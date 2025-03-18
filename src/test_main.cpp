@@ -19,13 +19,16 @@ static std::vector<std::pair<sf::RectangleShape, sf::Text>>
     add_lib(const sf::Font& font) {
     std::vector<std::pair<sf::RectangleShape, sf::Text>> libs;
     const std::string lib_dir = "./lib/";
+
     DIR* dir = opendir(lib_dir.c_str());
     if (!dir) {
         std::cerr << "Failed to open directory: " << lib_dir << std::endl;
         return libs;
     }
+
     struct dirent* entry;
     int position = 0;
+
     while ((entry = readdir(dir)) != nullptr) {
         std::string filename(entry->d_name);
         if (filename.size() >= 3 &&
@@ -33,15 +36,17 @@ static std::vector<std::pair<sf::RectangleShape, sf::Text>>
             sf::Text lib_text(filename, font, 24);
             lib_text.setFillColor(sf::Color::White);
             lib_text.setPosition(300.f, 200.f + position * 40.f);
+
+            sf::FloatRect textBounds = lib_text.getLocalBounds();
             sf::RectangleShape select;
             select.setFillColor(sf::Color::Transparent);
             select.setOutlineColor(sf::Color::White);
             select.setOutlineThickness(0.0f);
-            sf::FloatRect textBounds = lib_text.getLocalBounds();
             select.setSize(sf::Vector2f(
                 textBounds.width + 2 * 10.0f,
                 textBounds.height + 2 * 10.0f));
             select.setPosition(290.f, 195.f + position * 40.f);
+
             libs.push_back(std::make_pair(select, lib_text));
             position++;
         }
@@ -55,29 +60,24 @@ void launch_main_menu(void) {
     sf::Event event;
     sf::Font font;
     std::vector<std::pair<sf::RectangleShape, sf::Text>> libs;
+
     if (!font.loadFromFile("assets/fonts/arial.ttf")) {
-        sf::CircleShape shape(100.f);
-        shape.setFillColor(sf::Color::Green);
-        shape.setPosition(300.f, 200.f);
-        while (window.isOpen()) {
-            while (window.pollEvent(event)) {
-                if (event.type == sf::Event::Closed)
-                    window.close();
-            }
-            window.clear(sf::Color::Black);
-            window.draw(shape);
-            window.display();
-        }
+        std::cerr << "Font not found pease add it in assets/fonts/";
+        std::cerr << std::endl;
         return;
     }
     sf::Text title("Arcade Main Menu", font, 50);
     title.setFillColor(sf::Color::White);
     title.setPosition(200.f, 100.f);
+
     libs = add_lib(font);
+
     sf::Text instructions("Press ESC to exit", font, 24);
     instructions.setFillColor(sf::Color::White);
     instructions.setPosition(300.f, 500.f);
+
     int selectedIndex = -1;
+
     while (window.isOpen()) {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
