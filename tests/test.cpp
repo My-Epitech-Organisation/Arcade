@@ -1,3 +1,4 @@
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
@@ -5,22 +6,13 @@
 ** Temp test
 */
 #include <gtest/gtest.h>
-#include "../src/temp/add.hpp"
+#include "../src/Games/Game1/Game1.hpp"
 
-TEST(AddTest, HandlesPositiveInput) {
-    Add addObj;
-    EXPECT_EQ(addObj.add(1, 2), 3);
-    EXPECT_EQ(addObj.add(10, 20), 30);
-}
+class Game1Test : public ::testing::Test, public Game1 {};
 
-TEST(AddTest, HandlesNegativeInput) {
-    Add addObj;
-    EXPECT_EQ(addObj.add(-1, -2), -3);
-    EXPECT_EQ(addObj.add(-10, -20), -30);
-}
-
-TEST(AddTest, HandlesMixedInput) {
-    Add addObj;
-    EXPECT_EQ(addObj.add(-1, 2), 1);
-    EXPECT_EQ(addObj.add(10, -20), -10);
+TEST_F(Game1Test, printHelp) {
+    testing::internal::CaptureStdout();
+    printHelp();
+    std::string output = testing::internal::GetCapturedStdout();
+    ASSERT_EQ(output, "USAGE: ./arcade lib_name\n");
 }

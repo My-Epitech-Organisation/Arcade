@@ -1,0 +1,8 @@
+add_library(arcade_game1 SHARED Game1.cpp)
+
+set_target_properties(arcade_game1 PROPERTIES PREFIX "" OUTPUT_NAME "arcade_game1")
+target_include_directories(arcade_game1 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
+if(ENABLE_COVERAGE)
+    target_compile_options(arcade_game1 PRIVATE -O0 -g --coverage -fprofile-arcs -ftest-coverage)
+    target_link_libraries(arcade_game1 PRIVATE --coverage)
+endif()
