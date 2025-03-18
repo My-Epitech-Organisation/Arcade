@@ -30,6 +30,19 @@ cmake .. -DENABLE_CORE=ON
 cmake --build .
 ```
 
+## Adding New Games or Graphical Libraries
+
+To add a new game or graphical library, follow these steps:
+
+1. Create a new directory for your game or graphical library in the `src/Games` or `src/Graphics` directory, respectively.
+2. Implement the required interfaces defined in the `src/Shared` directory.
+3. Update the `CMakeLists.txt` files to include your new game or graphical library.
+4. Rebuild the project using the build instructions above.
+
+## Documentation
+
+The project documentation is available in the `docs` directory. You can find the class diagrams, annotated source code, and other relevant documentation there.
+
 ## Collaboration team
 
 ### Pixel Computer Club
