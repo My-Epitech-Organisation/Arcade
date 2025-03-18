@@ -4,13 +4,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 set(SRC
     ${SRCCORE}/core.cpp
-    ${SRCCORE}/DLoader/DLoader.cpp
+    ${SRCCORE}/DLLoader/DLLoader.cpp
     ${SRCCORE}/GameLoop/GameLoop.cpp
 )
 
 set(INC
     ${INCCORE}/core.hpp
-    ${INCCORE}/DLoader/DLoader.hpp
+    ${INCCORE}/DLLoader/DLLoader.hpp
     ${INCCORE}/GameLoop/GameLoop.hpp
 )
 

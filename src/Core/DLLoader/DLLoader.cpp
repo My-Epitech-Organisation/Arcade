@@ -3,6 +3,6 @@
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
 ** File description:
-** DLoader
+** DLLoader
 */
-#include "DLoader/DLoader.hpp"
+#include "DLLoader/DLLoader.hpp"
