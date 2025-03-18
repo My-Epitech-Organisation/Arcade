@@ -23,6 +23,9 @@ set(LIB
 add_executable(my_tests
     test.cpp
 )
+add_dependencies(my_tests arcade_core)
+
+add_dependencies(my_tests arcade_game1 arcade_game2 arcade_game3 arcade_sfml arcade_sdl2 arcade_ncurses)
 
 target_link_libraries(my_tests PRIVATE ${LIB} gtest gtest_main)
 include(GoogleTest)
