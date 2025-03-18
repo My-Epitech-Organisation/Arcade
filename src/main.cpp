@@ -1,4 +1,4 @@
-// Copyright 2024 <Epitech>
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
@@ -7,10 +7,10 @@
 */
 #include <iostream>
 #include <fstream>
-#include "main.hpp"
+#include <string>
+#include "../src/main.hpp"
 
-static bool check_path(const std::string &path)
-{
+static bool check_path(const std::string &path) {
     std::ifstream lib(path);
 
     if (path.size() < 4)
@@ -32,8 +32,7 @@ static bool check_path(const std::string &path)
  * @param av Arguments
  * @return int Return value
  */
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     if (ac != 2) {
         std::cerr
             << "Usage: ./arcade path_to_graphical_library.so"

@@ -1,3 +1,4 @@
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2025
 ** Arcade
@@ -5,9 +6,9 @@
 ** main
 */
 
-#ifndef MAIN_HPP_
-    #define MAIN_HPP_
+#ifndef SRC_MAIN_HPP_
+    #define SRC_MAIN_HPP_
 
     void launch_main_menu(void);
 
-#endif /* !MAIN_HPP_ */
+#endif  // SRC_MAIN_HPP_
