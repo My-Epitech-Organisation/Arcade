@@ -34,3 +34,10 @@
 build
 html
 latex
+cmake-build-debug
+cmake-build-release
+cmake-build-relwithdebinfo
+cpp-lint-reports.log
+.vscode
+bin
+arcade
