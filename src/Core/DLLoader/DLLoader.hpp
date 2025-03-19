@@ -19,8 +19,8 @@
         std::string _libPath;
 
      public:
-        explicit DLLoader(const std::string& libPath) : _handle(nullptr)
-             _libPath(libPath) {}
+        explicit DLLoader(const std::string& libPath) : _handle(nullptr),
+            _libPath(libPath) {}
         ~DLLoader() {
             if (_handle)
                 dlclose(_handle);
