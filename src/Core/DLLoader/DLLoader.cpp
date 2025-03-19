@@ -6,17 +6,17 @@
 ** DLLoader
 */
 #include "DLLoader/DLLoader.hpp"
+#include <string>
+#include <iostream>
 
 template <typename T>
-DLLoader<T>::~DLLoader()
-{
+DLLoader<T>::~DLLoader() {
     if (_handle)
         dlclose(_handle);
 }
 
 template <typename T>
-T* DLLoader<T>::getInstance(const std::string& entryPointName)
-{
+T* DLLoader<T>::getInstance(const std::string& entryPointName) {
     if (!_handle) {
         _handle = dlopen(_libPath.c_str(), RTLD_LAZY);
         if (!_handle) {
