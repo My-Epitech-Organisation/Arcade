@@ -48,25 +48,21 @@ class IDisplayModule {
      */
     virtual void render() = 0;
     /**
-     * @brief Clears the display.
-     *
-     * This method should remove all elements from the screen before
-     * the next rendering cycle.
-     */
-    virtual void clear() = 0;
-    /**
      * @brief Retrieves the latest user input.
      *
      * This method captures and returns the latest input received from the user.
      * @return An InputModel representing the user's input.
      */
-    virtual InputModel getInput() = 0;
+    virtual InputModel::Input getInput() = 0;
     /**
      * @brief Sets the entities to be displayed.
      *
      * This method updates the graphical entities that should be rendered on the screen.
      */
-    virtual void setEntities() = 0;
+    virtual void drawElement() = 0;
+    virtual void stop() = 0;
+
+    virtual const std::string& getName() const = 0;
 };
 }  // namespace Arcade
 #endif  // SRC_SHARED_INTERFACE_IDISPLAYMODULE_HPP_

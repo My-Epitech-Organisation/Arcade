@@ -38,7 +38,8 @@ class InputModel {
         ZERO, ONE, TWO, THREE, FOUR, FIVE,
         SIX, SEVEN, EIGHT, NINE,  ///< Numeric keys
         UNKNOWN,                  ///< Unrecognized input
-        RIGHT_CLICK, LEFT_CLICK, MIDDLE_CLICK  ///< Mouse buttons
+        RIGHT_CLICK, LEFT_CLICK, MIDDLE_CLICK,  ///< Mouse buttons
+        WINDOW_CLOSED
     };
     /**
     * @brief Retrieves the current user input.
@@ -47,6 +48,8 @@ class InputModel {
     * @return An Input enumeration value representing the current input.
     */
     Input getInput() const;
+
+    Input input = UNKNOWN;
 };
 
 #endif  // SRC_SHARED_MODELS_INPUTMODEL_HPP_
