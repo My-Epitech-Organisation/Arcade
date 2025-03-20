@@ -1,150 +1,184 @@
-# Enhanced UML Class Diagram for the Arcade project with more precision
 from graphviz import Digraph
 # Further enhancing the UML diagram by adding inheritance details for core classes
 
 uml = Digraph("Arcade_UML", filename="arcade_uml", format="png")
 
-# Define Interfaces
-uml.node("IGame", label="""<
-<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><I>IGame</I></TD></TR>
-    <TR><TD ALIGN="LEFT">+ start()</TD></TR>
-    <TR><TD ALIGN="LEFT">+ update()</TD></TR>
-    <TR><TD ALIGN="LEFT">+ render()</TD></TR>
-    <TR><TD ALIGN="LEFT">+ handleInput()</TD></TR>
-</TABLE>>""", shape="none")
-
-uml.node("IRenderer", label="""<
-<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><I>IRenderer</I></TD></TR>
-    <TR><TD ALIGN="LEFT">+ draw()</TD></TR>
-    <TR><TD ALIGN="LEFT">+ clearScreen()</TD></TR>
-    <TR><TD ALIGN="LEFT">+ updateDisplay()</TD></TR>
-</TABLE>>""", shape="none")
-
-# Define Abstract Classes
-uml.node("AbstractGame", label="""<
-<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>AbstractGame</B></TD></TR>
-    <TR><TD ALIGN="LEFT"><I>inherits from IGame</I></TD></TR>
-    <TR><TD ALIGN="LEFT">+ start()</TD></TR>
-    <TR><TD ALIGN="LEFT">+ update()</TD></TR>
-    <TR><TD ALIGN="LEFT">+ render()</TD></TR>
-</TABLE>>""", shape="none")
-
-uml.node("AbstractRenderer", label="""<
-<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>AbstractRenderer</B></TD></TR>
-    <TR><TD ALIGN="LEFT"><I>inherits from IRenderer</I></TD></TR>
-    <TR><TD ALIGN="LEFT">+ draw()</TD></TR>
-    <TR><TD ALIGN="LEFT">+ clearScreen()</TD></TR>
-</TABLE>>""", shape="none")
-
-# Define Factories
-uml.node("GameFactory", label="""<
-<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>GameFactory</B></TD></TR>
-    <TR><TD ALIGN="LEFT">+ createGame(type: string): unique_ptr&lt;IGame&gt;</TD></TR>
-</TABLE>>""", shape="none")
-
-uml.node("RendererFactory", label="""<
-<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>RendererFactory</B></TD></TR>
-    <TR><TD ALIGN="LEFT">+ createRenderer(type: string): unique_ptr&lt;IRenderer&gt;</TD></TR>
-</TABLE>>""", shape="none")
-
-# Core System
+# Core Architecture
 uml.node("ArcadeCore", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
     <TR><TD><B>ArcadeCore</B></TD></TR>
-    <TR><TD ALIGN="LEFT"><B>- _currentGame</B>: unique_ptr&lt;IGame&gt;</TD></TR>
-    <TR><TD ALIGN="LEFT"><B>- _currentRenderer</B>: unique_ptr&lt;IRenderer&gt;</TD></TR>
-    <TR><TD ALIGN="LEFT">+ loadGame(game: string)</TD></TR>
-    <TR><TD ALIGN="LEFT">+ loadRenderer(renderer: string)</TD></TR>
-    <TR><TD ALIGN="LEFT">+ mainLoop()</TD></TR>
+    <TR><TD ALIGN="LEFT">- _currentGame: IGameModule*</TD></TR>
+    <TR><TD ALIGN="LEFT">- _currentDisplay: IDisplayModule*</TD></TR>
+    <TR><TD ALIGN="LEFT">+ run()</TD></TR>
+    <TR><TD ALIGN="LEFT">+ loadGame(gameName: string)</TD></TR>
+    <TR><TD ALIGN="LEFT">+ loadDisplay(displayName: string)</TD></TR>
 </TABLE>>""", shape="none")
 
-# Plugin Loader
-uml.node("PluginLoader", label="""<
+uml.node("DLLoader", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>PluginLoader</B></TD></TR>
-    <TR><TD ALIGN="LEFT">+ loadLibrary(filename: string): void*</TD></TR>
-    <TR><TD ALIGN="LEFT">+ getSymbol(handle: void*, symbol: string): void*</TD></TR>
+    <TR><TD><B>DLLoader</B></TD></TR>
+    <TR><TD ALIGN="LEFT">+ load&lt;T&gt;(libPath: string): T*</TD></TR>
+    <TR><TD ALIGN="LEFT">+ unload()</TD></TR>
 </TABLE>>""", shape="none")
 
-# Event Manager (Observer Pattern)
-uml.node("EventManager", label="""<
+uml.node("GameLoop", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>EventManager</B></TD></TR>
-    <TR><TD ALIGN="LEFT">+ registerObserver(observer: IObserver)</TD></TR>
-    <TR><TD ALIGN="LEFT">+ notify(event: EventType)</TD></TR>
+    <TR><TD><B>GameLoop</B></TD></TR>
+    <TR><TD ALIGN="LEFT">+ run(game: IGameModule*, display: IDisplayModule*)</TD></TR>
 </TABLE>>""", shape="none")
 
-# Score Management (Singleton)
-uml.node("ScoreManager", label="""<
+# Interface Definitions
+uml.node("ISystem", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>ScoreManager</B></TD></TR>
-    <TR><TD ALIGN="LEFT">+ saveScore(player: string, score: int)</TD></TR>
-    <TR><TD ALIGN="LEFT">+ getScores(): vector&lt;pair&lt;string, int&gt;&gt;</TD></TR>
-</TABLE>>""", shape="none")
-
-# ECS - Entity Component System
-uml.node("ECS", label="""<
-<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>Entity Component System</B></TD></TR>
-    <TR><TD ALIGN="LEFT">+ addEntity()</TD></TR>
-    <TR><TD ALIGN="LEFT">+ addComponent(entity, component)</TD></TR>
-    <TR><TD ALIGN="LEFT">+ removeComponent(entity, component)</TD></TR>
+    <TR><TD><B>ISystem</B></TD></TR>
     <TR><TD ALIGN="LEFT">+ update()</TD></TR>
 </TABLE>>""", shape="none")
 
-# Define concrete implementations for games and renderers
-uml.node("SnakeGame", label="""<
+uml.node("IGameModule", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>SnakeGame</B></TD></TR>
-    <TR><TD ALIGN="LEFT"><I>inherits from AbstractGame</I></TD></TR>
+    <TR><TD><B>IGameModule</B></TD></TR>
+    <TR><TD ALIGN="LEFT">+ init()</TD></TR>
+    <TR><TD ALIGN="LEFT">+ update()</TD></TR>
+    <TR><TD ALIGN="LEFT">+ render()</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getElements(): vector&lt;Entity&gt;</TD></TR>
+    <TR><TD ALIGN="LEFT">+ handleInput(event: IEventManager&amp;)</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getName(): string</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getScore(): int</TD></TR>
 </TABLE>>""", shape="none")
 
-uml.node("PacmanGame", label="""<
+uml.node("IDisplayModule", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>PacmanGame</B></TD></TR>
-    <TR><TD ALIGN="LEFT"><I>inherits from AbstractGame</I></TD></TR>
+    <TR><TD><B>IDisplayModule</B></TD></TR>
+    <TR><TD ALIGN="LEFT">+ init()</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getInput(): IEventManager</TD></TR>
+    <TR><TD ALIGN="LEFT">+ drawElement(entities: vector&lt;Entity&gt;&amp;)</TD></TR>
+    <TR><TD ALIGN="LEFT">+ render()</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getName(): string</TD></TR>
 </TABLE>>""", shape="none")
 
-uml.node("SFMLRenderer", label="""<
+uml.node("IEventManager", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>SFMLRenderer</B></TD></TR>
-    <TR><TD ALIGN="LEFT"><I>inherits from AbstractRenderer</I></TD></TR>
+    <TR><TD><B>IEventManager</B></TD></TR>
+    <TR><TD ALIGN="LEFT">+ getEventState(key: int): bool</TD></TR>
+    <TR><TD ALIGN="LEFT">+ setEventState(key: int, state: bool)</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getMouseX(): size_t</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getMouseY(): size_t</TD></TR>
+    <TR><TD ALIGN="LEFT">+ pollEvents()</TD></TR>
 </TABLE>>""", shape="none")
 
-uml.node("SDLRenderer", label="""<
+# ECS Components
+uml.node("EntityManager", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>SDLRenderer</B></TD></TR>
-    <TR><TD ALIGN="LEFT"><I>inherits from AbstractRenderer</I></TD></TR>
+    <TR><TD><B>EntityManager</B></TD></TR>
+    <TR><TD ALIGN="LEFT">- _nextEntityId: Entity</TD></TR>
+    <TR><TD ALIGN="LEFT">- _activeEntities: vector&lt;Entity&gt;</TD></TR>
+    <TR><TD ALIGN="LEFT">+ createEntity(): Entity</TD></TR>
+    <TR><TD ALIGN="LEFT">+ destroyEntity(entity: Entity)</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getEntities(): vector&lt;Entity&gt;&amp;</TD></TR>
+</TABLE>>""", shape="none")
+
+uml.node("ComponentManager", label="""<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+    <TR><TD><B>ComponentManager&lt;T&gt;</B></TD></TR>
+    <TR><TD ALIGN="LEFT">- components: unordered_map&lt;Entity, T&gt;</TD></TR>
+    <TR><TD ALIGN="LEFT">+ addComponent(entity: Entity, component: T)</TD></TR>
+    <TR><TD ALIGN="LEFT">+ removeComponent(entity: Entity)</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getComponent(entity: Entity): T*</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getAll(): unordered_map&lt;Entity, T&gt;&amp;</TD></TR>
+</TABLE>>""", shape="none")
+
+uml.node("SystemManager", label="""<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+    <TR><TD><B>SystemManager</B></TD></TR>
+    <TR><TD ALIGN="LEFT">- _systems: vector&lt;ISystem*&gt;</TD></TR>
+    <TR><TD ALIGN="LEFT">+ addSystem(system: ISystem*)</TD></TR>
+    <TR><TD ALIGN="LEFT">+ updateSystems()</TD></TR>
+</TABLE>>""", shape="none")
+
+# Components
+uml.node("PositionComponent", label="""<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+    <TR><TD><B>PositionComponent</B></TD></TR>
+    <TR><TD ALIGN="LEFT">+ x: int</TD></TR>
+    <TR><TD ALIGN="LEFT">+ y: int</TD></TR>
+</TABLE>>""", shape="none")
+
+uml.node("VelocityComponent", label="""<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+    <TR><TD><B>VelocityComponent</B></TD></TR>
+    <TR><TD ALIGN="LEFT">+ dx: int</TD></TR>
+    <TR><TD ALIGN="LEFT">+ dy: int</TD></TR>
+</TABLE>>""", shape="none")
+
+uml.node("SpriteComponent", label="""<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+    <TR><TD><B>SpriteComponent</B></TD></TR>
+    <TR><TD ALIGN="LEFT">+ path: string</TD></TR>
+</TABLE>>""", shape="none")
+
+# Systems
+uml.node("MovementSystem", label="""<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+    <TR><TD><B>MovementSystem</B></TD></TR>
+    <TR><TD ALIGN="LEFT">- positionManager: ComponentManager&lt;PositionComponent&gt;*</TD></TR>
+    <TR><TD ALIGN="LEFT">- velocityManager: ComponentManager&lt;VelocityComponent&gt;*</TD></TR>
+    <TR><TD ALIGN="LEFT">+ update()</TD></TR>
+</TABLE>>""", shape="none")
+
+uml.node("AEventManager", label="""<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+    <TR><TD><B>AEventManager</B></TD></TR>
+    <TR><TD ALIGN="LEFT">- _keyEvents: vector&lt;pair&lt;int, bool&gt;&gt;</TD></TR>
+    <TR><TD ALIGN="LEFT">- _mouseX: size_t</TD></TR>
+    <TR><TD ALIGN="LEFT">- _mouseY: size_t</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getEventState(key: int): bool</TD></TR>
+    <TR><TD ALIGN="LEFT">+ setEventState(key: int, state: bool)</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getMouseX(): size_t</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getMouseY(): size_t</TD></TR>
+</TABLE>>""", shape="none")
+
+uml.node("WindowManager", label="""<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+    <TR><TD><B>WindowManager</B></TD></TR>
+    <TR><TD ALIGN="LEFT">- _width: int</TD></TR>
+    <TR><TD ALIGN="LEFT">- _height: int</TD></TR>
+    <TR><TD ALIGN="LEFT">- _fps: float</TD></TR>
+    <TR><TD ALIGN="LEFT">- _title: string</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getWindowSize(): Vector2i</TD></TR>
+    <TR><TD ALIGN="LEFT">+ setWindowSize(vec: Vector2i)</TD></TR>
 </TABLE>>""", shape="none")
 
 # Relationships
-uml.edge("IGame", "AbstractGame", arrowhead="empty", label="inherits")
-uml.edge("IRenderer", "AbstractRenderer", arrowhead="empty", label="inherits")
+# Interface implementations
+uml.edge("IEventManager", "AEventManager", arrowhead="vee", label="implements")
+uml.edge("ISystem", "MovementSystem", arrowhead="vee", label="implements")
+uml.edge("IGameModule", "EntityManager", arrowhead="vee", label="uses")
+uml.edge("IDisplayModule", "EntityManager", arrowhead="vee", label="uses")
+uml.edge("IGameModule", "WindowManager", arrowhead="vee", label="uses")
+uml.edge("IDisplayModule", "WindowManager", arrowhead="vee", label="uses")
 
-uml.edge("AbstractGame", "SnakeGame", arrowhead="empty", label="inherits")
-uml.edge("AbstractGame", "PacmanGame", arrowhead="empty", label="inherits")
-uml.edge("AbstractRenderer", "SFMLRenderer", arrowhead="empty", label="inherits")
-uml.edge("AbstractRenderer", "SDLRenderer", arrowhead="empty", label="inherits")
+# Core relationships
+uml.edge("ArcadeCore", "DLLoader", arrowhead="vee", label="uses")
+uml.edge("ArcadeCore", "GameLoop", arrowhead="vee", label="uses")
+uml.edge("ArcadeCore", "IGameModule", arrowhead="vee", label="manages")
+uml.edge("ArcadeCore", "IDisplayModule", arrowhead="vee", label="manages")
+uml.edge("GameLoop", "IGameModule", arrowhead="vee", label="uses")
+uml.edge("GameLoop", "IDisplayModule", arrowhead="vee", label="uses")
 
-uml.edge("GameFactory", "AbstractGame", arrowhead="none", label="creates")
-uml.edge("RendererFactory", "AbstractRenderer", arrowhead="none", label="creates")
-uml.edge("ECS", "AbstractGame", arrowhead="none", label="used by")
+# ECS relationships
+uml.edge("ComponentManager", "EntityManager", arrowhead="vee", label="uses")
+uml.edge("SystemManager", "ISystem", arrowhead="vee", label="manages")
+uml.edge("MovementSystem", "ComponentManager", arrowhead="vee", label="uses")
 
-uml.edge("ArcadeCore", "AbstractGame", arrowhead="none", label="manages")
-uml.edge("PluginLoader", "AbstractGame", arrowhead="none", label="loads")
-uml.edge("PluginLoader", "AbstractRenderer", arrowhead="none", label="loads")
-uml.edge("ArcadeCore", "AbstractRenderer", arrowhead="none", label="manages")
+# Component relationships
+uml.edge("ComponentManager", "PositionComponent", arrowhead="vee", label="manages")
+uml.edge("ComponentManager", "VelocityComponent", arrowhead="vee", label="manages")
+uml.edge("ComponentManager", "SpriteComponent", arrowhead="vee", label="manages")
 
-uml.edge("EventManager", "AbstractGame", arrowhead="none", label="notifies")
-uml.edge("ScoreManager", "ArcadeCore", arrowhead="none", label="tracks scores")
+# Event relationships
+uml.edge("IGameModule", "IEventManager", arrowhead="vee", label="uses")
+uml.edge("IDisplayModule", "IEventManager", arrowhead="vee", label="provides")
 
 # Render and display the UML diagram
-uml_path = "arcade_uml"
-uml.render(uml_path, format="png", cleanup=True)
-uml_path
+uml.render("arcade_uml", cleanup=True)
+print("UML diagram has been generated as arcade_uml.png")

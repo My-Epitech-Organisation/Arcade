@@ -3,70 +3,84 @@
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
 ** File description:
-** IDisplayModule interface
+** Display Module Interface
 */
 /**
  * @file IDisplayModule.hpp
- * @brief Interface for display modules in the Arcade project.
+ * @brief Interface for graphical display modules in the Arcade project.
  *
- * This interface defines the necessary methods for implementing
- * a display module in the Arcade project.
+ * The IDisplayModule interface provides methods for initializing a display module,
+ * handling user input, rendering graphical elements, and retrieving the module's name.
  */
+
 #ifndef SRC_SHARED_INTERFACE_IDISPLAYMODULE_HPP_
     #define SRC_SHARED_INTERFACE_IDISPLAYMODULE_HPP_
-    #include <memory>
     #include <string>
-    #include "../Models/InputModel.hpp"
+    #include <vector>
+    #include "Shared/Models/EntityComponentSystem/EntityManager.hpp"
+    #include "Interface/IEventManager.hpp"
 
 namespace Arcade {
+
 /**
  * @class IDisplayModule
  * @brief Interface for graphical display modules.
  *
- * The IDisplayModule interface provides a set of pure virtual functions
- * that must be implemented by any graphical display module in the Arcade project.
- * It includes methods for initialization, rendering, input handling,
- * and refreshing the display.
+ * The IDisplayModule interface defines the required methods that each display module
+ * must implement. This includes initializing the module, handling input,
+ * rendering game entities, and retrieving the module's name.
  */
 class IDisplayModule {
  public:
     /**
      * @brief Virtual destructor for the interface.
+     *
+     * Ensures that derived classes clean up their resources upon destruction.
      */
     virtual ~IDisplayModule() = default;
+
     /**
      * @brief Initializes the display module.
      *
      * This method is responsible for setting up the display module,
-     * loading necessary resources, and preparing the graphical environment.
+     * loading required resources, and preparing the graphical environment.
      */
     virtual void init() = 0;
+
     /**
-     * @brief Renders the current frame.
+     * @brief Retrieves the input manager.
      *
-     * This method should draw all necessary elements onto the screen.
+     * This method returns an instance of the `IEventManager` to handle user input events.
+     *
+     * @return An `IEventManager` instance responsible for managing user inputs.
+     */
+    virtual IEventManager getInput(void) = 0;
+
+    /**
+     * @brief Draws a set of game entities.
+     *
+     * This method takes a list of entities and processes their rendering on the display.
+     *
+     * @param entities A vector of `Entity` objects representing game entities to be drawn.
+     */
+    virtual void drawElement(const std::vector<Entity> &entities) = 0;
+
+    /**
+     * @brief Renders the display module.
+     *
+     * This method finalizes all drawing operations and updates the display with the latest
+     * graphical elements.
      */
     virtual void render() = 0;
+
     /**
-     * @brief Clears the display.
+     * @brief Retrieves the name of the display module.
      *
-     * This method should remove all elements from the screen before
-     * the next rendering cycle.
+     * @return A string representing the name of the display module.
      */
-    virtual void clear() = 0;
-    /**
-     * @brief Retrieves the latest user input.
-     *
-     * This method captures and returns the latest input received from the user.
-     * @return An InputModel representing the user's input.
-     */
-    virtual InputModel getInput() = 0;
-    /**
-     * @brief Sets the entities to be displayed.
-     *
-     * This method updates the graphical entities that should be rendered on the screen.
-     */
-    virtual void setEntities() = 0;
+    virtual std::string getName() const = 0;
 };
+
 }  // namespace Arcade
+
 #endif  // SRC_SHARED_INTERFACE_IDISPLAYMODULE_HPP_
