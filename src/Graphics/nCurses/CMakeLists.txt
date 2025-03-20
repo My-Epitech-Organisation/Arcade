@@ -12,7 +12,7 @@ target_include_directories(arcade_ncurses PUBLIC ${NCURSES_INCLUDE_DIRS} ${CMAKE
 
 if(ENABLE_COVERAGE)
     target_compile_options(arcade_ncurses PUBLIC -O0 -g --coverage -fprofile-arcs -ftest-coverage)
-    target_link_libraries(arcade_ncurses PUBLIC --coverage)
+    target_link_libraries(arcade_ncurses PUBLIC arcade_shared --coverage)
 else ()
-    target_link_libraries(arcade_ncurses PUBLIC ${NCURSES_LIBRARIES} --coverage)
+    target_link_libraries(arcade_ncurses PUBLIC arcade_shared ${NCURSES_LIBRARIES} --coverage)
 endif()
