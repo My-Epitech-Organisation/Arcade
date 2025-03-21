@@ -1,18 +1,21 @@
-//
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2025
 ** Arcade
 ** File description:
 ** SFMLUtils
 */
+#include <string>
+#include <memory>
+#include <iostream>
 #include "SFML/SFML.hpp"
+
 
 void SFML::createWindow(int width, int height) {
     _window = std::make_unique<sf::RenderWindow>(
         sf::VideoMode(width, height),
         "Arcade",
-        sf::Style::Close
-    );
+        sf::Style::Close);
 
     if (!_window)
         throw std::runtime_error("SFML: Failed to create window");

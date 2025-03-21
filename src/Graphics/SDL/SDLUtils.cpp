@@ -5,12 +5,13 @@
 ** File description:
 ** SDLUtils
 */
-#include "SDL/SDL.hpp"
 #include <stdexcept>
 #include <memory>
 #include <utility>
 #include <string>
 #include <iostream>
+#include "SDL/SDL.hpp"
+
 
 void SDL::createWindow(int width, int height) {
     _window = std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)>(

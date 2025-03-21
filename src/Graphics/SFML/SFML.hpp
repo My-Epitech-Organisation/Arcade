@@ -8,10 +8,10 @@
 
 #ifndef SRC_GRAPHICS_SFML_SFML_HPP_
     #define SRC_GRAPHICS_SFML_SFML_HPP_
-    #include <SFML/Graphics.hpp>
     #include <memory>
     #include <string>
     #include <unordered_map>
+    #include <SFML/Graphics.hpp>
     #include "../../Shared/Interface/IDisplayModule.hpp"
 
     class SFML : public Arcade::IDisplayModule {
