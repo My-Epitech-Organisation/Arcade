@@ -19,24 +19,27 @@
     class SDL : public Arcade::IDisplayModule {
      private:
         std::string _name;
-        std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> window;
-        std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)> renderer;
+        std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> _window;
+        std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)> _renderer;
         std::vector<std::pair<std::unique_ptr<SDL_Texture,
             decltype(&SDL_DestroyTexture)>, std::pair<int, int>>> _sprite;
-        int windowWidth = 0;
-        int windowHeight = 0;
+        int _windowWidth = 0;
+        int _windowHeight = 0;
+        bool _running = true;
      public:
         SDL() : _name("SDL2"),
-        window(nullptr, SDL_DestroyWindow),
-        renderer(nullptr, SDL_DestroyRenderer) {}
+        _window(nullptr, SDL_DestroyWindow),
+        _renderer(nullptr, SDL_DestroyRenderer) {}
         ~SDL() override;
-        void init() override;
-        void init(float x, float y);
-        void drawElement() override;
-        void addSprite(const std::string &textPath);
-        void render();
-        InputModel::Input getInput() override;
+        void init(float width, float height) override;
         void stop() override;
+        void clearScreen();
+        void refreshScreen();
+        void drawEntity(int x, int y, char symbol);
+        void drawTexture(int x, int y, const std::string &textureId);
+        void drawText(int x, int y, const std::string &text);
+        void pollEvents();
+        bool isOpen() const;
         const std::string& getName() const override { return _name;};
     };
 

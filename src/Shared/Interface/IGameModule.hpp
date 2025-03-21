@@ -17,7 +17,10 @@
     #define SRC_SHARED_INTERFACE_IGAMEMODULE_HPP_
     #include <memory>
     #include <string>
-    #include "../Models/InputModel.hpp"
+    #include <vector>
+    #include <unordered_map>
+    #include "Shared/Models/EntityComponentSystem/EntityManager.hpp"
+    #include "Interface/IEventManager.hpp"
 
 namespace Arcade {
 /**
@@ -40,7 +43,7 @@ class IGameModule {
      * This method is responsible for initializing the game state
      * and preparing all necessary resources for the game session.
      */
-    virtual void start() = 0;
+    virtual void init() = 0;
 
     /**
      * @brief Updates the game state.
@@ -63,16 +66,32 @@ class IGameModule {
      *
      * This method should return the current entities involved in the game
      * to be processed or displayed.
+     * @return A map of entity names and their corresponding ECS components.
      */
-    virtual void getEntity() = 0;
-
+    virtual std::vector<Entity> getElements() const = 0;
     /**
      * @brief Handles player input.
      *
      * This method should process user input and apply the corresponding
      * actions to the game logic.
      */
-    virtual void handleInput() = 0;
+    virtual void handleInput(const IEventManager &event) = 0;
+
+    /**
+     * @brief Retrieves the game's name.
+     *
+     * This method should return the name of the game module.
+     * @return The name of the game module.
+     */
+    virtual std::string getName() const = 0;
+
+    /**
+     * @brief Retrieves the game's score.
+     *
+     * This method should return the current score of the game session.
+     * @return The current score of the game session.
+     */
+    virtual int getScore() const = 0;
 };
 }  // namespace Arcade
 #endif  // SRC_SHARED_INTERFACE_IGAMEMODULE_HPP_

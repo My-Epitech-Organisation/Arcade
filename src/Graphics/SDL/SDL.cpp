@@ -7,27 +7,24 @@
 */
 #include "SDL/SDL.hpp"
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdexcept>
 #include <memory>
 #include <utility>
 #include <string>
 
 SDL::~SDL() {
-    renderer.reset();
-    window.reset();
+    _renderer.reset();
+    _window.reset();
     SDL_Quit();
 }
 
-void SDL::init() {
-    init(800.0f, 600.0f);
-}
-
-void SDL::init(float x, float y) {
+void SDL::init(float x = 800.f, float y = 600.f) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
         throw std::runtime_error("SDL could not initialize! SDL Error: "
             + std::string(SDL_GetError()));
 
-    window = std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)>(
+    _window = std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)>(
         SDL_CreateWindow(
             "Arcade",
             SDL_WINDOWPOS_UNDEFINED,
@@ -36,38 +33,56 @@ void SDL::init(float x, float y) {
             static_cast<int>(y),
             SDL_WINDOW_SHOWN),
         SDL_DestroyWindow);
-    if (!window) {
+    if (!_window) {
         SDL_Quit();
         throw std::runtime_error("Window could not be created! SDL Error: "
             + std::string(SDL_GetError()));
     }
 
-    renderer = std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)>(
-        SDL_CreateRenderer(window.get(), -1, SDL_RENDERER_ACCELERATED),
+    _renderer = std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)>(
+        SDL_CreateRenderer(_window.get(), -1, SDL_RENDERER_ACCELERATED),
         SDL_DestroyRenderer);
-    if (!renderer) {
+    if (!_renderer) {
         SDL_Quit();
         throw std::runtime_error("Renderer could not be created! SDL Error: "
             + std::string(SDL_GetError()));
     }
 
-    SDL_SetRenderDrawColor(renderer.get(), 0xFF, 0xFF, 0xFF, 0xFF);
-    windowWidth = static_cast<int>(x);
-    windowHeight = static_cast<int>(y);
+    SDL_SetRenderDrawColor(_renderer.get(), 0xFF, 0xFF, 0xFF, 0xFF);
+    _windowWidth = static_cast<int>(x);
+    _windowHeight = static_cast<int>(y);
 }
 
-void SDL::addSprite(const std::string &textPath) {
+void SDL::stop() {
+    _renderer.reset();
+    _window.reset();
+    SDL_Quit();
+}
+
+void SDL::clearScreen() {
+    SDL_RenderClear(_renderer.get());
+}
+
+void SDL::refreshScreen() {
+    SDL_RenderPresent(_renderer.get());
+}
+
+void SDL::drawEntity(int x, int y, char symbol) {
+    return;
+}
+
+void SDL::drawTexture(int x, int y, const std::string &texturePath) {
     std::unique_ptr<SDL_Surface, decltype(&SDL_FreeSurface)> tempSurface(
-        IMG_Load(textPath.c_str()), SDL_FreeSurface);
+        IMG_Load(texturePath.c_str()), SDL_FreeSurface);
     if (!tempSurface) {
-        throw std::runtime_error("Unable to load image " + textPath +
+        throw std::runtime_error("Unable to load image " + texturePath +
             "! SDL_image Error: " +std::string(IMG_GetError()));
     }
 
-    SDL_Texture* newTexture = SDL_CreateTextureFromSurface(renderer.get(),
+    SDL_Texture* newTexture = SDL_CreateTextureFromSurface(_renderer.get(),
         tempSurface.get());
     if (!newTexture) {
-        throw std::runtime_error("Unable to create texture from" + textPath +
+        throw std::runtime_error("Unable to create texture from" + texturePath +
             "! SDL Error: " + std::string(SDL_GetError()));
     }
 
@@ -75,152 +90,62 @@ void SDL::addSprite(const std::string &textPath) {
     SDL_QueryTexture(newTexture, nullptr, nullptr, &w, &h);
 
     auto texturePtr = std::unique_ptr<SDL_Texture,
-        decltype(&SDL_DestroyTexture)>(
-        newTexture,
+        decltype(&SDL_DestroyTexture)>( newTexture,
         SDL_DestroyTexture);
 
-    _sprite.push_back(std::make_pair(std::move(texturePtr),
-        std::make_pair(w, h)));
+    SDL_Rect destRect;
+    destRect.x = (_windowWidth - w) / 2;
+    destRect.y = (_windowHeight - h) / 2;
+    destRect.w = w;
+    destRect.h = h;
+
+    SDL_RenderCopy(_renderer.get(), texturePtr.get(), nullptr, &destRect);
 }
 
-void SDL::render() {
-    SDL_RenderClear(renderer.get());
-    for (const auto &sprt : _sprite) {
-        SDL_Rect destRect;
-        destRect.x = (windowWidth - sprt.second.first) / 2;
-        destRect.y = (windowHeight - sprt.second.second) / 2;
-        destRect.w = sprt.second.first;
-        destRect.h = sprt.second.second;
+void SDL::drawText(int x, int y, const std::string &text) {
+    auto _font = std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)>(
+        TTF_OpenFont("assets/fonts/arial.ttf", 24),
+        TTF_CloseFont);
 
-        SDL_RenderCopy(renderer.get(), sprt.first.get(), nullptr, &destRect);
+    if (!_font) {
+        std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
+        return;
     }
-    SDL_RenderPresent(renderer.get());
+
+    SDL_Color textColor = {255, 255, 255, 255};
+
+    std::unique_ptr<SDL_Surface, decltype(&SDL_FreeSurface)> textSurface(
+        TTF_RenderText_Solid(_font.get(), text.c_str(), textColor),
+        SDL_FreeSurface);
+    if (!textSurface) {
+        std::cerr << "Unable to render text surface: " << TTF_GetError() << std::endl;
+        return;
+    }
+
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(_renderer.get(), textSurface.get());
+    if (!textTexture) {
+        std::cerr << "Unable to create texture from rendered text: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    int textWidth = textSurface->w;
+    int textHeight = textSurface->h;
+
+    SDL_Rect renderRect = {x, y, textWidth, textHeight};
+    SDL_RenderCopy(_renderer.get(), textTexture, nullptr, &renderRect);
+    SDL_DestroyTexture(textTexture);
 }
 
-InputModel::Input SDL::getInput() {
+void SDL::pollEvents() {
     SDL_Event event;
-
     while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) {
-            return InputModel::Input::WINDOW_CLOSED;
-        } else if (event.type == SDL_KEYDOWN) {
-            switch (event.key.keysym.sym) {
-                case SDLK_UP:
-                    return InputModel::Input::UP;
-                case SDLK_DOWN:
-                    return InputModel::DOWN;
-                case SDLK_LEFT:
-                    return InputModel::LEFT;
-                case SDLK_RIGHT:
-                    return InputModel::RIGHT;
-                case SDLK_RETURN:
-                    return InputModel::ENTER;
-                case SDLK_ESCAPE:
-                    return InputModel::ESCAPE;
-                case SDLK_SPACE:
-                    return InputModel::SPACE;
-
-                case SDLK_a:
-                    return InputModel::A;
-                case SDLK_b:
-                    return InputModel::B;
-                case SDLK_c:
-                    return InputModel::C;
-                case SDLK_d:
-                    return InputModel::D;
-                case SDLK_e:
-                    return InputModel::E;
-                case SDLK_f:
-                    return InputModel::F;
-                case SDLK_g:
-                    return InputModel::G;
-                case SDLK_h:
-                    return InputModel::H;
-                case SDLK_i:
-                    return InputModel::I;
-                case SDLK_j:
-                    return InputModel::J;
-                case SDLK_k:
-                    return InputModel::K;
-                case SDLK_l:
-                    return InputModel::L;
-                case SDLK_m:
-                    return InputModel::M;
-                case SDLK_n:
-                    return InputModel::N;
-                case SDLK_o:
-                    return InputModel::O;
-                case SDLK_p:
-                    return InputModel::P;
-                case SDLK_q:
-                    return InputModel::Q;
-                case SDLK_r:
-                    return InputModel::R;
-                case SDLK_s:
-                    return InputModel::S;
-                case SDLK_t:
-                    return InputModel::T;
-                case SDLK_u:
-                    return InputModel::U;
-                case SDLK_v:
-                    return InputModel::V;
-                case SDLK_w:
-                    return InputModel::W;
-                case SDLK_x:
-                    return InputModel::X;
-                case SDLK_y:
-                    return InputModel::Y;
-                case SDLK_z:
-                    return InputModel::Z;
-
-                case SDLK_0:
-                    return InputModel::ZERO;
-                case SDLK_1:
-                    return InputModel::ONE;
-                case SDLK_2:
-                    return InputModel::TWO;
-                case SDLK_3:
-                    return InputModel::THREE;
-                case SDLK_4:
-                    return InputModel::FOUR;
-                case SDLK_5:
-                    return InputModel::FIVE;
-                case SDLK_6:
-                    return InputModel::SIX;
-                case SDLK_7:
-                    return InputModel::SEVEN;
-                case SDLK_8:
-                    return InputModel::EIGHT;
-                case SDLK_9:
-                    return InputModel::NINE;
-
-                default:
-                    return InputModel::UNKNOWN;
-            }
-        } else if (event.type == SDL_MOUSEBUTTONDOWN) {
-            switch (event.button.button) {
-                case SDL_BUTTON_LEFT:
-                    return InputModel::LEFT_CLICK;
-                case SDL_BUTTON_RIGHT:
-                    return InputModel::RIGHT_CLICK;
-                case SDL_BUTTON_MIDDLE:
-                    return InputModel::MIDDLE_CLICK;
-                default:
-                    return InputModel::UNKNOWN;
-            }
-        }
+        if (event.type == SDL_QUIT)
+            _running = false;
     }
-    return InputModel::Input::UNKNOWN;
 }
 
-void SDL::drawElement() {
-    addSprite("./chest.png");
-}
-
-void SDL::stop() {
-    renderer.reset();
-    window.reset();
-    SDL_Quit();
+bool SDL::isOpen() const {
+    return (_running);
 }
 
 extern "C" {
