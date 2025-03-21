@@ -15,8 +15,8 @@
  * that operate within the ECS of the Arcade project.
  */
 
-#ifndef SRC_SHARED_INTERFACE_ISYSTEM_HPP_
-    #define SRC_SHARED_INTERFACE_ISYSTEM_HPP_
+#ifndef SRC_SHARED_INTERFACE_ECS_ISYSTEM_HPP_
+    #define SRC_SHARED_INTERFACE_ECS_ISYSTEM_HPP_
 
 namespace Arcade {
 /**
@@ -54,8 +54,8 @@ class ISystem {
      * to handle system-specific logic that needs to be executed
      * every update cycle.
      */
-    virtual void update() = 0;
+    virtual void update(float deltaTime) = 0;
 };
 }  // namespace Arcade
 
-#endif  // SRC_SHARED_INTERFACE_ISYSTEM_HPP_
+#endif  // SRC_SHARED_INTERFACE_ECS_ISYSTEM_HPP_
