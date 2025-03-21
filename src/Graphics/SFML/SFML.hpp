@@ -24,7 +24,6 @@
         void createWindow(int width, int height);
         sf::Font* loadFont(const std::string& fontPath);
         sf::Texture* loadTexture(const std::string& texturePath);
-        std::unique_ptr<sf::RenderWindow> _window;
         std::unordered_map<std::string, std::unique_ptr<sf::Font>> _fonts;
         std::unordered_map<std::string, std::unique_ptr<sf::Texture>> _textures;
 
