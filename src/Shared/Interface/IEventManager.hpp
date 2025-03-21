@@ -10,7 +10,7 @@
  * @file IEventManager.hpp
  * @brief Interface for managing user input events in the Arcade project.
  *
- * The IEventManager interface defines a set of methods for handling 
+ * The IEventManager interface defines a set of methods for handling
  * keyboard and mouse events, including retrieving event states and polling for new events.
  */
 

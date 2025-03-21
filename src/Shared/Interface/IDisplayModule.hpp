@@ -17,7 +17,7 @@
     #define SRC_SHARED_INTERFACE_IDISPLAYMODULE_HPP_
     #include <string>
     #include <vector>
-    #include "Shared/Models/EntityComponentSystem/EntityManager.hpp"
+    #include "Models/EntityComponentSystem/EntityManager.hpp"
     #include "Interface/IEventManager.hpp"
 
 namespace Arcade {
@@ -32,53 +32,17 @@ namespace Arcade {
  */
 class IDisplayModule {
  public:
-    /**
-     * @brief Virtual destructor for the interface.
-     *
-     * Ensures that derived classes clean up their resources upon destruction.
-     */
     virtual ~IDisplayModule() = default;
-
-    /**
-     * @brief Initializes the display module.
-     *
-     * This method is responsible for setting up the display module,
-     * loading required resources, and preparing the graphical environment.
-     */
-    virtual void init() = 0;
-
-    /**
-     * @brief Retrieves the input manager.
-     *
-     * This method returns an instance of the `IEventManager` to handle user input events.
-     *
-     * @return An `IEventManager` instance responsible for managing user inputs.
-     */
-    virtual IEventManager getInput(void) = 0;
-
-    /**
-     * @brief Draws a set of game entities.
-     *
-     * This method takes a list of entities and processes their rendering on the display.
-     *
-     * @param entities A vector of `Entity` objects representing game entities to be drawn.
-     */
-    virtual void drawElement(const std::vector<Entity> &entities) = 0;
-
-    /**
-     * @brief Renders the display module.
-     *
-     * This method finalizes all drawing operations and updates the display with the latest
-     * graphical elements.
-     */
-    virtual void render() = 0;
-
-    /**
-     * @brief Retrieves the name of the display module.
-     *
-     * @return A string representing the name of the display module.
-     */
-    virtual std::string getName() const = 0;
+    virtual void init(float width, float height) = 0;
+    virtual void stop() = 0;
+    virtual void clearScreen() = 0;
+    virtual void refreshScreen() = 0;
+    virtual void drawEntity(int x, int y, char symbol) = 0;
+    virtual void drawTexture(int x, int y, const std::string &textureId) = 0;
+    virtual void drawText(int x, int y, const std::string &text) = 0;
+    virtual void pollEvents() = 0;
+    virtual bool isOpen() const = 0;
+    virtual const std::string &getName() const = 0;
 };
 
 }  // namespace Arcade

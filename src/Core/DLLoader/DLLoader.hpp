@@ -8,5 +8,21 @@
 
 #ifndef SRC_CORE_DLLOADER_DLLOADER_HPP_
     #define SRC_CORE_DLLOADER_DLLOADER_HPP_
+    #include <dlfcn.h>
+    #include <iostream>
+    #include <string>
+
+    template <typename T>
+    class DLLoader {
+     private:
+        void* _handle;
+        std::string _libPath;
+
+     public:
+        explicit DLLoader(const std::string& libPath) : _handle(nullptr),
+            _libPath(libPath) {}
+        ~DLLoader();
+        T* getInstance(const std::string& entryPointName = "entryPoint");
+    };
 
 #endif  // SRC_CORE_DLLOADER_DLLOADER_HPP_
