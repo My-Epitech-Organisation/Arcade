@@ -31,18 +31,18 @@ namespace Arcade {
  * rendering game entities, and retrieving the module's name.
  */
 class IDisplayModule {
-    public:
-        virtual ~IDisplayModule() = default;
-        virtual void init(float width, float height) = 0;
-        virtual void stop() = 0;
-        virtual void clearScreen() = 0;
-        virtual void refreshScreen() = 0;
-        virtual void drawEntity(int x, int y, char symbol) = 0;
-        virtual void drawTexture(int x, int y, const std::string &textureId) = 0;
-        virtual void drawText(int x, int y, const std::string &text) = 0;
-        virtual void pollEvents() = 0;
-        virtual bool isOpen() const = 0;
-        virtual const std::string &getName() const = 0;
+ public:
+    virtual ~IDisplayModule() = default;
+    virtual void init(float width, float height) = 0;
+    virtual void stop() = 0;
+    virtual void clearScreen() = 0;
+    virtual void refreshScreen() = 0;
+    virtual void drawEntity(int x, int y, char symbol) = 0;
+    virtual void drawTexture(int x, int y, const std::string &textureId) = 0;
+    virtual void drawText(int x, int y, const std::string &text) = 0;
+    virtual void pollEvents() = 0;
+    virtual bool isOpen() const = 0;
+    virtual const std::string &getName() const = 0;
 };
 
 }  // namespace Arcade

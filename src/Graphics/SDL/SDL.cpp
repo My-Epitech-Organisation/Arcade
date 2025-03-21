@@ -12,6 +12,7 @@
 #include <memory>
 #include <utility>
 #include <string>
+#include <iostream>
 
 SDL::~SDL() {
     _renderer.reset();
@@ -67,9 +68,7 @@ void SDL::refreshScreen() {
     SDL_RenderPresent(_renderer.get());
 }
 
-void SDL::drawEntity(int x, int y, char symbol) {
-    return;
-}
+void SDL::drawEntity(int x, int y, char symbol) {}
 
 void SDL::drawTexture(int x, int y, const std::string &texturePath) {
     std::unique_ptr<SDL_Surface, decltype(&SDL_FreeSurface)> tempSurface(
@@ -79,19 +78,16 @@ void SDL::drawTexture(int x, int y, const std::string &texturePath) {
             "! SDL_image Error: " +std::string(IMG_GetError()));
     }
 
-    SDL_Texture* newTexture = SDL_CreateTextureFromSurface(_renderer.get(),
-        tempSurface.get());
-    if (!newTexture) {
-        throw std::runtime_error("Unable to create texture from" + texturePath +
-            "! SDL Error: " + std::string(SDL_GetError()));
+    std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)> texturePtr(
+        SDL_CreateTextureFromSurface(_renderer.get(), tempSurface.get()),
+        SDL_DestroyTexture);
+    if (!texturePtr) {
+        throw std::runtime_error("Unable to create texture from "
+            + texturePath + "! SDL Error: " + std::string(SDL_GetError()));
     }
 
     int w, h;
-    SDL_QueryTexture(newTexture, nullptr, nullptr, &w, &h);
-
-    auto texturePtr = std::unique_ptr<SDL_Texture,
-        decltype(&SDL_DestroyTexture)>( newTexture,
-        SDL_DestroyTexture);
+    SDL_QueryTexture(texturePtr.get(), nullptr, nullptr, &w, &h);
 
     SDL_Rect destRect;
     destRect.x = (_windowWidth - w) / 2;
@@ -103,11 +99,11 @@ void SDL::drawTexture(int x, int y, const std::string &texturePath) {
 }
 
 void SDL::drawText(int x, int y, const std::string &text) {
-    auto _font = std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)>(
+    auto font = std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)>(
         TTF_OpenFont("assets/fonts/arial.ttf", 24),
         TTF_CloseFont);
 
-    if (!_font) {
+    if (!font) {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
         return;
     }
@@ -115,16 +111,20 @@ void SDL::drawText(int x, int y, const std::string &text) {
     SDL_Color textColor = {255, 255, 255, 255};
 
     std::unique_ptr<SDL_Surface, decltype(&SDL_FreeSurface)> textSurface(
-        TTF_RenderText_Solid(_font.get(), text.c_str(), textColor),
+        TTF_RenderText_Solid(font.get(), text.c_str(), textColor),
         SDL_FreeSurface);
     if (!textSurface) {
-        std::cerr << "Unable to render text surface: " << TTF_GetError() << std::endl;
+        std::cerr << "Unable to render text surface: " <<
+            TTF_GetError() << std::endl;
         return;
     }
 
-    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(_renderer.get(), textSurface.get());
+    std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)> textTexture(
+        SDL_CreateTextureFromSurface(_renderer.get(), textSurface.get()),
+        SDL_DestroyTexture);
     if (!textTexture) {
-        std::cerr << "Unable to create texture from rendered text: " << SDL_GetError() << std::endl;
+        std::cerr << "Unable to create texture from rendered text: "
+            << SDL_GetError() << std::endl;
         return;
     }
 
@@ -132,8 +132,7 @@ void SDL::drawText(int x, int y, const std::string &text) {
     int textHeight = textSurface->h;
 
     SDL_Rect renderRect = {x, y, textWidth, textHeight};
-    SDL_RenderCopy(_renderer.get(), textTexture, nullptr, &renderRect);
-    SDL_DestroyTexture(textTexture);
+    SDL_RenderCopy(_renderer.get(), textTexture.get(), nullptr, &renderRect);
 }
 
 void SDL::pollEvents() {

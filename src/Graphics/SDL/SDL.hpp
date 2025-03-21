@@ -21,8 +21,6 @@
         std::string _name;
         std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> _window;
         std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)> _renderer;
-        std::vector<std::pair<std::unique_ptr<SDL_Texture,
-            decltype(&SDL_DestroyTexture)>, std::pair<int, int>>> _sprite;
         int _windowWidth = 0;
         int _windowHeight = 0;
         bool _running = true;
@@ -33,13 +31,13 @@
         ~SDL() override;
         void init(float width, float height) override;
         void stop() override;
-        void clearScreen();
-        void refreshScreen();
-        void drawEntity(int x, int y, char symbol);
-        void drawTexture(int x, int y, const std::string &textureId);
-        void drawText(int x, int y, const std::string &text);
-        void pollEvents();
-        bool isOpen() const;
+        void clearScreen() override;
+        void refreshScreen() override;
+        void drawEntity(int x, int y, char symbol) override;
+        void drawTexture(int x, int y, const std::string &textureId) override;
+        void drawText(int x, int y, const std::string &text) override;
+        void pollEvents() override;
+        bool isOpen() const override;
         const std::string& getName() const override { return _name;};
     };
 
