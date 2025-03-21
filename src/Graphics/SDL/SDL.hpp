@@ -9,6 +9,8 @@
 #ifndef SRC_GRAPHICS_SDL_SDL_HPP_
     #define SRC_GRAPHICS_SDL_SDL_HPP_
     #include <SDL2/SDL.h>
+    #include <SDL2/SDL_image.h>
+    #include <SDL2/SDL_ttf.h>
     #include <memory>
     #include <map>
     #include <utility>
