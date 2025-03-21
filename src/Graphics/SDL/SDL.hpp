@@ -24,12 +24,13 @@
         int _windowWidth = 0;
         int _windowHeight = 0;
         bool _running = true;
+
      public:
         SDL() : _name("SDL2"),
         _window(nullptr, SDL_DestroyWindow),
         _renderer(nullptr, SDL_DestroyRenderer) {}
         ~SDL() override;
-        void init(float width, float height) override;
+        void init(float width = 800.f, float height = 600.f) override;
         void stop() override;
         void clearScreen() override;
         void refreshScreen() override;
@@ -38,6 +39,23 @@
         void drawText(int x, int y, const std::string &text) override;
         void pollEvents() override;
         bool isOpen() const override;
+        void createWindow(int width, int height);
+        void createRenderer();
+        std::unique_ptr<SDL_Surface, decltype(&SDL_FreeSurface)>
+            loadSurface(const std::string &texturePath);
+        std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>
+            createTexture(SDL_Surface *surface,
+                const std::string &texturePath);
+        void renderTexture(SDL_Texture *texture);
+        std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)>
+            loadFont(int fontSize);
+        std::unique_ptr<SDL_Surface, decltype(&SDL_FreeSurface)>
+            createTextSurface(TTF_Font* font, const std::string& text,
+                SDL_Color color);
+        std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>
+            createTextTexture(SDL_Surface* surface);
+        void renderTextTexture(SDL_Texture* texture, int x, int y,
+            int width, int height);
         const std::string& getName() const override { return _name;};
     };
 
