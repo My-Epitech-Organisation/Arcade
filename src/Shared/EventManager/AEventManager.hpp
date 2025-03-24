@@ -15,11 +15,15 @@
  * including keyboard event states and mouse position tracking.
  */
 
-#pragma once
-
-#include <vector>
-#include <utility>
-#include "Interface/IEventManager.hpp"
+#ifndef SRC_SHARED_EVENTMANAGER_AEVENTMANAGER_HPP_
+    #define SRC_SHARED_EVENTMANAGER_AEVENTMANAGER_HPP_
+    #include <vector>
+    #include <string>
+    #include <utility>
+    #include <unordered_map>
+    #include "Interface/Core/IEventManager.hpp"
+    #include "Interface/Core/IEvent.hpp"
+    #include "Models/EventType.hpp"
 
 /**
  * @class AEventManager
@@ -44,34 +48,20 @@ class AEventManager : public Arcade::IEventManager {
     virtual ~AEventManager() = default;
 
     /**
-    * @brief Retrieves the state of a specific key event.
+    * @brief Subscribe to an event with a callback function.
     *
-    * @param key The key/event identifier.
-    * @return True if the key is currently active, false otherwise.
+    * @param eventType The type of the event to subscribe to.
+    * @param callback The function to call when the event occurs.
     */
-    bool getEventState(int key) override;
+    void subscribe(const Arcade::IEvent& eventType,
+      const Callback callback) override;
 
-    /**
-    * @brief Sets the state of a specific key event.
-    *
-    * @param key The key/event identifier.
-    * @param state The new state of the key (true = pressed, false = released).
-    */
-    void setEventState(int key, bool state) override;
-
-    /**
-    * @brief Retrieves the current X-coordinate of the mouse.
-    *
-    * @return The current X position of the mouse cursor.
-    */
-    std::size_t getMouseX() const override;
-
-    /**
-    * @brief Retrieves the current Y-coordinate of the mouse.
-    *
-    * @return The current Y position of the mouse cursor.
-    */
-    std::size_t getMouseY() const override;
+   /**
+   * @brief Publish an event to all subscribers.
+   *
+   * @param eventType The type of the event to publish.
+   */
+    void publish(const Arcade::IEvent& eventType) override;
 
     /**
     * @brief Polls for new events.
@@ -100,4 +90,8 @@ class AEventManager : public Arcade::IEventManager {
       /// Stores key event states as (key, state) pairs.
     std::size_t _mouseX;  /// The current X position of the mouse.
     std::size_t _mouseY;  /// The current Y position of the mouse.
+    std::unordered_map<Arcade::EventType, std::vector<Callback>> _subscribers;
+         /// Maps event names to subscriber callback functions.
 };
+
+#endif  // SRC_SHARED_EVENTMANAGER_AEVENTMANAGER_HPP_

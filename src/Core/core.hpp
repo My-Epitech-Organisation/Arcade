@@ -10,8 +10,8 @@
     #define SRC_CORE_CORE_HPP_
     #include <memory>
     #include <string>
-    #include "../Shared/Interface/IGameModule.hpp"
-    #include "../Shared/Interface/IDisplayModule.hpp"
+    #include "Interface/Game/IGameModule.hpp"
+    #include "Interface/Display/IDisplayModule.hpp"
 
 namespace Arcade {
 class Core {

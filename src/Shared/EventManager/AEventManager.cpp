@@ -15,20 +15,15 @@ AEventManager::AEventManager() {
     }
 }
 
-bool AEventManager::getEventState(int key) {
-    return _keyEvents[key].second;
+void AEventManager::subscribe(const Arcade::IEvent& eventType,
+    const Callback callback) {
+    _subscribers[eventType.getType()].push_back(callback);
 }
 
-void AEventManager::setEventState(int key, bool state) {
-    _keyEvents[key].second = state;
-}
-
-std::size_t AEventManager::getMouseX() const {
-    return _mouseX;
-}
-
-std::size_t AEventManager::getMouseY() const {
-    return _mouseY;
+void AEventManager::publish(const Arcade::IEvent& eventType) {
+    for (auto& callback : _subscribers[eventType.getType()]) {
+        callback();
+    }
 }
 
 void AEventManager::setMouseX(std::size_t x) {

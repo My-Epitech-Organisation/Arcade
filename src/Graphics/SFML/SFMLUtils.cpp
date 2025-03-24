@@ -44,3 +44,7 @@ sf::Texture* SFML::loadTexture(const std::string& texturePath) {
     }
     return _textures[texturePath].get();
 }
+
+const std::string& SFML::getName() const {
+    return _name;
+}

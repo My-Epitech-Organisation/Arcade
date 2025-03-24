@@ -16,7 +16,7 @@
     #include <utility>
     #include <string>
     #include <vector>
-    #include "../../Shared/Interface/IDisplayModule.hpp"
+    #include "Interface/Display/IDisplayModule.hpp"
 
     class SDL : public Arcade::IDisplayModule {
      private:
@@ -58,7 +58,7 @@
         void drawText(int x, int y, const std::string &text) override;
         void pollEvents() override;
         bool isOpen() const override;
-        const std::string& getName() const override { return _name;};
+        const std::string& getName() const override;
     };
 
 #endif  // SRC_GRAPHICS_SDL_SDL_HPP_

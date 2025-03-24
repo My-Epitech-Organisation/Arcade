@@ -123,3 +123,7 @@ void SDL::renderTextTexture(SDL_Texture* texture, int x, int y,
     SDL_Rect renderRect = {x, y, width, height};
     SDL_RenderCopy(_renderer.get(), texture, nullptr, &renderRect);
 }
+
+const std::string& SDL::getName() const {
+    return _name;
+}
