@@ -154,7 +154,7 @@ bool GTK::isOpen() const {
     return _running;
 }
 
-const std::string& getName() const override {
+const std::string& GTK::getName() const override {
     return _name;
 }
 
