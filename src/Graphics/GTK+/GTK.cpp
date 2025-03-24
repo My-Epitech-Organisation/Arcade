@@ -154,6 +154,10 @@ bool GTK::isOpen() const {
     return _running;
 }
 
+const std::string& getName() const override {
+    return _name;
+}
+
 extern "C" {
     __attribute__((constructor))
     const char* init_gtk(void) {

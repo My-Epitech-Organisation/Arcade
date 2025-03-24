@@ -64,7 +64,7 @@
         void drawText(int x, int y, const std::string &text) override;
         void pollEvents() override;
         bool isOpen() const override;
-        const std::string& getName() const override { return _name; }
+        const std::string& getName() const override;
 
         static void on_draw(GtkDrawingArea *area, cairo_t *cr,
                            int width, int height, gpointer user_data);
