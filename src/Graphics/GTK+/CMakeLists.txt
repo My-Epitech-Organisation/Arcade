@@ -3,7 +3,7 @@ pkg_check_modules(GTK4 REQUIRED gtk4)
 
 add_library(arcade_gtk SHARED GTK.cpp GTKUtils.cpp)
 
-set_target_properties(arcade_gtk PROPERTIES PREFIX "" OUTPUT_NAME "arcade_gtk")
+set_target_properties(arcade_gtk PROPERTIES PREFIX "" OUTPUT_NAME "arcade_gtk+")
 target_include_directories(arcade_gtk PUBLIC ${GTK4_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 if(ENABLE_COVERAGE)
