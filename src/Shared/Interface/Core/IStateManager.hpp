@@ -8,13 +8,14 @@
 
 #ifndef SRC_SHARED_INTERFACE_CORE_ISTATEMANAGER_HPP_
     #define SRC_SHARED_INTERFACE_CORE_ISTATEMANAGER_HPP_
+    #include <memory>
     #include "Core/IGameState.hpp"
 
 namespace Arcade {
 class IStateManager {
  public:
     virtual ~IStateManager() = default;
-    virtual void changeState(IGameState* newState) = 0;
+    virtual void changeState(std::shared_ptr<IGameState> newState) = 0;
 };
 }  // namespace Arcade
 #endif  // SRC_SHARED_INTERFACE_CORE_ISTATEMANAGER_HPP_

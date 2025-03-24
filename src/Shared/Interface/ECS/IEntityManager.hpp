@@ -10,6 +10,7 @@
     #define SRC_SHARED_INTERFACE_ECS_IENTITYMANAGER_HPP_
     #include <vector>
     #include "Models/EntityType.hpp"
+
 namespace Arcade {
 class IEntityManager {
  public:
