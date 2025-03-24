@@ -6,17 +6,17 @@
 ** Position Component header
 */
 
-#ifndef SRC_ECS_COMPONENTS_POSITIONCOMPONENT_HPP_
-    #define SRC_ECS_COMPONENTS_POSITIONCOMPONENT_HPP_
+#ifndef SRC_ECS_COMPONENTS_POSITION_POSITIONCOMPONENT_HPP_
+    #define SRC_ECS_COMPONENTS_POSITION_POSITIONCOMPONENT_HPP_
     #include <string>
-    #include "Shared/Interface/IComponent.hpp"
+    #include "Shared/Interface/ECS/IComponent.hpp"
     #include "Shared/Models/ComponentType.hpp"
 
-class PositionComponent : public IComponent {
+class PositionComponent : public Arcade::IComponent {
  public:
     PositionComponent(float x, float y) : x(x), y(y) {}
     ComponentType getType() const override;
     float x, y;
 };
 
-#endif  // SRC_ECS_COMPONENTS_POSITIONCOMPONENT_HPP_
+#endif  // SRC_ECS_COMPONENTS_POSITION_POSITIONCOMPONENT_HPP_

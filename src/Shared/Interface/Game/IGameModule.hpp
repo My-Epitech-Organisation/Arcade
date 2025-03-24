@@ -16,7 +16,7 @@
 #ifndef SRC_SHARED_INTERFACE_GAME_IGAMEMODULE_HPP_
     #define SRC_SHARED_INTERFACE_GAME_IGAMEMODULE_HPP_
     #include <vector>
-    #include "ECS/IEntity.hpp"
+    #include "Models/EntityType.hpp"
 
 namespace Arcade {
 /**
@@ -33,7 +33,7 @@ class IGameModule {
     virtual void init() = 0;
     virtual void update(float deltaTime) = 0;
     virtual void stop() = 0;
-    virtual std::vector<IEntity*> getEntities() const = 0;
+    virtual std::vector<Entity> getEntities() const = 0;
     virtual bool isGameOver() const = 0;
     virtual bool hasWon() const = 0;
 };

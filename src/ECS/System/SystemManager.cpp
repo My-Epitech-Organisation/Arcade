@@ -1,0 +1,24 @@
+// Copyright 2025 <Epitech>
+/*
+** EPITECH PROJECT, 2025
+** B-OOP-400 Arcade
+** File description:
+** System Manager
+*/
+#include "ECS/System/SystemManager.hpp"
+#include <algorithm>
+
+void SystemManager::registerSystem(Arcade::ISystem* system) {
+    _systems.push_back(system);
+}
+
+void SystemManager::removeSystem(Arcade::ISystem* system) {
+    _systems.erase(std::remove(_systems.begin(),
+        _systems.end(), system), _systems.end());
+}
+
+void SystemManager::updateSystems() {
+    for (Arcade::ISystem* system : _systems) {
+        system->update();
+    }
+}

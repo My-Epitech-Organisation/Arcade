@@ -14,10 +14,11 @@
  * and tracking active entities.
  */
 
-#ifndef SRC_SHARED_MODELS_ENTITYCOMPONENTSYSTEM_ENTITYMANAGER_HPP_
-    #define SRC_SHARED_MODELS_ENTITYCOMPONENTSYSTEM_ENTITYMANAGER_HPP_
+#ifndef SRC_ECS_ENTITY_ENTITYMANAGER_HPP_
+    #define SRC_ECS_ENTITY_ENTITYMANAGER_HPP_
     #include <iostream>
     #include <vector>
+    #include "Shared/Interface/ECS/IEntityManager.hpp"
 
 using Entity = std::size_t;  /// Alias for entity identifiers.
 /**
@@ -27,7 +28,7 @@ using Entity = std::size_t;  /// Alias for entity identifiers.
  * The EntityManager class handles the creation and deletion of entities,
  * ensuring each entity has a unique identifier and maintaining a list of active entities.
  */
-class EntityManager {
+class EntityManager : public Arcade::IEntityManager {
  public:
     /**
      * @brief Creates a new entity.
@@ -59,4 +60,4 @@ class EntityManager {
     std::vector<Entity> _activeEntities;  /// Stores currently active entities.
 };
 
-#endif  // SRC_SHARED_MODELS_ENTITYCOMPONENTSYSTEM_ENTITYMANAGER_HPP_
+#endif  // SRC_ECS_ENTITY_ENTITYMANAGER_HPP_

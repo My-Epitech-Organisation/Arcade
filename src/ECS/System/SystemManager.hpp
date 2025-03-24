@@ -13,10 +13,10 @@
  * implement the ISystem interface.
  */
 
-#ifndef SRC_SHARED_MODELS_SYSTEMMANAGER_SYSTEMMANAGER_HPP_
-    #define SRC_SHARED_MODELS_SYSTEMMANAGER_SYSTEMMANAGER_HPP_
+#ifndef SRC_ECS_SYSTEM_SYSTEMMANAGER_HPP_
+    #define SRC_ECS_SYSTEM_SYSTEMMANAGER_HPP_
     #include <vector>
-    #include "Interface/ISystem.hpp"
+    #include "Shared/Interface/ECS/ISystemManager.hpp"
 
 /**
  * @class SystemManager
@@ -26,7 +26,7 @@
  * that implement the Arcade::ISystem interface. It provides methods to add
  * systems and update them collectively.
  */
-class SystemManager : public Arcade::ISystem {
+class SystemManager : public Arcade::ISystemManager {
  public:
     /**
      * @brief Adds a system to the manager.
@@ -35,7 +35,9 @@ class SystemManager : public Arcade::ISystem {
      *
      * @param system A pointer to an ISystem instance to be managed.
      */
-    void addSystem(Arcade::ISystem* system);
+    void registerSystem(Arcade::ISystem* system);
+
+    void removeSystem(Arcade::ISystem* system);
     /**
      * @brief Updates all registered systems.
      *
@@ -47,4 +49,4 @@ class SystemManager : public Arcade::ISystem {
     std::vector<Arcade::ISystem*> _systems;  ///< List of managed systems.
 };
 
-#endif  // SRC_SHARED_MODELS_SYSTEMMANAGER_SYSTEMMANAGER_HPP_
+#endif  // SRC_ECS_SYSTEM_SYSTEMMANAGER_HPP_

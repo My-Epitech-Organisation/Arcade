@@ -16,10 +16,11 @@
  * and retrieval within an ECS architecture.
  */
 
-#ifndef SRC_SHARED_MODELS_ENTITYCOMPONENTSYSTEM_COMPONENTMANAGER_HPP_
-    #define SRC_SHARED_MODELS_ENTITYCOMPONENTSYSTEM_COMPONENTMANAGER_HPP_
+#ifndef SRC_ECS_COMPONENTS_COMPONENTMANAGER_HPP_
+    #define SRC_ECS_COMPONENTS_COMPONENTMANAGER_HPP_
     #include <unordered_map>
-    #include "Models/EntityComponentSystem/EntityManager.hpp"
+    #include "Shared/Models/EntityType.hpp"
+    #include "Shared/Interface/ECS/IComponentManager.hpp"
 
 /**
  * @class ComponentManager
@@ -32,9 +33,9 @@
  * @tparam T The type of component managed by this class.
  */
 template <typename T>
-class ComponentManager {
+class ComponentManager : public Arcade::IComponentManager {
  private:
-    std::unordered_map<Entity, T> components;
+    std::unordered_map<Arcade::Entity, T> components;
         /// Maps entities to their corresponding components.
 
  public:
@@ -46,7 +47,7 @@ class ComponentManager {
      * @param entity The entity to which the component is assigned.
      * @param component The component to be added.
      */
-    void addComponent(Entity entity, T component);
+    void registerComponent(Arcade::Entity entity, T component) override;
 
     /**
      * @brief Removes a component from an entity.
@@ -55,7 +56,7 @@ class ComponentManager {
      *
      * @param entity The entity whose component should be removed.
      */
-    void removeComponent(Entity entity);
+    void removeComponent(Arcade::Entity entity) override;
 
     /**
      * @brief Retrieves a pointer to an entity's component.
@@ -66,7 +67,7 @@ class ComponentManager {
      * @param entity The entity whose component is being retrieved.
      * @return A pointer to the component, or nullptr if not found.
      */
-    T* getComponent(Entity entity);
+    T* getComponent(Arcade::Entity entity) override;
 
     /**
      * @brief Retrieves all components.
@@ -76,8 +77,8 @@ class ComponentManager {
      *
      * @return A reference to the unordered map of entity-component pairs.
      */
-    std::unordered_map<Entity, T>& getAll();
+    std::unordered_map<Arcade::Entity, T>& getAll();
 };
 
-#endif  // SRC_SHARED_MODELS_ENTITYCOMPONENTSYSTEM_COMPONENTMANAGER_HPP_
+#endif  // SRC_ECS_COMPONENTS_COMPONENTMANAGER_HPP_
 

@@ -5,7 +5,7 @@
 ** File description:
 ** Position Component
 */
-#include "Components/PositionComponent.hpp"
+#include "Position/PositionComponent.hpp"
 #include "Shared/Models/ComponentType.hpp"
 
 ComponentType PositionComponent::getType() const {

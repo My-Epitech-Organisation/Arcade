@@ -17,8 +17,8 @@
     #define SRC_SHARED_INTERFACE_DISPLAY_IDISPLAYMODULE_HPP_
     #include <string>
     #include <vector>
-    #include "Shared/Models/EntityComponentSystem/EntityManager.hpp"
-    #include "Interface/IEventManager.hpp"
+    #include "Interface/ECS/IEntityManager.hpp"
+    #include "Interface/Core/IEventManager.hpp"
 
 namespace Arcade {
 

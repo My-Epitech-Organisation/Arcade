@@ -18,6 +18,7 @@
     #define SRC_SHARED_INTERFACE_CORE_IEVENTMANAGER_HPP_
     #include <functional>
     #include <string>
+    #include "Interface/Core/IEvent.hpp"
 namespace Arcade {
 
 /**
@@ -32,8 +33,9 @@ class IEventManager {
  public:
     virtual ~IEventManager() = default;
     using Callback = std::function<void()>;
-    virtual void subscribe(const std::string& eventName, Callback callback) = 0;
-    virtual void publish(const std::string& eventName) = 0;
+    virtual void subscribe(const IEvent& eventType,
+        const Callback callback) = 0;
+    virtual void publish(const IEvent& eventType) = 0;
 };
 }  // namespace Arcade
 

@@ -54,7 +54,7 @@ class ISystem {
      * to handle system-specific logic that needs to be executed
      * every update cycle.
      */
-    virtual void update(float deltaTime) = 0;
+    virtual void update() = 0;
 };
 }  // namespace Arcade
 

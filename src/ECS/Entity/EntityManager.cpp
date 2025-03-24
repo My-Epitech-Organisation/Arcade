@@ -8,7 +8,7 @@
 
 #include <algorithm>
 #include <vector>
-#include "Models/EntityComponentSystem/EntityManager.hpp"
+#include "ECS/Entity/EntityManager.hpp"
 
 Entity EntityManager::createEntity() {
     return _nextEntityId++;
