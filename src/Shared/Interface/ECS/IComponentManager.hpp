@@ -9,17 +9,19 @@
 #ifndef SRC_SHARED_INTERFACE_ECS_ICOMPONENTMANAGER_HPP_
     #define SRC_SHARED_INTERFACE_ECS_ICOMPONENTMANAGER_HPP_
     #include <string>
+    #include <memory>
     #include "Interface/ECS/IComponent.hpp"
-    #include "Models/EntityType.hpp"
+    #include "Interface/ECS/IEntity.hpp"
 
 namespace Arcade {
 class IComponentManager {
  public:
     virtual ~IComponentManager() = default;
-    virtual void registerComponent(Entity entity, IComponent* component) = 0;
-    virtual IComponent* getComponent(Entity entity,
+    virtual void registerComponent(std::shared_ptr<IEntity> entity,
+        std::shared_ptr<IComponent> component) = 0;
+    virtual IComponent* getComponent(std::shared_ptr<IEntity> entity,
         const std::string& componentName) = 0;
-    virtual void removeComponent(Entity entity,
+    virtual void unregisterComponent(std::shared_ptr<IEntity> entity,
         const std::string& componentName) = 0;
 };
 }  // namespace Arcade

@@ -18,6 +18,7 @@
     #define SRC_ECS_ENTITY_ENTITYMANAGER_HPP_
     #include <iostream>
     #include <vector>
+    #include "Shared/Interface/ECS/IEntity.hpp"
     #include "Shared/Interface/ECS/IEntityManager.hpp"
 
 using Entity = std::size_t;  /// Alias for entity identifiers.
