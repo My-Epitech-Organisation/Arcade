@@ -2,7 +2,7 @@ set(SRCCURSES ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(Curses REQUIRED)
 
 set(SRC
-    ${SRCCURSES}/nCurses.cpp
+    ${SRCCURSES}/NCurses.cpp
 )
 
 add_library(arcade_ncurses SHARED ${SRC})
