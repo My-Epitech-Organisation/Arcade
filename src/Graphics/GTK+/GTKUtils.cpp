@@ -14,8 +14,8 @@
 #include <iostream>
 #include "GTK+/GTK.hpp"
 
-void GTKModule::on_draw(GtkDrawingArea *area, cairo_t *cr, int width, int height,
-    gpointer user_data) {
+void GTKModule::on_draw(GtkDrawingArea *area, cairo_t *cr, int width,
+    int height, gpointer user_data) {
     //? These are raw pointer parameters from a C callback - unavoidable
     //? We immediately wrap them in smart pointers when entering C++ code
     //? Function signature must match what GTK expects (C function pointer)
@@ -59,7 +59,8 @@ void GTKModule::on_activate(GtkApplication *app, gpointer user_data) {
     //? We immediately wrap it in a non-owning smart pointer to
     //? prevent raw pointer usage in the rest of the code.
     auto self = GTK::nonOwningPtr(static_cast<GTKModule*>(user_data));
-    self->_window.createWindow(self->_app, self->_windowWidth, self->_windowHeight);
+    self->_window.createWindow(self->_app, self->_windowWidth,
+        self->_windowHeight);
     self->_renderer.createRenderer(self->_windowWidth, self->_windowHeight);
 
     if (!self->_fontManager.hasFonts())

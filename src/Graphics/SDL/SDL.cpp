@@ -22,7 +22,8 @@ void SDLModule::init(float x, float y) {
             + std::string(SDL_GetError()));
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
         SDL_Quit();
-        throw std::runtime_error("SDL_image could not initialize! SDL_image Error: "
+        throw std::runtime_error
+        ("SDL_image could not initialize! SDL_image Error: "
             + std::string(IMG_GetError()));
     }
     if (TTF_Init() == -1) {
@@ -66,11 +67,13 @@ void SDLModule::drawTexture(int x, int y, const std::string &texturePath) {
     if (!surface)
         return;
 
-    auto texture = _texture.createTexture(renderer.get(), surface.get(), texturePath);
+    auto texture = _texture.createTexture(renderer.get(),
+        surface.get(), texturePath);
     if (!texture)
         return;
 
-    _texture.renderTexture(renderer.get(), texture.get(), _windowWidth, _windowHeight);
+    _texture.renderTexture(renderer.get(), texture.get(),
+        _windowWidth, _windowHeight);
 }
 
 void SDLModule::drawText(int x, int y, const std::string &text) {
