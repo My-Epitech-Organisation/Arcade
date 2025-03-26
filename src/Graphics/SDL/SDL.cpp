@@ -44,7 +44,6 @@ void SDLModule::init(float x, float y) {
 }
 
 void SDLModule::stop() {
-    TTF_Quit();
     IMG_Quit();
     SDL_Quit();
 }
