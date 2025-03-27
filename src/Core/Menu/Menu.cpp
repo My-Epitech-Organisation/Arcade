@@ -38,9 +38,9 @@ const std::string &value, int y, Color color) {
 }
 
 void Menu::displayMainMenu(const std::vector<std::string> &graphicsLibs,
-                           const std::vector<std::string> &gameLibs,
-                           size_t selectedGraphics,
-                           size_t selectedGame) {
+const std::vector<std::string> &gameLibs,
+size_t selectedGraphics,
+size_t selectedGame) {
     int centerX = _window->getWidth() / 2;
     int height = _window->getHeight();
 
@@ -63,8 +63,8 @@ void Menu::displayMainMenu(const std::vector<std::string> &graphicsLibs,
 }
 
 void Menu::displaySelectionMenu(const std::string &title,
-                                const std::vector<std::string> &options,
-                                size_t selectedOption) {
+const std::vector<std::string> &options,
+size_t selectedOption) {
     int centerX = _window->getWidth() / 2;
 
     displayTitle(title);

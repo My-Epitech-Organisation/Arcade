@@ -9,12 +9,12 @@
 #ifndef SRC_CORE_GAMELOOP_GAMELOOP_HPP_
 #define SRC_CORE_GAMELOOP_GAMELOOP_HPP_
 
+#include <dirent.h>
+#include <sys/stat.h>
 #include <vector>
 #include <string>
 #include <memory>
 #include <map>
-#include <dirent.h>
-#include <sys/stat.h>
 #include <cstring>
 #include "Interface/Display/IDisplayModule.hpp"
 #include "Interface/Game/IGameModule.hpp"
