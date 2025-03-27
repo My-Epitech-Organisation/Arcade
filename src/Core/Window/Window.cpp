@@ -7,6 +7,8 @@
 */
 
 #include <utility>
+#include <memory>
+#include <string>
 #include <iostream>
 #include "Window/Window.hpp"
 #include "EventManager/KeyEvent/RawInputState.hpp"
@@ -14,13 +16,13 @@
 namespace Arcade {
 
 Window::Window(std::shared_ptr<IDisplayModule> displayModule,
-    std::shared_ptr<AEventManager> eventManager)
-    : _displayModule(std::move(displayModule)),
-    _eventManager(eventManager),
-    _width(800),
-    _height(600),
-    _title("Arcade"),
-    _isShuttingDown(false) {
+std::shared_ptr<AEventManager> eventManager)
+: _displayModule(std::move(displayModule)),
+_eventManager(eventManager),
+_width(800),
+_height(600),
+_title("Arcade"),
+_isShuttingDown(false) {
     if (_displayModule)
         _displayModule->init(_width, _height);
 }
@@ -31,9 +33,11 @@ Window::~Window() {
         try {
             _displayModule->stop();
         } catch (const std::exception& e) {
-            std::cerr << "Exception during display module cleanup: " << e.what() << std::endl;
+            std::cerr << "Exception during display module cleanup: "
+                << e.what() << std::endl;
         } catch (...) {
-            std::cerr << "Unknown exception during display module cleanup" << std::endl;
+            std::cerr << "Unknown exception during display module cleanup"
+                << std::endl;
         }
         _displayModule.reset();
     }
@@ -126,12 +130,14 @@ void Window::setDisplayModule(std::shared_ptr<IDisplayModule> displayModule) {
         _displayModule->init(_width, _height);
         std::cout << "Display module initialized successfully" << std::endl;
     } catch (const std::exception& e) {
-        std::cerr << "Exception during display module initialization: " << e.what() << std::endl;
+        std::cerr << "Exception during display module initialization: "
+            << e.what() << std::endl;
         _displayModule.reset();
         _isShuttingDown = true;
         return;
     } catch (...) {
-        std::cerr << "Unknown exception during display module initialization" << std::endl;
+        std::cerr << "Unknown exception during display module initialization"
+            << std::endl;
         _displayModule.reset();
         _isShuttingDown = true;
         return;
@@ -146,7 +152,8 @@ void Window::pollEvents() {
         if (_isShuttingDown) return;
         RawInputState state;
         for (int i = 0; i <= static_cast<int>(Arcade::Keys::Z); ++i) {
-            state.keyStates[static_cast<Arcade::Keys>(i)] = _displayModule->isKeyPressed(i);
+            state.keyStates[static_cast<Arcade::Keys>(i)]
+                = _displayModule->isKeyPressed(i);
         }
         for (int i = 0; i <= 2; ++i) {
             state.mouseButtons[static_cast<Arcade::MouseButton>(i)] =
@@ -159,10 +166,11 @@ void Window::pollEvents() {
             _eventManager->updateInputState(state);
         }
     } catch (const std::exception &e) {
-        std::cerr << "Exception during event polling: " << e.what() << std::endl;
+        std::cerr << "Exception during event polling: " << e.what()
+            << std::endl;
     } catch (...) {
         std::cerr << "Unknown exception during event polling" << std::endl;
     }
 }
 
-} // namespace Arcade
+}  // namespace Arcade

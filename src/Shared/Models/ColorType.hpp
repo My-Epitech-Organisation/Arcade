@@ -10,19 +10,19 @@
     #define SRC_SHARED_MODELS_COLORTYPE_HPP_
 
 namespace Arcade {
-    enum Color {
-        RED,
-        GREEN,
-        BLUE,
-        YELLOW,
-        MAGENTA,
-        ORANGE,
-        BROWN,
-        GREY,
-        CYAN,
-        WHITE,
-        BLACK
-    };
+enum Color {
+    RED,
+    GREEN,
+    BLUE,
+    YELLOW,
+    MAGENTA,
+    ORANGE,
+    BROWN,
+    GREY,
+    CYAN,
+    WHITE,
+    BLACK
+};
 }  // namespace Arcade
 
 #endif  // SRC_SHARED_MODELS_COLORTYPE_HPP_

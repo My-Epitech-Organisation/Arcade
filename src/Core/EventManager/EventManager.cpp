@@ -7,6 +7,7 @@
 */
 
 #include <iostream>
+#include <utility>
 #include "EventManager/EventManager.hpp"
 #include "Models/KeysType.hpp"
 #include "Interface/Display/IDisplayModule.hpp"
@@ -15,9 +16,8 @@
 
 namespace Arcade {
 
-// Add default constructor
 EventManager::EventManager()
-    : AEventManager(), _mouseX(0), _mouseY(0) {}
+: AEventManager(), _mouseX(0), _mouseY(0) {}
 
 void EventManager::updateInputState(const RawInputState& state) {
     for (const auto& [key, isPressed] : state.keyStates) {

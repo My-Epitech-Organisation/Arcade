@@ -6,6 +6,7 @@
 ** GameLoop Utils
 */
 
+#include <iostream>
 #include "GameLoop/GameLoop.hpp"
 #include "EventManager/KeyEvent/KeyEvent.hpp"
 #include "Models/EventType.hpp"
@@ -83,18 +84,7 @@ void GameLoop::subscribeMouseEvents() {
         auto [x, y] = _eventManager->getMousePosition();
         int centerX = _window->getWidth() / 2;
         int itemWidth = 200;
-        if (_state == MAIN_MENU) {
-            std::cout << "Mouse moved at position (" << x << "," << y << ")" << std::endl;
-            for (int i = 0; i < 4; i++) {  // 4 main menu items
-                std::cout << "Item position: " << centerX << "," << MENU_START_Y + i * MENU_ITEM_HEIGHT << std::endl;
-                if (x >= centerX - 100 && x <= centerX + 100 &&
-                    y >= MENU_START_Y + i * MENU_ITEM_HEIGHT &&
-                    y <= MENU_START_Y + (i + 1) * MENU_ITEM_HEIGHT) {
-                    std::cout << "Hovering over main menu item: " << i + 1 << std::endl;
-                }
-            }
-        } else if (_state == GAME_SELECTION && !_gameLibs.empty()) {
-            // Check if mouse is over any game in the list
+        if (_state == GAME_SELECTION && !_gameLibs.empty()) {
             for (size_t i = 0; i < _gameLibs.size(); i++) {
                 if (x >= centerX - 100 && x <= centerX + 100 &&
                     y >= MENU_START_Y + i * MENU_ITEM_HEIGHT &&
@@ -113,7 +103,8 @@ void GameLoop::subscribeMouseEvents() {
         }
     });
 
-    MouseEvent leftClickEvent(MouseButton::LEFT, EventType::MOUSE_BUTTON_PRESSED, 0, 0);
+    MouseEvent leftClickEvent(MouseButton::LEFT,
+            EventType::MOUSE_BUTTON_PRESSED, 0, 0);
     _eventManager->subscribe(leftClickEvent, [this]() {
         std::cout << "Left mouse button clicked" << std::endl;
         auto [x, y] = _eventManager->getMousePosition();
@@ -149,7 +140,8 @@ void GameLoop::subscribeMouseEvents() {
                     break;
                 }
             }
-            if (!clickedOnGame && y >= MENU_START_Y + _gameLibs.size() * MENU_ITEM_HEIGHT + 40) {
+            if (!clickedOnGame && y >= MENU_START_Y
+                    + _gameLibs.size() * MENU_ITEM_HEIGHT + 40) {
                 _state = MAIN_MENU;
             }
         } else if (_state == GRAPHICS_SELECTION) {
@@ -164,7 +156,8 @@ void GameLoop::subscribeMouseEvents() {
                     break;
                 }
             }
-            if (!clickedOnGraphics && y >= MENU_START_Y + _graphicsLibs.size() * MENU_ITEM_HEIGHT + 40) {
+            if (!clickedOnGraphics && y >= MENU_START_Y
+                    + _graphicsLibs.size() * MENU_ITEM_HEIGHT + 40) {
                 _state = MAIN_MENU;
             }
         } else if (_state == GAME_PLAYING) {

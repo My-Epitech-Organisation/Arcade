@@ -6,6 +6,9 @@
 ** Menu
 */
 
+#include <iostream>
+#include <vector>
+#include <string>
 #include "Menu/Menu.hpp"
 #include "Interface/Display/IDisplayModule.hpp"
 #include "Models/ColorType.hpp"
@@ -17,9 +20,9 @@ Menu::Menu(std::shared_ptr<Window> window) : _window(window) { }
 Menu::~Menu() { }
 
 void Menu::displayMainMenu(const std::vector<std::string> &graphicsLibs,
-                        const std::vector<std::string> &gameLibs,
-                        size_t selectedGraphics,
-                        size_t selectedGame) {
+const std::vector<std::string> &gameLibs,
+size_t selectedGraphics,
+size_t selectedGame) {
     int centerX = _window->getWidth() / 2;
     int width = _window->getWidth();
     int height = _window->getHeight();
@@ -41,7 +44,7 @@ void Menu::displayMainMenu(const std::vector<std::string> &graphicsLibs,
 }
 
 void Menu::displayGameSelection(const std::vector<std::string> &gameLibs,
-    size_t selectedGame) {
+size_t selectedGame) {
     int centerX = _window->getWidth() / 2;
     _window->drawText("SELECT GAME", centerX - 30, TITLE_Y, Color::WHITE);
     int yPos = MENU_START_Y;
@@ -55,7 +58,7 @@ void Menu::displayGameSelection(const std::vector<std::string> &gameLibs,
 }
 
 void Menu::displayGraphicsSelection(
-    const std::vector<std::string> &graphicsLibs, size_t selectedGraphics) {
+const std::vector<std::string> &graphicsLibs, size_t selectedGraphics) {
     int centerX = _window->getWidth() / 2;
     _window->drawText("SELECT GRAPHICS LIBRARY",
         centerX - 60, TITLE_Y, Color::WHITE);

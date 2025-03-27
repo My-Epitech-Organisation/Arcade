@@ -14,7 +14,6 @@
     #include "Models/MouseButtonType.hpp"
 
 namespace Arcade {
-
 class SFMLKeyMap {
  private:
     static const std::unordered_map<Keys, sf::Keyboard::Key> _keyMap;
@@ -73,7 +72,7 @@ const std::unordered_map<Keys, sf::Keyboard::Key> SFMLKeyMap::_keyMap = {
 };
 
 const std::unordered_map<MouseButton, sf::Mouse::Button>
-    SFMLKeyMap::_mouseButtonMap = {
+SFMLKeyMap::_mouseButtonMap = {
         {MouseButton::LEFT, sf::Mouse::Button::Left},
         {MouseButton::MIDDLE, sf::Mouse::Button::Middle},
         {MouseButton::RIGHT, sf::Mouse::Button::Right},

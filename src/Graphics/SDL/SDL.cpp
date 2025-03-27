@@ -104,19 +104,22 @@ void SDL::drawText(const std::string &text, int x, int y, Arcade::Color color) {
     SDL_Color textColor = SDLColor::convertColor(color);
     auto textSurface = createTextSurface(font.get(), text, textColor);
     if (!textSurface) {
-        std::cerr << "Failed to create text surface: " << TTF_GetError() << std::endl;
+        std::cerr << "Failed to create text surface: "
+            << TTF_GetError() << std::endl;
         return;
     }
     auto textTexture = createTextTexture(textSurface.get());
     if (!textTexture) {
-        std::cerr << "Failed to create text texture: " << SDL_GetError() << std::endl;
+        std::cerr << "Failed to create text texture: "
+            << SDL_GetError() << std::endl;
         return;
     }
     SDL_SetTextureBlendMode(textTexture.get(), SDL_BLENDMODE_BLEND);
     int textWidth = textSurface->w;
     int textHeight = textSurface->h;
     SDL_Rect destRect = {x, y, textWidth, textHeight};
-    if (SDL_RenderCopy(_renderer.get(), textTexture.get(), NULL, &destRect) != 0) {
+    if (SDL_RenderCopy(_renderer.get(), textTexture.get(),
+        NULL, &destRect) != 0) {
         std::cerr << "Failed to render text: " << SDL_GetError() << std::endl;
     }
 }

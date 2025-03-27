@@ -50,7 +50,8 @@ class AEventManager : public Arcade::IEventManager {
     };
 
     struct MousePairHash {
-      std::size_t operator()(const std::pair<Arcade::EventType, Arcade::MouseButton>& p)
+      std::size_t operator()(const std::pair<Arcade::EventType,
+         Arcade::MouseButton>& p)
       const noexcept {
          return std::hash<int>()(static_cast<int>(p.first)) ^
             std::hash<int>()(static_cast<int>(p.second));
@@ -97,7 +98,7 @@ class AEventManager : public Arcade::IEventManager {
     void publishMouseEvent(const Arcade::MouseEvent& eventType);
     void subscribe(const Arcade::MouseEvent& eventType,
          const Callback callback);
-   virtual std::pair<std::size_t, std::size_t>
+    virtual std::pair<std::size_t, std::size_t>
       getMousePosition() const = 0;
 
  protected:

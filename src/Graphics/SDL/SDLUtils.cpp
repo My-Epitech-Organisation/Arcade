@@ -120,14 +120,16 @@ std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>
     return textTexture;
 }
 
-void SDL::renderTextTexture(SDL_Texture* texture, int x, int y, int width, int height) {
+void SDL::renderTextTexture(SDL_Texture* texture, int x,
+    int y, int width, int height) {
     if (!texture) {
         std::cerr << "Invalid texture for rendering" << std::endl;
         return;
     }
     SDL_Rect destRect = {x, y, width, height};
     if (SDL_RenderCopy(_renderer.get(), texture, NULL, &destRect) != 0) {
-        std::cerr << "Failed to render texture: " << SDL_GetError() << std::endl;
+        std::cerr << "Failed to render texture: "
+            << SDL_GetError() << std::endl;
     }
 }
 
@@ -154,7 +156,8 @@ bool SDL::isKeyPressed(int keyCode) {
 bool SDL::isMouseButtonPressed(int button) const {
     auto arcadeButton = static_cast<Arcade::MouseButton>(button);
     Uint8 sdlButton = Arcade::SDLKeyMap::getSDLButton(arcadeButton);
-    bool isPressed = SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(sdlButton);
+    bool isPressed = SDL_GetMouseState(nullptr, nullptr)
+        & SDL_BUTTON(sdlButton);
     return isPressed;
 }
 

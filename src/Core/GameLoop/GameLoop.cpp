@@ -7,22 +7,24 @@
 */
 
 #include "GameLoop/GameLoop.hpp"
+#include <dirent.h>
+#include <sys/stat.h>
+#include <cstring>
 #include <iostream>
-#include <filesystem>
 #include <algorithm>
 #include <utility>
 #include <memory>
+#include <string>
 #include "EventManager/EventManager.hpp"
 #include "Interface/IArcadeModule.hpp"
 
 namespace Arcade {
-
 GameLoop::GameLoop(const std::string& initialLib)
-    : _state(MAIN_MENU),
-      _selectedGraphics(0),
-      _selectedGame(0),
-      _graphicsLoader(initialLib),
-      _gameLoader(".") {
+: _state(MAIN_MENU),
+_selectedGraphics(0),
+_selectedGame(0),
+_graphicsLoader(initialLib),
+_gameLoader(".") {
     _eventManager = std::make_shared<EventManager>();
     subscribeEvents();
     subscribeNavEvents();
@@ -84,31 +86,38 @@ void GameLoop::run() {
         _window->refreshScreen();
     }
     _currentGame.reset();  // Release current game first
-    
     if (_window) {
-        // Explicitly reset display module to ensure it's released before library handles
         _window->setDisplayModule(nullptr);
         _window.reset();  // Now safe to reset window
     }
-    
-    // Now close library handles after all objects from them are destroyed
     for (auto& [path, handle] : _loadedLibHandles) {
         if (handle) {
             dlclose(handle);
         }
     }
 }
-
 void GameLoop::loadAvailableLibraries() {
     _graphicsLibs.clear();
     _gameLibs.clear();
 
-    for (const auto& entry : std::filesystem::directory_iterator(_libDir)) {
-        const std::string path = entry.path().string();
-        if (entry.path().extension() != ".so" ||
-            entry.path().filename().string().find("arcade_")
-             == std::string::npos)
+    DIR* dir = opendir(_libDir.c_str());
+    if (!dir) {
+        std::cerr << "Error opening directory: " << _libDir << std::endl;
+        return;
+    }
+
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        std::string filename(entry->d_name);
+        if (filename == "." || filename == "..")
             continue;
+        size_t dot_pos = filename.rfind('.');
+        if (dot_pos == std::string::npos)
+            continue;
+        std::string extension = filename.substr(dot_pos);
+        if (extension != ".so" || filename.find("arcade_") == std::string::npos)
+            continue;
+        std::string path = _libDir + "/" + filename;
         void* handle = dlopen(path.c_str(), RTLD_LAZY);
         if (!handle) {
             std::cerr << "Error loading " << path
@@ -142,8 +151,8 @@ void GameLoop::loadAvailableLibraries() {
         delete instance;
         _loadedLibHandles[path] = handle;
     }
+    closedir(dir);
 }
-
 void GameLoop::loadAndStartGame() {
     try {
         _gameLoader.setLibPath(_gameLibs[_selectedGame]);
@@ -163,7 +172,8 @@ void GameLoop::loadGraphicsLibraries() {
         std::cout << "Loading graphics library: " << newLibPath << std::endl;
         _graphicsLoader.setLibPath(newLibPath);
         auto newGraphics = _graphicsLoader.getInstanceUPtr("entryPoint");
-        auto sharedPtr = std::shared_ptr<IDisplayModule>(std::move(newGraphics));
+        auto sharedPtr =
+            std::shared_ptr<IDisplayModule>(std::move(newGraphics));
         if (sharedPtr) {
             _window->setDisplayModule(sharedPtr);
             _state = MAIN_MENU;
