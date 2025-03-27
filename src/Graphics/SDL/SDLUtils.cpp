@@ -11,6 +11,8 @@
 #include <string>
 #include <iostream>
 #include "SDL/SDL.hpp"
+#include "SDL/SDLKeys.hpp"
+#include "Models/KeysType.hpp"
 
 
 void SDL::createWindow(int width, int height) {
@@ -21,8 +23,9 @@ void SDL::createWindow(int width, int height) {
             SDL_WINDOWPOS_UNDEFINED,
             width,
             height,
-            SDL_WINDOW_SHOWN),
+            SDL_WINDOW_RESIZABLE),
         SDL_DestroyWindow);
+    SDL_ShowWindow(_window.get());
     if (!_window) {
         SDL_Quit();
         throw std::runtime_error("Window could not be created! SDL Error: "
@@ -82,7 +85,6 @@ std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)>
     std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)> font(
         TTF_OpenFont("assets/fonts/arial.ttf", fontSize),
         TTF_CloseFont);
-
     if (!font) {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
     }
@@ -118,12 +120,50 @@ std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>
     return textTexture;
 }
 
-void SDL::renderTextTexture(SDL_Texture* texture, int x, int y,
-    int width, int height) {
-    SDL_Rect renderRect = {x, y, width, height};
-    SDL_RenderCopy(_renderer.get(), texture, nullptr, &renderRect);
+void SDL::renderTextTexture(SDL_Texture* texture, int x, int y, int width, int height) {
+    if (!texture) {
+        std::cerr << "Invalid texture for rendering" << std::endl;
+        return;
+    }
+    SDL_Rect destRect = {x, y, width, height};
+    if (SDL_RenderCopy(_renderer.get(), texture, NULL, &destRect) != 0) {
+        std::cerr << "Failed to render texture: " << SDL_GetError() << std::endl;
+    }
 }
 
 const std::string& SDL::getName() const {
     return _name;
+}
+
+int SDL::getHeight() const {
+    return _windowHeight;
+}
+
+int SDL::getWidth() const {
+    return _windowWidth;
+}
+
+bool SDL::isKeyPressed(int keyCode) {
+    SDL_Keycode sdlKey = Arcade::SDLKeyMap::getSDLKey(
+        static_cast<Arcade::Keys>(keyCode));
+    SDL_Scancode scanCode = SDL_GetScancodeFromKey(sdlKey);
+    const Uint8* state = SDL_GetKeyboardState(nullptr);
+    return state[scanCode] != 0;
+}
+
+bool SDL::isMouseButtonPressed(int button) const {
+    auto arcadeButton = static_cast<Arcade::MouseButton>(button);
+    Uint8 sdlButton = Arcade::SDLKeyMap::getSDLButton(arcadeButton);
+    bool isPressed = SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(sdlButton);
+    return isPressed;
+}
+
+std::pair<size_t, size_t> SDL::getMousePosition() const {
+    if (!_window)
+        return {0, 0};
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    x = (x < 0) ? 0 : x;
+    y = (y < 0) ? 0 : y;
+    return {static_cast<size_t>(x), static_cast<size_t>(y)};
 }

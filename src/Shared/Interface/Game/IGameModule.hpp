@@ -18,6 +18,7 @@
     #include <vector>
     #include <memory>
     #include "Interface/ECS/IEntity.hpp"
+    #include "Interface/IArcadeModule.hpp"
 
 namespace Arcade {
 /**
@@ -28,7 +29,7 @@ namespace Arcade {
  * that must be implemented by any game module in the Arcade project.
  * It includes methods for starting, updating, rendering, and handling input.
  */
-class IGameModule {
+class IGameModule : public IArcadeModule {
  public:
     virtual ~IGameModule() = default;
     virtual void init() = 0;

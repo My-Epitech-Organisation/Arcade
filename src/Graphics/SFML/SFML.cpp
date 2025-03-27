@@ -11,6 +11,8 @@
 #include <utility>
 #include <string>
 #include <iostream>
+#include "SFML/SFMLColor.hpp"
+#include "Interface/IArcadeModule.hpp"
 
 SFML::~SFML() {
     _window.reset();
@@ -19,6 +21,7 @@ SFML::~SFML() {
 }
 
 void SFML::init(float x, float y) {
+    std::cout << "SFML init" << std::endl;
     int width = static_cast<int>(x);
     int height = static_cast<int>(y);
     createWindow(width, height);
@@ -27,6 +30,7 @@ void SFML::init(float x, float y) {
 }
 
 void SFML::stop() {
+    std::cout << "SFML stop" << std::endl;
     if (_window && _window->isOpen()) {
         _window->close();
     }
@@ -61,7 +65,8 @@ void SFML::drawTexture(int x, int y, const std::string& texturePath) {
     _window->draw(sprite);
 }
 
-void SFML::drawText(int x, int y, const std::string& text) {
+void SFML::drawText(const std::string& text, int x, int y,
+    Arcade::Color color) {
     auto font = loadFont("assets/fonts/arial.ttf");
     if (!font)
         return;
@@ -70,9 +75,8 @@ void SFML::drawText(int x, int y, const std::string& text) {
     sfText.setFont(*font);
     sfText.setString(text);
     sfText.setCharacterSize(24);
-    sfText.setFillColor(sf::Color::White);
+    sfText.setFillColor(SFMLColor::convertColor(color));
     sfText.setPosition(static_cast<float>(x), static_cast<float>(y));
-
     _window->draw(sfText);
 }
 
@@ -90,17 +94,13 @@ bool SFML::isOpen() const {
     return _running && _window && _window->isOpen();
 }
 
-extern "C" {
-    __attribute__((constructor))
-    const char* init_sfml(void) {
-        return "Lib";
-    }
+extern "C" __attribute__((constructor)) const char* init_sfml(void) {
+    return "Lib";
+}
 
-    __attribute__((destructor))
-    void fini_sfml(void) {
-    }
+extern "C" __attribute__((destructor)) void fini_sfml(void) {}
 
-    Arcade::IDisplayModule* entryPoint(void) {
-        return new SFML();
-    }
+
+extern "C" Arcade::IArcadeModule* entryPoint(void) {
+    return new SFML();
 }

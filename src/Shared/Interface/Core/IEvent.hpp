@@ -17,6 +17,7 @@
     #define SRC_SHARED_INTERFACE_CORE_IEVENT_HPP_
     #include <string>
     #include "Models/EventType.hpp"
+    #include "Models/KeysType.hpp"
 
 namespace Arcade {
 
@@ -38,6 +39,7 @@ class IEvent {
      * @return The EventType of this event.
      */
     virtual EventType getType() const = 0;
+    virtual Keys getKey() const = 0;
 
     /**
      * @brief Check if the event is of a specific type.
