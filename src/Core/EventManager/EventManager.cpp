@@ -19,7 +19,7 @@ namespace Arcade {
 EventManager::EventManager()
 : AEventManager(), _mouseX(0), _mouseY(0) {}
 
-void EventManager::updateInputState(const RawInputState& state) {
+void EventManager::updateKeyState(const RawInputState& state) {
     for (const auto& [key, isPressed] : state.keyStates) {
         bool wasPressed = _keyStates[key];
         if (isPressed && !wasPressed) {
@@ -29,7 +29,9 @@ void EventManager::updateInputState(const RawInputState& state) {
         }
         _keyStates[key] = isPressed;
     }
+}
 
+void EventManager::updateMouseButtonState(const RawInputState& state) {
     for (const auto& [button, isPressed] : state.mouseButtons) {
         bool wasPressed = _mouseButtonStates[button];
         if (isPressed && !wasPressed) {
@@ -41,12 +43,21 @@ void EventManager::updateInputState(const RawInputState& state) {
         }
         _mouseButtonStates[button] = isPressed;
     }
+}
+
+void EventManager::updateMousePosition(const RawInputState& state) {
     if (state.mouseX != _mouseX || state.mouseY != _mouseY) {
         publishMouseEvent(MouseEvent(MouseButton::NONE,
             EventType::MOUSE_MOVED, state.mouseX, state.mouseY));
         _mouseX = state.mouseX;
         _mouseY = state.mouseY;
     }
+}
+
+void EventManager::updateInputState(const RawInputState& state) {
+    updateKeyState(state);
+    updateMouseButtonState(state);
+    updateMousePosition(state);
 }
 
 void EventManager::setKeyPressed(Arcade::Keys key, bool pressed) {

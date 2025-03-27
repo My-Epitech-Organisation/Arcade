@@ -155,6 +155,13 @@ class Window : public IWindowModule {
     std::string _title;  /// The title of the window.
     bool _isShuttingDown;
         /// Indicates if the window is in the process of shutting down.
+    void updateMousePosition(std::shared_ptr<RawInputState> state);
+    void updateMouseStates(std::shared_ptr<RawInputState> state);
+    void updateKeyStates(std::shared_ptr<RawInputState> state);
+    void processInputState();
+    void initializeNewDisplayModule(
+        std::shared_ptr<IDisplayModule> displayModule);
+    void cleanupCurrentDisplayModule();
 };
 
 }  // namespace Arcade

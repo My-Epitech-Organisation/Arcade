@@ -91,7 +91,14 @@ class Menu {
  private:
     std::shared_ptr<Window> _window;
         /** Shared pointer to the Window object used for rendering. */
-
+    void displayTitle(const std::string &title);
+    void displayMenuOption(const std::string &option,
+        int x, int y, Color color);
+    void displayStatus(const std::string &label,
+        const std::string &value, int y, Color color);
+    void displaySelectionMenu(const std::string &title,
+        const std::vector<std::string> &options,
+        size_t selectedOption);
     static constexpr int TITLE_Y = 50;
         /** Y-coordinate for the title. */
     static constexpr int MENU_START_Y = 100;

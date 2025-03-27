@@ -13,6 +13,9 @@
 #include <string>
 #include <memory>
 #include <map>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <cstring>
 #include "Interface/Display/IDisplayModule.hpp"
 #include "Interface/Game/IGameModule.hpp"
 #include "Interface/Core/IStateManager.hpp"
@@ -99,7 +102,35 @@ class GameLoop : public IStateManager {
      * @brief Loads the available graphics libraries.
      */
     void loadGraphicsLibraries();
-
+    DIR* openLibraryDirectory();
+    void processLibraryEntry(struct dirent* entry);
+    bool isIgnoredFile(const std::string& filename);
+    bool processLibraryHandle(const std::string& path, void* handle);
+    bool processLibraryInstance(const std::string& path,
+        void* handle, IArcadeModule* (*entryPoint)());
+    void handleEvents(std::shared_ptr<bool> running);
+    void handleState();
+    void displayMainMenu();
+    void displayGameSelection();
+    void displayGraphicsSelection();
+    void cleanup();
+    void updateGame();
+    void subscribeNum1Event();
+    void subscribeNum2Event();
+    void subscribeNum3Event();
+    void subscribeNum4Event();
+    void subscribeUpEvent();
+    void subscribeDownEvent();
+    void subscribeEnterEvent();
+    void subscribeEscEvent();
+    void subscribeMouseMoveEvent();
+    void subscribeRightClickEvent();
+    void handleMouseMoveGameSelection(int x, int y, int centerX);
+    void handleMouseMoveGraphicsSelection(int x, int y, int centerX);
+    void handleLeftClickMainMenu(int x, int y, int centerX);
+    void handleLeftClickGameSelection(int x, int y, int centerX);
+    void handleLeftClickGraphicsSelection(int x, int y, int centerX);
+    void subscribeLeftClickEvent();
     std::shared_ptr<AEventManager> _eventManager;
         /** The event manager for handling input events. */
     std::shared_ptr<Window> _window; /** The window instance for rendering. */

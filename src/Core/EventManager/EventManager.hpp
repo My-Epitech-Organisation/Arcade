@@ -104,6 +104,9 @@ class EventManager : public AEventManager {
     * @brief The y-coordinate of the mouse position.
     */
     std::size_t _mouseY;
+    void updateKeyState(const RawInputState& state);
+    void updateMouseButtonState(const RawInputState& state);
+    void updateMousePosition(const RawInputState& state);
 };
 
 }  // namespace Arcade

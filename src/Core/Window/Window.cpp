@@ -108,9 +108,17 @@ IDisplayModule* Window::getDisplayModule() {
     if (_isShuttingDown) return nullptr;
     return _displayModule.get();
 }
-
 void Window::setDisplayModule(std::shared_ptr<IDisplayModule> displayModule) {
     _isShuttingDown = false;
+    cleanupCurrentDisplayModule();
+    if (!displayModule) {
+        std::cerr << "Error: Trying to set null display module!" << std::endl;
+        return;
+    }
+    initializeNewDisplayModule(std::move(displayModule));
+}
+
+void Window::cleanupCurrentDisplayModule() {
     if (_displayModule) {
         try {
             _displayModule->stop();
@@ -121,26 +129,23 @@ void Window::setDisplayModule(std::shared_ptr<IDisplayModule> displayModule) {
         }
         _displayModule.reset();
     }
-    if (!displayModule) {
-        std::cerr << "Error: Trying to set null display module!" << std::endl;
-        return;
-    }
+}
+
+void Window::initializeNewDisplayModule(
+std::shared_ptr<IDisplayModule> displayModule) {
     _displayModule = std::move(displayModule);
     try {
         _displayModule->init(_width, _height);
-        std::cout << "Display module initialized successfully" << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Exception during display module initialization: "
-            << e.what() << std::endl;
+                  << e.what() << std::endl;
         _displayModule.reset();
         _isShuttingDown = true;
-        return;
     } catch (...) {
         std::cerr << "Unknown exception during display module initialization"
-            << std::endl;
+                  << std::endl;
         _displayModule.reset();
         _isShuttingDown = true;
-        return;
     }
 }
 
@@ -150,27 +155,44 @@ void Window::pollEvents() {
     try {
         _displayModule->pollEvents();
         if (_isShuttingDown) return;
-        RawInputState state;
-        for (int i = 0; i <= static_cast<int>(Arcade::Keys::Z); ++i) {
-            state.keyStates[static_cast<Arcade::Keys>(i)]
-                = _displayModule->isKeyPressed(i);
-        }
-        for (int i = 0; i <= 2; ++i) {
-            state.mouseButtons[static_cast<Arcade::MouseButton>(i)] =
-                _displayModule->isMouseButtonPressed(i);
-        }
-        auto [mouseX, mouseY] = _displayModule->getMousePosition();
-        state.mouseX = mouseX;
-        state.mouseY = mouseY;
-        if (_eventManager) {
-            _eventManager->updateInputState(state);
-        }
+        processInputState();
     } catch (const std::exception &e) {
         std::cerr << "Exception during event polling: " << e.what()
-            << std::endl;
+                  << std::endl;
     } catch (...) {
         std::cerr << "Unknown exception during event polling" << std::endl;
     }
+}
+
+void Window::processInputState() {
+    auto state = std::make_shared<RawInputState>();
+
+    updateKeyStates(state);
+    updateMouseStates(state);
+    updateMousePosition(state);
+    if (_eventManager) {
+        _eventManager->updateInputState(*state);
+    }
+}
+
+void Window::updateKeyStates(std::shared_ptr<RawInputState> state) {
+    for (int i = 0; i <= static_cast<int>(Arcade::Keys::Z); ++i) {
+        state->keyStates[static_cast<Arcade::Keys>(i)]
+            = _displayModule->isKeyPressed(i);
+    }
+}
+
+void Window::updateMouseStates(std::shared_ptr<RawInputState> state) {
+    for (int i = 0; i <= 2; ++i) {
+        state->mouseButtons[static_cast<Arcade::MouseButton>(i)] =
+            _displayModule->isMouseButtonPressed(i);
+    }
+}
+
+void Window::updateMousePosition(std::shared_ptr<RawInputState> state) {
+    auto [mouseX, mouseY] = _displayModule->getMousePosition();
+    state->mouseX = mouseX;
+    state->mouseY = mouseY;
 }
 
 }  // namespace Arcade
