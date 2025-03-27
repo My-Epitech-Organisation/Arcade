@@ -5,7 +5,9 @@
 ** File description:
 ** NCursesColor
 */
+
 #include "NCursesUtils/NCursesColor.hpp"
+#include <string>
 
 NCurses::NCursesColor::NCursesColor() {
 }
@@ -33,7 +35,7 @@ int NCurses::NCursesColor::getColorPair(const std::string &colorName) {
 }
 
 void NCurses::NCursesColor::addColorPair(const std::string &colorName,
-                                          short fg, short bg) {
+                                          int16_t fg, int16_t bg) {
     init_pair(_nextPairId, fg, bg);
     _colorPairs[colorName] = _nextPairId++;
 }

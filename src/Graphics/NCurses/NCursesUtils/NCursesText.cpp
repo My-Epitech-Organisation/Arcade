@@ -5,7 +5,9 @@
 ** File description:
 ** NCursesText
 */
+
 #include "NCursesUtils/NCursesText.hpp"
+#include <string>
 
 void NCurses::NCursesText::drawText(WINDOW* window, const std::string &text,
                                    int x, int y) {

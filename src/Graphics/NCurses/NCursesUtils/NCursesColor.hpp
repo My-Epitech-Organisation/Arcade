@@ -18,7 +18,7 @@ class NCursesColor {
     NCursesColor();
     void initColors();
     int getColorPair(const std::string &colorName);
-    void addColorPair(const std::string &colorName, short fg, short bg);
+    void addColorPair(const std::string &colorName, int16_t fg, int16_t bg);
     void applyColorPair(int colorPair);
 
  private:
