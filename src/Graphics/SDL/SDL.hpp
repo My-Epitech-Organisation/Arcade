@@ -3,7 +3,7 @@
 ** EPITECH PROJECT, 2025
 ** Arcade
 ** File description:
-** SDL
+** SDLModule
 */
 
 #ifndef SRC_GRAPHICS_SDL_SDL_HPP_
@@ -17,38 +17,28 @@
     #include <string>
     #include <vector>
     #include "Interface/Display/IDisplayModule.hpp"
+    #include "SDLUtils/SDLWindow.hpp"
+    #include "SDLUtils/SDLRenderer.hpp"
+    #include "SDLUtils/SDLTexture.hpp"
+    #include "SDLUtils/SDLSurface.hpp"
+    #include "SDLUtils/SDLFont.hpp"
+    #include "SDLUtils/SDLText.hpp"
 
-    class SDL : public Arcade::IDisplayModule {
+    class SDLModule : public Arcade::IDisplayModule {
      private:
         std::string _name;
-        std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> _window;
-        std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)> _renderer;
+        SDL::SDLWindow _window;
+        SDL::SDLRenderer _renderer;
+        SDL::SDLSurface _surface;
+        SDL::SDLTexture _texture;
+        SDL::SDLText _text;
         int _windowWidth = 0;
         int _windowHeight = 0;
         bool _running = true;
-        void createWindow(int width, int height);
-        void createRenderer();
-        std::unique_ptr<SDL_Surface, decltype(&SDL_FreeSurface)>
-            loadSurface(const std::string &texturePath);
-        std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>
-            createTexture(SDL_Surface *surface,
-                const std::string &texturePath);
-        void renderTexture(SDL_Texture *texture);
-        std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)>
-            loadFont(int fontSize);
-        std::unique_ptr<SDL_Surface, decltype(&SDL_FreeSurface)>
-            createTextSurface(TTF_Font* font, const std::string& text,
-                SDL_Color color);
-        std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>
-            createTextTexture(SDL_Surface* surface);
-        void renderTextTexture(SDL_Texture* texture, int x, int y,
-            int width, int height);
 
      public:
-        SDL() : _name("SDL2"),
-        _window(nullptr, SDL_DestroyWindow),
-        _renderer(nullptr, SDL_DestroyRenderer) {}
-        ~SDL() override;
+        SDLModule() : _name("SDL2") {}
+        ~SDLModule() override;
         void init(float width = 800.f, float height = 600.f) override;
         void stop() override;
         void clearScreen() override;

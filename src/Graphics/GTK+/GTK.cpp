@@ -3,7 +3,7 @@
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
 ** File description:
-** GTK+
+** GTKModule+
 */
 #include <stdexcept>
 #include <memory>
@@ -12,16 +12,16 @@
 #include <iostream>
 #include "GTK+/GTK.hpp"
 
-GTK::GTK() : _name("GTK+") {
+GTKModule::GTKModule() : _name("GTK+") {
     gtk_init();
-    loadFonts();
+    _fontManager.loadFonts();
 }
 
-GTK::~GTK() {
+GTKModule::~GTKModule() {
     stop();
 }
 
-void GTK::init(float x, float y) {
+void GTKModule::init(float x, float y) {
     int width = static_cast<int>(x);
     int height = static_cast<int>(y);
 
@@ -36,20 +36,10 @@ void GTK::init(float x, float y) {
 
     g_application_register(G_APPLICATION(_app.get()), nullptr, nullptr);
 
-    createWindow(width, height);
-
-    _surface = std::shared_ptr<cairo_surface_t>(
-        cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
-            _windowWidth, _windowHeight),
-        cairo_surface_destroy);
-
-    _cr = std::shared_ptr<cairo_t>(
-        cairo_create(_surface.get()),
-        cairo_destroy);
-
-    if (_fonts.empty())
-        loadFonts();
-
+    _window.createWindow(_app, width, height);
+    _window.setupDrawingArea(width, height, on_draw, this);
+    _window.showWindow();
+    _renderer.createRenderer(width, height);
     clearScreen();
 
     while (g_main_context_iteration(nullptr, FALSE)) {}
@@ -57,51 +47,42 @@ void GTK::init(float x, float y) {
     _running = true;
 }
 
-void GTK::stop() {
+void GTKModule::stop() {
     _running = false;
 
     _textures.clear();
-    _fonts.clear();
-    _cr.reset();
-    _surface.reset();
 
     if (_app) {
         g_application_quit(G_APPLICATION(_app.get()));
 
         while (g_main_context_iteration(nullptr, FALSE)) {}
 
-        _window.reset();
         _app.reset();
-    }
+    }  _app.reset();
 }
 
-void GTK::clearScreen() {
-    if (_cr) {
-        cairo_set_source_rgb(_cr.get(), 0, 0, 0);
-        cairo_paint(_cr.get());
-    }
+void GTKModule::clearScreen() {
+    _renderer.clearScreen();
 }
 
-void GTK::refreshScreen() {
-    if (_drawingArea) {
-        gtk_widget_queue_draw(_drawingArea.get());
-
-        while (g_main_context_iteration(nullptr, FALSE)) {}
-    }
+void GTKModule::refreshScreen() {
+    _renderer.present();
+    gtk_widget_queue_draw(_window.getDrawingArea().get());
 }
 
-void GTK::drawEntity(int x, int y, char symbol) {
+void GTKModule::drawEntity(int x, int y, char symbol) {
 }
 
-void GTK::drawTexture(int x, int y, const std::string &texturePath) {
-    if (_cr) {
+void GTKModule::drawTexture(int x, int y, const std::string &texturePath) {
+    auto renderer = _renderer.getRenderer();
+    if (renderer) {
         std::shared_ptr<cairo_surface_t> texture = nullptr;
         int width = 0;
         int height = 0;
 
         auto it = _textures.find(texturePath);
         if (it == _textures.end()) {
-            texture = loadTexture(texturePath);
+            texture = _textureManager.loadTexture(texturePath);
             if (!texture)
                 return;
 
@@ -110,51 +91,32 @@ void GTK::drawTexture(int x, int y, const std::string &texturePath) {
             _textures[texturePath] = {texture, width, height};
         } else {
             texture = it->second.surface;
-            width = it->second.width;
-            height = it->second.height;
         }
 
-        cairo_save(_cr.get());
-
-        cairo_set_source_surface(_cr.get(), texture.get(), x, y);
-
-        cairo_rectangle(_cr.get(), x, y, width, height);
-
-        cairo_fill(_cr.get());
-
-        cairo_restore(_cr.get());
+        _textureManager.renderTexture(renderer, texture, x, y);
     }
 }
 
-void GTK::drawText(int x, int y, const std::string &text) {
-    if (_cr) {
-        std::shared_ptr<PangoFontDescription> font = nullptr;
-        auto it = _fonts.find("default");
-        if (it != _fonts.end()) {
-            font = it->second;
-        } else {
-            font = std::shared_ptr<PangoFontDescription>(
-                pango_font_description_from_string("Sans 12"),
-                pango_font_description_free);
-            if (font)
-                _fonts["default"] = font;
-        }
-        drawTextInternal(_cr, x, y, text, font);
+void GTKModule::drawText(int x, int y, const std::string &text) {
+    auto renderer = _renderer.getRenderer();
+    if (renderer) {
+        auto font = _fontManager.getFont("default");
+        _textManager.drawText(renderer, x, y, text, font);
     }
 }
 
-void GTK::pollEvents() {
-    while (g_main_context_iteration(nullptr, FALSE)) {}
+void GTKModule::pollEvents() {
+    _eventManager.handleEvents();
 
-    if (!_window || !GTK_IS_WINDOW(_window.get()))
+    if (!_window.getWindow() || !GTK_IS_WINDOW(_window.getWindow().get()))
         _running = false;
 }
 
-bool GTK::isOpen() const {
+bool GTKModule::isOpen() const {
     return _running;
 }
 
-const std::string& GTK::getName() const {
+const std::string& GTKModule::getName() const {
     return _name;
 }
 
@@ -169,6 +131,6 @@ extern "C" {
     }
 
     Arcade::IDisplayModule* entryPoint(void) {
-        return new GTK();
+        return new GTKModule();
     }
 }
