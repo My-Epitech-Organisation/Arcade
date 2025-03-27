@@ -7,74 +7,85 @@
 */
 #include "NCurses/NCurses.hpp"
 #include <stdexcept>
+#include <memory>
+#include <utility>
 #include <string>
 #include <iostream>
 
-NCurses::~NCurses() {
+NCursesModule::~NCursesModule() {
     stop();
 }
 
-void NCurses::init(float x, float y) {
-    _window = initscr();
-    if (!_window) {
-        throw std::runtime_error("NCurses could not initialize window!");
-    }
+void NCursesModule::init(float width, float height) {
+    _windowWidth = static_cast<int>(width);
+    _windowHeight = static_cast<int>(height);
 
-    cbreak();
-    noecho();
-    keypad(_window, TRUE);
-    nodelay(_window, TRUE);
-    curs_set(0);
-
-    _windowWidth = static_cast<int>(x);
-    _windowHeight = static_cast<int>(y);
-
-    if (has_colors()) {
-        start_color();
-        initColors();
+    try {
+        _window.createWindow(_windowWidth, _windowHeight);
+        _window.enableKeypad(true);
+        _colorManager.initColors();
+    } catch (const std::exception &e) {
+        std::cerr << "NCurses initialization error: " << e.what() << std::endl;
+        _running = false;
     }
 }
 
-void NCurses::stop() {
-    if (_window) {
-        endwin();
-        _window = nullptr;
-    }
+void NCursesModule::stop() {
+    _window.closeWindow();
     _running = false;
 }
 
-void NCurses::clearScreen() {
-    clear();
+void NCursesModule::clearScreen() {
+    _window.clearWindow();
 }
 
-void NCurses::refreshScreen() {
-    refresh();
+void NCursesModule::refreshScreen() {
+    _window.refreshWindow();
 }
 
-void NCurses::drawEntity(int x, int y, char symbol) {
-    mvaddch(y, x, symbol);
+void NCursesModule::drawEntity(int x, int y, char symbol) {
+    if (!_window.isOpen() || x < 0 || y < 0 ||
+        x >= _windowWidth || y >= _windowHeight) {
+        return;
+    }
+
+    WINDOW* win = _window.getWindow();
+    int colorPair = _entity.getEntityColor(symbol);
+
+    _entity.drawEntity(win, x, y, symbol, colorPair);
 }
 
-void NCurses::drawTexture(int x, int y, const std::string &textureId) {
-    // Not implemented
-    (void)x;
-    (void)y;
-    (void)textureId;
+void NCursesModule::drawTexture(int x, int y, const std::string &textureId) {
 }
 
-void NCurses::drawText(int x, int y, const std::string &text) {
-    mvprintw(y, x, "%s", text.c_str());
+void NCursesModule::drawText(int x, int y, const std::string &text) {
+    if (!_window.isOpen() || x < 0 || y < 0 ||
+        x >= _windowWidth || y >= _windowHeight) {
+        return;
+    }
+
+    WINDOW* win = _window.getWindow();
+    _text.drawText(win, text, x, y);
 }
 
-void NCurses::pollEvents() {
-    int ch = getch();
-    if (ch != ERR) {
-        handleKeyPress(ch);
+void NCursesModule::pollEvents() {
+    if (!_window.isOpen()) {
+        _running = false;
+        return;
+    }
+
+    int key = _window.getChar();
+    if (_event.isQuitEvent(key)) {
+        _running = false;
     }
 }
 
-bool NCurses::isOpen() const {
-    return _running;
+bool NCursesModule::isOpen() const {
+    return _running && _window.isOpen();
+}
+
+const std::string& NCursesModule::getName() const {
+    return _name;
 }
 
 extern "C" {
@@ -88,6 +99,6 @@ extern "C" {
     }
 
     Arcade::IDisplayModule* entryPoint(void) {
-        return new NCurses();
+        return new NCursesModule();
     }
 }
