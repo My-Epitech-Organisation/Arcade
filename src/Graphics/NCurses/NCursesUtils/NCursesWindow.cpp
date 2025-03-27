@@ -1,0 +1,68 @@
+// Copyright 2025 <Epitech>
+/*
+** EPITECH PROJECT, 2025
+** Arcade
+** File description:
+** NCursesWindow
+*/
+#include "NCursesUtils/NCursesWindow.hpp"
+#include <stdexcept>
+
+NCurses::NCursesWindow::~NCursesWindow() {
+    if (_isOpen) {
+        closeWindow();
+    }
+}
+
+void NCurses::NCursesWindow::createWindow(int width, int height) {
+    initscr();
+    noecho();
+    cbreak();
+    curs_set(0);
+    nodelay(stdscr, TRUE);
+    timeout(100);
+
+    _window = newwin(height, width, 0, 0);
+    if (!_window) {
+        endwin();
+        throw std::runtime_error("Failed to create NCurses window");
+    }
+    _isOpen = true;
+}
+
+void NCurses::NCursesWindow::clearWindow() {
+    if (!_isOpen) return;
+    wclear(_window);
+}
+
+void NCurses::NCursesWindow::refreshWindow() {
+    if (!_isOpen) return;
+    wrefresh(_window);
+}
+
+void NCurses::NCursesWindow::closeWindow() {
+    if (!_isOpen) return;
+
+    delwin(_window);
+    endwin();
+    _window = nullptr;
+    _isOpen = false;
+}
+
+WINDOW* NCurses::NCursesWindow::getWindow() const {
+    return _window;
+}
+
+bool NCurses::NCursesWindow::isOpen() const {
+    return _isOpen;
+}
+
+void NCurses::NCursesWindow::enableKeypad(bool enable) {
+    if (!_isOpen) return;
+    keypad(_window, enable ? TRUE : FALSE);
+}
+
+int NCurses::NCursesWindow::getChar() {
+    if (!_isOpen) return ERR;
+    return wgetch(_window);
+}
