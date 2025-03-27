@@ -21,7 +21,6 @@ SDL::~SDL() {
 }
 
 void SDL::init(float x, float y) {
-    std::cout << "SDL init" << std::endl;
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
         throw std::runtime_error("SDL could not initialize! SDL Error: "
             + std::string(SDL_GetError()));
@@ -57,16 +56,12 @@ void SDL::init(float x, float y) {
 }
 
 void SDL::stop() {
-    std::cout << "SDL stop" << std::endl;
     if (_renderer) {
-        std::cout << "Destroying renderer" << std::endl;
         _renderer.reset();
     }
     if (_window) {
-        std::cout << "Destroying window" << std::endl;
         _window.reset();
     }
-    std::cout << "Quitting SDL" << std::endl;
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();

@@ -21,7 +21,6 @@ SFML::~SFML() {
 }
 
 void SFML::init(float x, float y) {
-    std::cout << "SFML init" << std::endl;
     int width = static_cast<int>(x);
     int height = static_cast<int>(y);
     createWindow(width, height);
@@ -30,7 +29,6 @@ void SFML::init(float x, float y) {
 }
 
 void SFML::stop() {
-    std::cout << "SFML stop" << std::endl;
     if (_window && _window->isOpen()) {
         _window->close();
     }

@@ -41,7 +41,6 @@ void DLLoader<T>::setLibPath(const std::string& libPath) {
         _handle = nullptr;
     }
     _libPath = libPath;
-    std::cout << "Library path set to: " << _libPath << std::endl;
 }
 
 template <typename T>
