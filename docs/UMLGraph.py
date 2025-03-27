@@ -180,5 +180,7 @@ uml.edge("IGameModule", "IEventManager", arrowhead="vee", label="uses")
 uml.edge("IDisplayModule", "IEventManager", arrowhead="vee", label="provides")
 
 # Render and display the UML diagram
-uml.render("arcade_uml", cleanup=True)
+uml.render("arcade_uml1", cleanup=True)
 print("UML diagram has been generated as arcade_uml.png")
+
+
