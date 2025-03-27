@@ -16,16 +16,15 @@
 #include "SDL/SDLColor.hpp"
 #include "Interface/IArcadeModule.hpp"
 
-SDL::~SDL() {
+SDLModule::~SDLModule() {
     stop();
 }
 
-void SDL::init(float x, float y) {
+void SDLModule::init(float x, float y) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
         throw std::runtime_error("SDL could not initialize! SDL Error: "
             + std::string(SDL_GetError()));
-    int imgFlags = IMG_INIT_PNG;
-    if (!(IMG_Init(imgFlags) & imgFlags)) {
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
         SDL_Quit();
         throw std::runtime_error
         ("SDL_image could not initialize! SDL_image Error: "
@@ -34,92 +33,63 @@ void SDL::init(float x, float y) {
     if (TTF_Init() == -1) {
         IMG_Quit();
         SDL_Quit();
-        throw std::runtime_error
-        ("SDL_ttf could not initialize! SDL_ttf Error: "
+        throw std::runtime_error("SDL_ttf could not initialize! SDL_ttf Error: "
             + std::string(TTF_GetError()));
     }
     int width = static_cast<int>(x);
     int height = static_cast<int>(y);
-    if (_renderer) {
-        SDL_DestroyRenderer(_renderer.release());
-    }
-    if (_window) {
-        SDL_DestroyWindow(_window.release());
-    }
-    createWindow(width, height);
-
-    createRenderer();
-
-    SDL_SetRenderDrawColor(_renderer.get(), 255, 0, 0, 255);
+    _window.createWindow(width, height);
+    _renderer.createRenderer(_window.getWindow());
     _windowWidth = static_cast<int>(x);
     _windowHeight = static_cast<int>(y);
 }
 
-void SDL::stop() {
-    if (_renderer) {
-        _renderer.reset();
+void SDLModule::stop() {
+    if (_renderer.getRenderer()) {
+        _renderer.getRenderer().reset();
     }
-    if (_window) {
-        _window.reset();
+    if (_window.getWindow()) {
+        _window.getWindow().reset();
     }
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
 }
 
-void SDL::clearScreen() {
-    SDL_SetRenderDrawColor(_renderer.get(), 255, 0, 0, 255);
-    if (SDL_RenderClear(_renderer.get()) != 0) {
-        std::cerr << "Failed to clear screen: " << SDL_GetError() << std::endl;
-    }
+void SDLModule::clearScreen() {
+    _renderer.clearScreen();
 }
 
-void SDL::refreshScreen() {
-    SDL_RenderPresent(_renderer.get());
+void SDLModule::refreshScreen() {
+    _renderer.refreshScreen();
 }
 
-void SDL::drawEntity(int x, int y, char symbol) {}
+void SDLModule::drawEntity(int x, int y, char symbol) {}
 
 
-void SDL::drawTexture(int x, int y, const std::string &texturePath) {
-    auto surface = loadSurface(texturePath);
-    auto texture = createTexture(surface.get(), texturePath);
-    renderTexture(texture.get());
+void SDLModule::drawTexture(int x, int y, const std::string &texturePath) {
+    auto renderer = _renderer.getRenderer();
+
+    auto surface = _surface.loadSurface(texturePath);
+    if (!surface)
+        return;
+
+    auto texture = _texture.createTexture(renderer.get(),
+        surface.get(), texturePath);
+    if (!texture)
+        return;
+
+    _texture.renderTexture(renderer.get(), texture.get(),
+        _windowWidth, _windowHeight);
 }
 
-void SDL::drawText(const std::string &text, int x, int y, Arcade::Color color) {
-    if (text.empty()) {
-        return;
-    }
-    auto font = loadFont(24);
-    if (!font) {
-        std::cerr << "Failed to load font" << std::endl;
-        return;
-    }
-    SDL_Color textColor = SDLColor::convertColor(color);
-    auto textSurface = createTextSurface(font.get(), text, textColor);
-    if (!textSurface) {
-        std::cerr << "Failed to create text surface: "
-            << TTF_GetError() << std::endl;
-        return;
-    }
-    auto textTexture = createTextTexture(textSurface.get());
-    if (!textTexture) {
-        std::cerr << "Failed to create text texture: "
-            << SDL_GetError() << std::endl;
-        return;
-    }
-    SDL_SetTextureBlendMode(textTexture.get(), SDL_BLENDMODE_BLEND);
-    int textWidth = textSurface->w;
-    int textHeight = textSurface->h;
-    SDL_Rect destRect = {x, y, textWidth, textHeight};
-    if (SDL_RenderCopy(_renderer.get(), textTexture.get(),
-        NULL, &destRect) != 0) {
-        std::cerr << "Failed to render text: " << SDL_GetError() << std::endl;
-    }
+void SDLModule::drawText(const std::string &text,
+int x, int y, Arcade::Color color) {
+    auto renderer = _renderer.getRenderer();
+    _text.drawText(renderer.get(), text, x, y, 24, color);
 }
 
-void SDL::pollEvents() {
+void SDLModule::pollEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT)
@@ -127,8 +97,28 @@ void SDL::pollEvents() {
     }
 }
 
-bool SDL::isOpen() const {
+int SDLModule::getWidth() const {
+    return _window.getWidth();
+}
+
+int SDLModule::getHeight() const {
+    return _window.getWidth();
+}
+
+bool SDLModule::isOpen() const {
     return (_running);
+}
+
+bool SDLModule::isKeyPressed(int keyCode) {
+    return _event.isKeyPressed(keyCode);
+}
+
+bool SDLModule::isMouseButtonPressed(int button) const {
+    return _event.isMouseButtonPressed(button);
+}
+
+std::pair<size_t, size_t> SDLModule::getMousePosition() const {
+    return _event.getMousePosition();
 }
 
 extern "C" __attribute__((constructor))
@@ -139,5 +129,5 @@ extern "C" __attribute__((constructor))
 extern "C" __attribute__((destructor)) void fini_sdl(void) { }
 
 extern "C" Arcade::IArcadeModule* entryPoint(void) {
-    return new SDL();
+    return new SDLModule();
 }
