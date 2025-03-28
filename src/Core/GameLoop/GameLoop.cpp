@@ -13,6 +13,8 @@
 #include <iostream>
 #include <algorithm>
 #include <utility>
+#include <chrono>
+#include <thread>
 #include <memory>
 #include <string>
 #include "EventManager/EventManager.hpp"
@@ -51,15 +53,51 @@ _gameLoader(".") {
 GameLoop::~GameLoop() {
 }
 
+void GameLoop::updateGame() {
+    if (_currentGame) {
+        _currentGame->update(0.016f);  // Fixed time step, ideally should use actual delta time
+        auto entities = _currentGame->getEntities();
+        
+        // Use the current graphics module to draw entities
+        if (_window && _window->getDisplayModule()) {
+            for (const auto& entity : entities) {
+                // Draw each entity using the display module
+                _window->getDisplayModule()->drawEntity(
+                    entity->getX(), 
+                    entity->getY(), 
+                    entity->getSymbol()
+                );
+            }
+        }
+        
+        // Check game state
+        if (_currentGame->isGameOver() || _currentGame->hasWon()) {
+            // Optional: Add a delay or wait for user input before returning to menu
+            if (_eventManager->isKeyPressed(Keys::ESC)) {
+                _state = MAIN_MENU;
+            }
+        }
+    }
+}
+
 void GameLoop::run() {
     auto running = std::make_shared<bool>(true);
+    auto lastFrameTime = std::chrono::high_resolution_clock::now();
 
     while (*running) {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float deltaTime = std::chrono::duration<float>(currentTime - lastFrameTime).count();
+        lastFrameTime = currentTime;
+        
         handleEvents(running);
-        if (!running) break;
+        if (!*running) break;
+        
         _window->clearScreen();
         handleState();
         _window->refreshScreen();
+        
+        // Simple frame rate limiting
+        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS
     }
     cleanup();
 }

@@ -47,6 +47,7 @@ enum Keys {
     X,
     Y,
     Z,
+    SPACE,
     NONE
 };
 }  // namespace Arcade
