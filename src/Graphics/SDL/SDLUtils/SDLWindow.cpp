@@ -17,13 +17,16 @@ void SDL::SDLWindow::createWindow(int width, int height) {
             SDL_WINDOWPOS_UNDEFINED,
             width,
             height,
-            SDL_WINDOW_SHOWN),
+            SDL_WINDOW_RESIZABLE),
         SDL_DestroyWindow);
+    SDL_ShowWindow(_window.get());
     if (!_window) {
         SDL_Quit();
         throw std::runtime_error("Window could not be created! SDL Error: "
             + std::string(SDL_GetError()));
     }
+    _windowWidth = width;
+    _windowHeight = height;
 }
 
 std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)>
@@ -31,4 +34,12 @@ std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)>
     auto windowPtr = _window.get();
     return std::unique_ptr<SDL_Window,
         decltype(&SDL_DestroyWindow)>(windowPtr, [](SDL_Window*){});
+}
+
+int SDL::SDLWindow::getHeight() const {
+    return _windowHeight;
+}
+
+int SDL::SDLWindow::getWidth() const {
+    return _windowWidth;
 }

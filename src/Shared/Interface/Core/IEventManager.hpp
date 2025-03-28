@@ -19,6 +19,7 @@
     #include <functional>
     #include <string>
     #include "Interface/Core/IEvent.hpp"
+    #include "EventManager/KeyEvent/KeyEvent.hpp"
 namespace Arcade {
 
 /**
@@ -33,9 +34,9 @@ class IEventManager {
  public:
     virtual ~IEventManager() = default;
     using Callback = std::function<void()>;
-    virtual void subscribe(const IEvent& eventType,
+    virtual void subscribe(const KeyEvent& eventType,
         const Callback callback) = 0;
-    virtual void publish(const IEvent& eventType) = 0;
+    virtual void publish(const KeyEvent& eventType) = 0;
 };
 }  // namespace Arcade
 

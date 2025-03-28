@@ -6,8 +6,12 @@
 ** AEventManager abstract class implementation
 */
 
-#include "EventManager/AEventManager.hpp"
 #include <utility>
+#include <iostream>
+#include <functional>
+#include "EventManager/AEventManager.hpp"
+#include "Models/KeysType.hpp"
+#include "Models/MouseButtonType.hpp"
 
 AEventManager::AEventManager() {
     for (int i = 0; i < 53; i++) {
@@ -15,13 +19,17 @@ AEventManager::AEventManager() {
     }
 }
 
-void AEventManager::subscribe(const Arcade::IEvent& eventType,
+void AEventManager::subscribe(const Arcade::KeyEvent& eventType,
     const Callback callback) {
-    _subscribers[eventType.getType()].push_back(callback);
+    auto found = std::pair<Arcade::EventType, Arcade::Keys>
+        (eventType.getType(), eventType.getKey());
+    _subscribers[found].push_back(callback);
 }
 
-void AEventManager::publish(const Arcade::IEvent& eventType) {
-    for (auto& callback : _subscribers[eventType.getType()]) {
+void AEventManager::publish(const Arcade::KeyEvent& eventType) {
+    auto found = std::pair<Arcade::EventType, Arcade::Keys>
+        (eventType.getType(), eventType.getKey());
+    for (auto& callback : _subscribers[found]) {
         callback();
     }
 }
@@ -32,4 +40,21 @@ void AEventManager::setMouseX(std::size_t x) {
 
 void AEventManager::setMouseY(std::size_t y) {
     _mouseY = y;
+}
+
+void AEventManager::subscribe(const Arcade::MouseEvent& eventType,
+    const Callback callback) {
+    auto found = std::pair<Arcade::EventType,
+        Arcade::MouseButton>(eventType.getType(),
+    eventType.getButton());
+    _mouseSubscribers[found].push_back(callback);
+}
+
+void AEventManager::publishMouseEvent(const Arcade::MouseEvent& eventType) {
+    auto found = std::pair<Arcade::EventType,
+        Arcade::MouseButton>(eventType.getType(),
+        eventType.getButton());
+    for (auto& callback : _mouseSubscribers[found]) {
+        callback();
+    }
 }

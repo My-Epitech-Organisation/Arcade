@@ -26,9 +26,13 @@ class NCursesWindow {
     bool isOpen() const;
     void enableKeypad(bool enable);
     int getChar();
+    int getWidth() const;
+    int getHeight() const;
 
  private:
     WINDOW* _window;
+    int _windowWidth = 0;
+    int _windowHeight = 0;
     bool _isOpen = false;
 };
 }  // namespace NCurses

@@ -3,15 +3,20 @@ set(SRCCORE ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 set(SRC
-    ${SRCCORE}/core.cpp
-    ${SRCCORE}/DLLoader/DLLoader.cpp
+    ${SRCCORE}/DLLoader/DLLoader.tpp
+    ${SRCCORE}/EventManager/EventManager.cpp
     ${SRCCORE}/GameLoop/GameLoop.cpp
+    ${SRCCORE}/GameLoop/GameLoopUtils.cpp
+    ${SRCCORE}/Menu/Menu.cpp
+    ${SRCCORE}/Window/Window.cpp
 )
 
 set(INC
-    ${INCCORE}/core.hpp
     ${INCCORE}/DLLoader/DLLoader.hpp
+    ${SRCCORE}/EventManager/EventManager.hpp
     ${INCCORE}/GameLoop/GameLoop.hpp
+    ${INCCORE}/Menu/Menu.hpp
+    ${INCCORE}/Window/Window.hpp
 )
 
 add_library(arcade_core STATIC ${SRC} ${INC})

@@ -11,6 +11,7 @@
     #include <gtk/gtk.h>
     #include <memory>
     #include <string>
+    #include <utility>
     #include <unordered_map>
     #include <functional>
     #include "../../Shared/Interface/Display/IDisplayModule.hpp"
@@ -20,6 +21,7 @@
     #include "GTKUtils/GTKText.hpp"
     #include "GTKUtils/GTKFont.hpp"
     #include "GTKUtils/GTKEvent.hpp"
+    #include "Models/ColorType.hpp"
 
     class GTKModule : public Arcade::IDisplayModule {
      private:
@@ -57,10 +59,16 @@
         void refreshScreen() override;
         void drawEntity(int x, int y, char symbol) override;
         void drawTexture(int x, int y, const std::string &textureId) override;
-        void drawText(int x, int y, const std::string &text) override;
+        void drawText(const std::string &text, int x, int y,
+            Arcade::Color color) override;
         void pollEvents() override;
         bool isOpen() const override;
         const std::string& getName() const override;
+        int getWidth() const override;
+        int getHeight() const override;
+        bool isKeyPressed(int keyCode) override;
+        bool isMouseButtonPressed(int button) const override;
+        std::pair<size_t, size_t> getMousePosition() const override;
     };
 
 #endif  // SRC_GRAPHICS_GTK__GTK_HPP_
