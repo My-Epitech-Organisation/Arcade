@@ -15,13 +15,14 @@
     #include "SDLUtils/SDLFont.hpp"
     #include "SDLUtils/SDLSurface.hpp"
     #include "SDLUtils/SDLTexture.hpp"
+    #include "Models/ColorType.hpp"
 
 namespace SDL {
 class SDLText {
  public:
     SDLText();
     void drawText(SDL_Renderer* renderer, const std::string& text, int x,
-        int y, int fontSize = 24);
+        int y, int fontSize = 24, Arcade::Color color = Arcade::WHITE);
  private:
     SDLFont _font;
     SDLSurface _surface;

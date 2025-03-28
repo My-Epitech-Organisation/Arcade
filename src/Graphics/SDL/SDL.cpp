@@ -6,11 +6,15 @@
 ** SDL
 */
 #include "SDL/SDL.hpp"
+#include <SDL2/SDL_video.h>
+#include <SDL2/SDL.h>
 #include <stdexcept>
 #include <memory>
 #include <utility>
 #include <string>
 #include <iostream>
+#include "SDL/SDLColor.hpp"
+#include "Interface/IArcadeModule.hpp"
 
 SDLModule::~SDLModule() {
     stop();
@@ -36,15 +40,18 @@ void SDLModule::init(float x, float y) {
     int height = static_cast<int>(y);
     _window.createWindow(width, height);
     _renderer.createRenderer(_window.getWindow());
-
-    auto renderer = _renderer.getRenderer();
-    SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 255);
-
-    _windowWidth = width;
-    _windowHeight = height;
+    _windowWidth = static_cast<int>(x);
+    _windowHeight = static_cast<int>(y);
 }
 
 void SDLModule::stop() {
+    if (_renderer.getRenderer()) {
+        _renderer.getRenderer().reset();
+    }
+    if (_window.getWindow()) {
+        _window.getWindow().reset();
+    }
+    TTF_Quit();
     IMG_Quit();
     SDL_Quit();
 }
@@ -76,9 +83,10 @@ void SDLModule::drawTexture(int x, int y, const std::string &texturePath) {
         _windowWidth, _windowHeight);
 }
 
-void SDLModule::drawText(int x, int y, const std::string &text) {
+void SDLModule::drawText(const std::string &text,
+int x, int y, Arcade::Color color) {
     auto renderer = _renderer.getRenderer();
-    _text.drawText(renderer.get(), text, x, y);
+    _text.drawText(renderer.get(), text, x, y, 24, color);
 }
 
 void SDLModule::pollEvents() {
@@ -89,26 +97,37 @@ void SDLModule::pollEvents() {
     }
 }
 
+int SDLModule::getWidth() const {
+    return _window.getWidth();
+}
+
+int SDLModule::getHeight() const {
+    return _window.getWidth();
+}
+
 bool SDLModule::isOpen() const {
     return (_running);
 }
 
-const std::string& SDLModule::getName() const {
-    return _name;
+bool SDLModule::isKeyPressed(int keyCode) {
+    return _event.isKeyPressed(keyCode);
 }
 
-extern "C" {
-    __attribute__((constructor))
+bool SDLModule::isMouseButtonPressed(int button) const {
+    return _event.isMouseButtonPressed(button);
+}
+
+std::pair<size_t, size_t> SDLModule::getMousePosition() const {
+    return _event.getMousePosition();
+}
+
+extern "C" __attribute__((constructor))
     const char *init_sdl(void) {
         return "Lib";
-    }
-
-    __attribute__((destructor))
-    void fini_sdl(void) {
-    }
-
-    Arcade::IDisplayModule* entryPoint(void) {
-        return new SDLModule();
-    }
 }
 
+extern "C" __attribute__((destructor)) void fini_sdl(void) { }
+
+extern "C" Arcade::IArcadeModule* entryPoint(void) {
+    return new SDLModule();
+}

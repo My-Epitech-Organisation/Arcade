@@ -1,6 +1,6 @@
 find_package(SFML 2.5 COMPONENTS graphics audio window system REQUIRED)
 
-add_library(arcade_sfml SHARED SFML.cpp)
+add_library(arcade_sfml SHARED SFML.cpp SFMLUtils.cpp)
 
 set_target_properties(arcade_sfml PROPERTIES PREFIX "" OUTPUT_NAME "arcade_sfml")
 target_include_directories(arcade_sfml PUBLIC ${SFML_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/..)

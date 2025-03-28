@@ -20,10 +20,16 @@
     #include <vector>
     #include <string>
     #include <utility>
+    #include <memory>
     #include <unordered_map>
     #include "Interface/Core/IEventManager.hpp"
     #include "Interface/Core/IEvent.hpp"
+    #include "Interface/Display/IDisplayModule.hpp"
     #include "Models/EventType.hpp"
+    #include "Models/KeysType.hpp"
+    #include "Models/MouseButtonType.hpp"
+    #include "EventManager/KeyEvent/MouseEvent.hpp"
+    #include "EventManager/KeyEvent/RawInputState.hpp"
 
 /**
  * @class AEventManager
@@ -35,6 +41,22 @@
  */
 class AEventManager : public Arcade::IEventManager {
  public:
+    struct PairHash {
+       std::size_t operator()(const std::pair<Arcade::EventType,
+          Arcade::Keys>& p) const noexcept {
+          return std::hash<int>()(static_cast<int>(p.first)) ^
+                std::hash<int>()(static_cast<int>(p.second));
+       }
+    };
+
+    struct MousePairHash {
+      std::size_t operator()(const std::pair<Arcade::EventType,
+         Arcade::MouseButton>& p)
+      const noexcept {
+         return std::hash<int>()(static_cast<int>(p.first)) ^
+            std::hash<int>()(static_cast<int>(p.second));
+      }
+    };
     /**
     * @brief Constructs an AEventManager object.
     *
@@ -53,7 +75,7 @@ class AEventManager : public Arcade::IEventManager {
     * @param eventType The type of the event to subscribe to.
     * @param callback The function to call when the event occurs.
     */
-    void subscribe(const Arcade::IEvent& eventType,
+    void subscribe(const Arcade::KeyEvent& eventType,
       const Callback callback) override;
 
    /**
@@ -61,14 +83,23 @@ class AEventManager : public Arcade::IEventManager {
    *
    * @param eventType The type of the event to publish.
    */
-    void publish(const Arcade::IEvent& eventType) override;
+    void publish(const Arcade::KeyEvent& eventType) override;
 
     /**
     * @brief Polls for new events.
     *
     * This method is pure virtual and must be implemented by derived classes.
     */
-    virtual void pollEvents() = 0;
+    virtual void updateInputState(const RawInputState& state) = 0;
+
+    virtual void setKeyPressed(Arcade::Keys key, bool state) = 0;
+
+    virtual bool isKeyPressed(Arcade::Keys key) const = 0;
+    void publishMouseEvent(const Arcade::MouseEvent& eventType);
+    void subscribe(const Arcade::MouseEvent& eventType,
+         const Callback callback);
+    virtual std::pair<std::size_t, std::size_t>
+      getMousePosition() const = 0;
 
  protected:
     /**
@@ -85,12 +116,17 @@ class AEventManager : public Arcade::IEventManager {
     */
     void setMouseY(std::size_t y);
 
- private:
+ protected:
     std::vector<std::pair<int, bool>> _keyEvents;
       /// Stores key event states as (key, state) pairs.
     std::size_t _mouseX;  /// The current X position of the mouse.
     std::size_t _mouseY;  /// The current Y position of the mouse.
-    std::unordered_map<Arcade::EventType, std::vector<Callback>> _subscribers;
+    std::unordered_map<std::pair<Arcade::EventType, Arcade::Keys>,
+      std::vector<Callback>, PairHash> _subscribers;
+    std::shared_ptr<Arcade::IDisplayModule> _displayModule;
+    std::unordered_map<std::pair<Arcade::EventType, Arcade::MouseButton>,
+      std::vector<Callback>, MousePairHash> _mouseSubscribers;
+
          /// Maps event names to subscriber callback functions.
 };
 

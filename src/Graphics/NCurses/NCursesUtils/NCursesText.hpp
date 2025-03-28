@@ -11,14 +11,17 @@
     #include <ncurses.h>
     #include <string>
     #include <memory>
+    #include <map>
+    #include "Models/ColorType.hpp"
 
 namespace NCurses {
 class NCursesText {
  public:
     NCursesText() = default;
-    void drawText(WINDOW* window, const std::string &text, int x, int y);
+    void drawText(WINDOW* window, const std::string &text, int x, int y,
+        Arcade::Color color);
     void drawTextWithColor(WINDOW* window, const std::string &text,
-                          int x, int y, int colorPair);
+        int x, int y, int colorPair);
 
  private:
 };

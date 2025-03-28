@@ -5,13 +5,14 @@
 ** File description:
 ** SDLText
 */
-#include "SDLUtils/SDLText.hpp"
 #include <string>
+#include "SDLUtils/SDLText.hpp"
+#include "Models/ColorType.hpp"
 
 SDL::SDLText::SDLText() {}
 
 void SDL::SDLText::drawText(SDL_Renderer* renderer, const std::string& text,
-    int x, int y, int fontSize) {
+    int x, int y, int fontSize, Arcade::Color color) {
 
     _font.loadFont(fontSize);
     auto font = _font.getFont();

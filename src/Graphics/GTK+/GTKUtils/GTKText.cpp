@@ -9,13 +9,17 @@
 #include <memory>
 #include "GTKUtils/GTKText.hpp"
 #include "GTKUtils/GTKWindow.hpp"
+#include "GTK+/GTKColor.hpp"
+#include "Models/ColorType.hpp"
 
 namespace GTK {
 
 void GTKText::drawText(std::shared_ptr<cairo_t> cr, int x, int y,
-const std::string &text, std::shared_ptr<PangoFontDescription> font) {
+const std::string &text, std::shared_ptr<PangoFontDescription> font,
+Arcade::Color color) {
     cairo_save(cr.get());
 
+    GdkRGBA gtkColor = GTKColor::convertColor(color);
     std::shared_ptr<PangoLayout> layout(
         pango_cairo_create_layout(cr.get()),
         g_object_unref);
@@ -25,7 +29,7 @@ const std::string &text, std::shared_ptr<PangoFontDescription> font) {
     if (font)
         pango_layout_set_font_description(layout.get(), font.get());
 
-    cairo_set_source_rgb(cr.get(), 1, 1, 1);
+    cairo_set_source_rgb(cr.get(), gtkColor.red, gtkColor.green, gtkColor.blue);
 
     cairo_move_to(cr.get(), x, y);
     pango_cairo_show_layout(cr.get(), layout.get());
