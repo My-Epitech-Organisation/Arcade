@@ -4,6 +4,7 @@ find_package(Curses REQUIRED)
 
 set(SRC
     ${SRCCURSES}/NCurses.cpp
+    ${SRCCURSES}/NCursesColor.cpp
     ${SRCUTILS}/NCursesWindow.cpp
     ${SRCUTILS}/NCursesColor.cpp
     ${SRCUTILS}/NCursesText.cpp

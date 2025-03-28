@@ -27,6 +27,8 @@ void NCurses::NCursesWindow::createWindow(int width, int height) {
         endwin();
         throw std::runtime_error("Failed to create NCurses window");
     }
+    _windowHeight = height;
+    _windowWidth = width;
     _isOpen = true;
 }
 
@@ -65,4 +67,12 @@ void NCurses::NCursesWindow::enableKeypad(bool enable) {
 int NCurses::NCursesWindow::getChar() {
     if (!_isOpen) return ERR;
     return wgetch(_window);
+}
+
+int NCurses::NCursesWindow::getWidth() const {
+    return _windowWidth;
+}
+
+int NCurses::NCursesWindow::getHeight() const {
+    return _windowHeight;
 }

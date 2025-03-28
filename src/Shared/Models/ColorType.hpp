@@ -21,7 +21,8 @@ enum Color {
     GREY,
     CYAN,
     WHITE,
-    BLACK
+    BLACK,
+    NOCOLOR
 };
 }  // namespace Arcade
 

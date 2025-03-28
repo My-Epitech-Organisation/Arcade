@@ -6,6 +6,7 @@
 ** SDLEvent
 */
 
+#include <utility>
 #include "SDLUtils/SDLEvent.hpp"
 #include "SDL/SDLKeys.hpp"
 #include "Models/KeysType.hpp"

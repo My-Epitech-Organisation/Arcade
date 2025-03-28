@@ -12,7 +12,7 @@
     #include <pango/pango.h>
     #include <memory>
     #include <string>
-
+    #include "Models/ColorType.hpp"
 namespace GTK {
 
 class GTKText {
@@ -21,7 +21,8 @@ class GTKText {
     ~GTKText() = default;
 
     void drawText(std::shared_ptr<cairo_t> cr, int x, int y,
-        const std::string &text, std::shared_ptr<PangoFontDescription> font);
+        const std::string &text, std::shared_ptr<PangoFontDescription> font,
+        Arcade::Color color);
 
     std::shared_ptr<cairo_surface_t> createTextSurface(
         const std::string &text,

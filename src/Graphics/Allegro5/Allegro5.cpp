@@ -11,6 +11,7 @@
 #include <string>
 #include <iostream>
 #include "Allegro5/Allegro5.hpp"
+#include "Models/ColorType.hpp"
 
 Allegro5::~Allegro5() {
     stop();
@@ -53,7 +54,8 @@ void Allegro5::drawTexture(int x, int y, const std::string& texturePath) {
     al_draw_bitmap(bitmap.get(), x, y, 0);
 }
 
-void Allegro5::drawText(int x, int y, const std::string& text) {
+void Allegro5::drawText(const std::string& text, int x,
+int y, Arcade::Color color) {
     _text.drawText(x, y, text);
 }
 
@@ -67,6 +69,29 @@ bool Allegro5::isOpen() const {
 
 const std::string& Allegro5::getName() const {
     return _name;
+}
+
+int Allegro5::getWidth() const {
+    return al_get_display_width(_window.getDisplay());
+}
+
+int Allegro5::getHeight() const {
+    return al_get_display_height(_window.getDisplay());
+}
+
+bool Allegro5::isKeyPressed(int keyCode) {
+    _event.registerEventSource();
+    return _event.isKeyPressed(keyCode);
+}
+
+bool Allegro5::isMouseButtonPressed(int button) const {
+    _event.registerEventSource();
+    return _event.isMouseButtonPressed(button);
+}
+
+std::pair<size_t, size_t> Allegro5::getMousePosition() const {
+    _event.registerEventSource();
+    return _event.getMousePosition();
 }
 
 extern "C" {

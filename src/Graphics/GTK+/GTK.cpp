@@ -11,8 +11,9 @@
 #include <string>
 #include <iostream>
 #include "GTK+/GTK.hpp"
+#include "Models/ColorType.hpp"
 
-GTKModule::GTKModule() : _name("GTK+") {
+GTKModule::GTKModule() : _name("GTK+"), _eventManager(nullptr) {
     gtk_init();
     _fontManager.loadFonts();
 }
@@ -39,6 +40,7 @@ void GTKModule::init(float x, float y) {
     _window.createWindow(_app, width, height);
     _window.setupDrawingArea(width, height, on_draw, this);
     _window.showWindow();
+    _eventManager = GTK::GTKEvent(_window.getWindow().get());
     _renderer.createRenderer(width, height);
     clearScreen();
 
@@ -97,11 +99,12 @@ void GTKModule::drawTexture(int x, int y, const std::string &texturePath) {
     }
 }
 
-void GTKModule::drawText(int x, int y, const std::string &text) {
+void GTKModule::drawText(const std::string &text, int x, int y,
+    Arcade::Color color) {
     auto renderer = _renderer.getRenderer();
     if (renderer) {
         auto font = _fontManager.getFont("default");
-        _textManager.drawText(renderer, x, y, text, font);
+        _textManager.drawText(renderer, x, y, text, font, color);
     }
 }
 
@@ -118,6 +121,26 @@ bool GTKModule::isOpen() const {
 
 const std::string& GTKModule::getName() const {
     return _name;
+}
+
+int GTKModule::getWidth() const {
+    return _windowWidth;
+}
+
+int GTKModule::getHeight() const {
+    return _windowHeight;
+}
+
+bool GTKModule::isKeyPressed(int keyCode) {
+    return _eventManager.isKeyPressed(keyCode);
+}
+
+std::pair<size_t, size_t> GTKModule::getMousePosition() const {
+    return _eventManager.getMousePosition();
+}
+
+bool GTKModule::isMouseButtonPressed(int button) const {
+    return _eventManager.isMouseButtonPressed(button);
 }
 
 extern "C" {

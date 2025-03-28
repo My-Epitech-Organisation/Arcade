@@ -8,7 +8,10 @@
 #include <stdexcept>
 #include <iostream>
 #include <memory>
+#include <utility>
 #include "Allegro5Utils/Allegro5Event.hpp"
+#include "Allegro5/Allegro5Keys.hpp"
+#include "Models/KeysType.hpp"
 
 namespace Allegro {
 
@@ -48,6 +51,30 @@ void Allegro5Event::registerDisplayEventSource(ALLEGRO_DISPLAY* display) {
         al_register_event_source(_eventQueue.get(),
             al_get_display_event_source(display));
     }
+}
+
+void Allegro5Event::registerEventSource() const {
+    al_get_mouse_state(&_mouseState);
+    al_get_keyboard_state(&_keyState);
+}
+
+bool Allegro5Event::isKeyPressed(int keyCode) const {
+    int allegroKey = Arcade::Allegro5KeyMap::getAllegroKey(
+        static_cast<Arcade::Keys>(keyCode));
+    return al_key_down(&_keyState, allegroKey);
+}
+
+bool Allegro5Event::isMouseButtonPressed(int buttonCode) const {
+    int allegroButton = Arcade::Allegro5KeyMap::getAllegroButton(
+        Arcade::MouseButton(buttonCode));
+    return al_mouse_button_down(&_mouseState, allegroButton);
+}
+
+std::pair<size_t, size_t> Allegro5Event::getMousePosition() const {
+    int x = 0;
+    int y = 0;
+    al_get_mouse_cursor_position(&x, &y);
+    return {x, y};
 }
 
 }  // namespace Allegro

@@ -15,6 +15,7 @@
     #include "SDLUtils/SDLFont.hpp"
     #include "SDLUtils/SDLSurface.hpp"
     #include "SDLUtils/SDLTexture.hpp"
+    #include "Models/ColorType.hpp"
 
 namespace SDL {
 class SDLText {
