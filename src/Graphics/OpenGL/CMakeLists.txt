@@ -3,6 +3,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(Freetype REQUIRED)
+find_package(glm REQUIRED)
 
 set(OPENGL_UTILS_SRC
     OpenGLUtils/OpenGLRenderer.cpp
@@ -14,7 +15,6 @@ set(OPENGL_UTILS_SRC
 
 add_library(arcade_opengl SHARED
     OpenGL.cpp
-    # OpenGLKeys.cpp
     ${OPENGL_UTILS_SRC}
 )
 
