@@ -5,186 +5,235 @@
 ** File description:
 ** OpenGLTexture
 */
-#include <stdexcept>
-#include <string>
+
+#include "OpenGLUtils/OpenGLTexture.hpp"
 #include <iostream>
+#include <vector>
+#include <string>
 #define STB_IMAGE_IMPLEMENTATION
 #include "OpenGLUtils/stb_image.h"
-#include "OpenGLUtils/OpenGLTexture.hpp"
 
 namespace GL {
 
-void OpenGLTexture::init() {
-    // Initialize shaders after GLEW has been initialized
-    initShaders();
-    initRenderData();
-}
+OpenGLTexture::OpenGLTexture() : _VAO(0), _VBO(0),
+_shaderProgram(0), _isInitialized(false) {}
 
-unsigned int OpenGLTexture::loadTexture(const std::string& texturePath) {
-    auto it = _textures.find(texturePath);
-    if (it != _textures.end())
-        return it->second;
-    
-    // Generate texture
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    
-    // Load image
-    int width, height, nrChannels;
-    unsigned char* data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
-    if (data) {
-        GLenum format;
-        if (nrChannels == 1)
-            format = GL_RED;
-        else if (nrChannels == 3)
-            format = GL_RGB;
-        else if (nrChannels == 4)
-            format = GL_RGBA;
-        
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        
-        // Set texture parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        
-        stbi_image_free(data);
-        _textures[texturePath] = textureID;
-    } else {
-        std::cerr << "Failed to load texture: " << texturePath << std::endl;
-        stbi_image_free(data);
-        return 0;
+OpenGLTexture::~OpenGLTexture() {
+    for (auto &texture : _textures)
+        glDeleteTextures(1, &texture.second.id);
+
+    if (_isInitialized) {
+        glDeleteBuffers(1, &_VBO);
+        glDeleteVertexArrays(1, &_VAO);
+        glDeleteProgram(_shaderProgram);
     }
-    if (_quadVAO == 0)
-        initRenderData();
-    
-    return textureID;
 }
 
-void OpenGLTexture::initShaders() {
-    const char *vertexShaderSource = R"(
+void OpenGLTexture::init() {
+    if (_isInitialized)
+        return;
+
+    const char* vertexShaderSource = R"glsl(
         #version 330 core
         layout (location = 0) in vec4 vertex; // <position, texCoords>
-        
         out vec2 TexCoords;
-        
+        uniform mat4 model;
         uniform mat4 projection;
-        uniform vec2 position;
-        uniform vec2 size;
-        
-        void main() {
-            // Apply position and size transformations
-            gl_Position = projection * vec4(
-                position.x + vertex.x * size.x, 
-                position.y + vertex.y * size.y, 
-                0.0, 1.0);
+
+        void main()
+        {
+            gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);
             TexCoords = vertex.zw;
         }
-    )";
-    
-    const char *fragmentShaderSource = R"(
+    )glsl";
+
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
+            << infoLog << std::endl;
+        return;
+    }
+
+    const char* fragmentShaderSource = R"glsl(
         #version 330 core
         in vec2 TexCoords;
         out vec4 color;
-        
-        uniform sampler2D image;
-        
-        void main() {
-            color = texture(image, TexCoords);
+        uniform sampler2D texture1;
+
+        void main()
+        {
+            color = texture(texture1, TexCoords);
         }
-    )";
-    
-    // Compile shaders
-    unsigned int vertexShader, fragmentShader;
-    
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    )glsl";
+
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
-    
-    // Create program
+
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
+            << infoLog << std::endl;
+        return;
+    }
+
     _shaderProgram = glCreateProgram();
     glAttachShader(_shaderProgram, vertexShader);
     glAttachShader(_shaderProgram, fragmentShader);
     glLinkProgram(_shaderProgram);
-    
-    // Clean up
+
+    glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(_shaderProgram, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+            << infoLog << std::endl;
+        return;
+    }
+
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-}
 
-void OpenGLTexture::renderTexture(int x, int y, unsigned int textureID,
-    int windowWidth, int windowHeight) {
-        if (textureID == 0 || _shaderProgram == 0)
-        return;
-    
-    // Use shader
-    glUseProgram(_shaderProgram);
-    
-    // Set up orthographic projection
-    float projection[16] = {
-        2.0f/windowWidth, 0.0f, 0.0f, 0.0f,
-        0.0f, -2.0f/windowHeight, 0.0f, 0.0f,
-        0.0f, 0.0f, -1.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f, 1.0f
-    };
-    
-    // Set uniform values
-    GLint projLoc = glGetUniformLocation(_shaderProgram, "projection");
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, projection);
-    
-    GLint posLoc = glGetUniformLocation(_shaderProgram, "position");
-    glUniform2f(posLoc, (float)x, (float)y);
-    
-    GLint sizeLoc = glGetUniformLocation(_shaderProgram, "size");
-    glUniform2f(sizeLoc, 100.0f, 100.0f); // Adjust size as needed
-    
-    // Set texture uniform
-    glUniform1i(glGetUniformLocation(_shaderProgram, "image"), 0);
-    
-    // Bind texture and VAO
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glBindVertexArray(_quadVAO);
-    
-    // Render quad
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    
-    // Cleanup
-    glBindVertexArray(0);
-    glUseProgram(0);
-}
+    glGenVertexArrays(1, &_VAO);
+    glGenBuffers(1, &_VBO);
 
-void OpenGLTexture::initRenderData() {
-    // Configure VAO/VBO
-    float vertices[] = { 
-        // pos      // tex
+    glBindVertexArray(_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, _VBO);
+
+    float vertices[] = {
+        0.0f, 0.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 1.0f, 0.0f,
         0.0f, 1.0f, 0.0f, 1.0f,
         1.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
-        
-        0.0f, 1.0f, 0.0f, 1.0f,
         1.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 0.0f, 1.0f, 0.0f
+        0.0f, 1.0f, 0.0f, 1.0f
     };
-    
-    glGenVertexArrays(1, &_quadVAO);
-    glGenBuffers(1, &_quadVBO);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, _quadVBO);
+
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    
-    glBindVertexArray(_quadVAO);
+
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE,
+        4 * sizeof(float), reinterpret_cast<void*>(0));
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    _isInitialized = true;
+}
+
+bool OpenGLTexture::loadTexture(const std::string &filename,
+const std::string &id) {
+    if (_textures.find(id) != _textures.end())
+        return true;
+
+    stbi_set_flip_vertically_on_load(true);
+
+    int width, height, channels;
+    unsigned char *data = stbi_load(filename.c_str(), &width,
+        &height, &channels, 0);
+    if (!data) {
+        std::cerr << "Failed to load texture: " << filename << std::endl;
+        return false;
+    }
+
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+        GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    GLenum format = GL_RGB;
+    if (channels == 1)
+        format = GL_RED;
+    else if (channels == 3)
+        format = GL_RGB;
+    else if (channels == 4)
+        format = GL_RGBA;
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0,
+        format, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(data);
+
+    TextureData textureData;
+    textureData.id = textureID;
+    textureData.width = width;
+    textureData.height = height;
+    _textures[id] = textureData;
+
+    return true;
+}
+
+void OpenGLTexture::draw(int x, int y, const std::string &textureId) {
+    if (!_isInitialized) {
+        std::cerr << "Texture system not initialized" << std::endl;
+        return;
+    }
+
+    auto it = _textures.find(textureId);
+    if (it == _textures.end()) {
+        if (!loadTexture(textureId, textureId)) {
+            std::cerr << "Texture not found: " << textureId << std::endl;
+            return;
+        }
+        it = _textures.find(textureId);
+    }
+
+    TextureData &texture = it->second;
+
+    glUseProgram(_shaderProgram);
+
+    int viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
+    float width = static_cast<float>(texture.width);
+    float height = static_cast<float>(texture.height);
+
+    float yPos = static_cast<float>(viewport[3] - y - height);
+    float model[16] = {
+        width, 0.0f, 0.0f, 0.0f,
+        0.0f, height, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        static_cast<float>(x), yPos, 0.0f, 1.0f
+    };
+
+    float projection[16] = {
+        2.0f / viewport[2], 0.0f, 0.0f, 0.0f,
+        0.0f, 2.0f / viewport[3], 0.0f, 0.0f,
+        0.0f, 0.0f, -1.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f, 1.0f
+    };
+
+    GLint modelLoc = glGetUniformLocation(_shaderProgram, "model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model);
+
+    GLint projLoc = glGetUniformLocation(_shaderProgram, "projection");
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, projection);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture.id);
+
+    glBindVertexArray(_VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+
+    glDisable(GL_BLEND);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 }  // namespace GL

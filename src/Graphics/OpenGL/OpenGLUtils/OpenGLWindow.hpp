@@ -16,20 +16,24 @@
 namespace GL {
 
 class OpenGLWindow {
- public:
-    OpenGLWindow() : _window(nullptr, glfwDestroyWindow), _width(0), _height(0) {}
-    ~OpenGLWindow() = default;
-
-    void createWindow(int width, int height);
-    GLFWwindow* getWindow() const;
-    int getWidth() const { return _width; }
-    int getHeight() const { return _height; }
-    bool shouldClose() const;
-
  private:
-    std::unique_ptr<GLFWwindow, decltype(&glfwDestroyWindow)> _window;
+    GLFWwindow *_window;
     int _width;
     int _height;
+    bool _isOpen;
+
+ public:
+    OpenGLWindow();
+    ~OpenGLWindow();
+
+    void init(float width, float height, const std::string &title);
+    void close();
+    void clearScreen();
+    void refreshScreen();
+    bool isOpen() const;
+    GLFWwindow *getWindow() const;
+    int getWidth() const;
+    int getHeight() const;
 };
 
 }  // namespace GL

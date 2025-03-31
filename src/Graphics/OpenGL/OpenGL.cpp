@@ -5,58 +5,64 @@
 ** File description:
 ** OpenGL
 */
-#include <stdexcept>
-#include <memory>
-#include <utility>
-#include <string>
-#include <iostream>
+
 #include "OpenGL/OpenGL.hpp"
+#include <iostream>
+#include <string>
+#include <utility>
+
+OpenGLModule::OpenGLModule()
+    : _name("OpenGL"), _windowWidth(800), _windowHeight(600), _running(true) {}
 
 OpenGLModule::~OpenGLModule() {
     stop();
 }
 
 void OpenGLModule::init(float width, float height) {
-    _windowWidth = static_cast<int>(width);
-    _windowHeight = static_cast<int>(height);
-    _window.createWindow(_windowWidth, _windowHeight);
-    _renderer.init(_window.getWindow());
-    _texture.init();
-    _text.init();
-    _running = true;
+    try {
+        _windowWidth = static_cast<int>(width);
+        _windowHeight = static_cast<int>(height);
+        _window.init(width, height, _name);
+        _text.init();
+        _texture.init();
+        _running = true;
+    } catch (const std::exception &e) {
+        std::cerr << "OpenGL initialization error: " << e.what() << std::endl;
+        throw;
+    }
 }
 
 void OpenGLModule::stop() {
+    if (_window.isOpen())
+        _window.close();
     _running = false;
-    glfwTerminate();
 }
 
 void OpenGLModule::clearScreen() {
-    _renderer.clearScreen();
+    _window.clearScreen();
 }
 
 void OpenGLModule::refreshScreen() {
-    _renderer.refreshScreen(_window.getWindow());
+    _window.refreshScreen();
 }
 
 void OpenGLModule::drawEntity(int x, int y, char symbol) {
-    std::string entityStr(1, symbol);
-    drawText(x, y, entityStr);
+    std::string text(1, symbol);
+    _text.draw(text, x, y, Arcade::Color::WHITE);
 }
 
-void OpenGLModule::drawTexture(int x, int y, const std::string& texturePath) {
-    unsigned int textureID = _texture.loadTexture(texturePath);
-    if (textureID != 0)
-        _texture.renderTexture(x, y, textureID, _windowWidth, _windowHeight);
+void OpenGLModule::drawTexture(int x, int y, const std::string &textureId) {
+    _texture.draw(x, y, textureId);
 }
 
-void OpenGLModule::drawText(int x, int y, const std::string& text) {
-    _text.drawText(x, y, text, _windowWidth, _windowHeight);
+void OpenGLModule::drawText(const std::string &text, int x, int y,
+    Arcade::Color color) {
+    _text.draw(text, x, y, color);
 }
 
 void OpenGLModule::pollEvents() {
-    glfwPollEvents();
-    if (_window.shouldClose())
+    _event.pollEvents(_window.getWindow());
+    if (!_window.isOpen())
         _running = false;
 }
 
@@ -68,16 +74,27 @@ const std::string& OpenGLModule::getName() const {
     return _name;
 }
 
+int OpenGLModule::getWidth() const {
+    return _windowWidth;
+}
+
+int OpenGLModule::getHeight() const {
+    return _windowHeight;
+}
+
+bool OpenGLModule::isKeyPressed(int keyCode) {
+    return _event.isKeyPressed(keyCode);
+}
+
+bool OpenGLModule::isMouseButtonPressed(int button) const {
+    return _event.isMouseButtonPressed(button);
+}
+
+std::pair<size_t, size_t> OpenGLModule::getMousePosition() const {
+    return _event.getMousePosition();
+}
+
 extern "C" {
-    __attribute__((constructor))
-    const char* init_opengl(void) {
-        return "Lib";
-    }
-
-    __attribute__((destructor))
-    void fini_opengl(void) {
-    }
-
     Arcade::IDisplayModule* entryPoint(void) {
         return new OpenGLModule();
     }

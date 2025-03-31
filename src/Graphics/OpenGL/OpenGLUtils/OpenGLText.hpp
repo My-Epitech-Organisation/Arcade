@@ -12,33 +12,35 @@
     #include <GLFW/glfw3.h>
     #include <ft2build.h>
     #include FT_FREETYPE_H
-    #include <map>
     #include <string>
-    #include <memory>
+    #include <map>
+    #include <glm/glm.hpp>
+    #include "Models/ColorType.hpp"
 
 namespace GL {
-
-struct Character {
-    unsigned int TextureID;
-    int Width;
-    int Height;
-    int Bearing[2];
-    unsigned int Advance;
-};
-
 class OpenGLText {
  public:
-    OpenGLText() : _shader(0) {}
-    ~OpenGLText() = default;
-    void init();
-    void drawText(int x, int y, const std::string& text, int windowWidth, int windowHeight);
+    struct Character {
+        GLuint textureID;
+        int width;
+        int height;
+        int bearingX;
+        int bearingY;
+        unsigned int advance;
+    };
 
+    OpenGLText();
+    ~OpenGLText();
+    void init();
+    void draw(const std::string &text, int x, int y, Arcade::Color color);
  private:
     std::map<char, Character> _characters;
-    unsigned int _VAO, _VBO;
-    unsigned int _shader;
-    unsigned int compileTextShader();
-    void loadChar();
+    GLuint _VAO;
+    GLuint _VBO;
+    GLuint _shaderProgram;
+    bool _isInitialized;
+    int _fontHeight;
+    int _fontAscender;
 };
 
 }  // namespace GL
