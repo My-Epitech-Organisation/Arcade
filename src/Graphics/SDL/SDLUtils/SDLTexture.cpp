@@ -33,6 +33,7 @@ std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>
     if (!textTexture) {
         std::cerr << "Unable to create texture from rendered text: "
             << SDL_GetError() << std::endl;
+        exit(84);
     }
     return textTexture;
 }

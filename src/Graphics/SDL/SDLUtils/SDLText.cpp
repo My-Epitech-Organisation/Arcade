@@ -8,6 +8,7 @@
 #include <string>
 #include "SDLUtils/SDLText.hpp"
 #include "Models/ColorType.hpp"
+#include "SDL/SDLColor.hpp"
 
 SDL::SDLText::SDLText() {}
 
@@ -15,10 +16,12 @@ void SDL::SDLText::drawText(SDL_Renderer* renderer, const std::string& text,
     int x, int y, int fontSize, Arcade::Color color) {
 
     _font.loadFont(fontSize);
+    if (_font.getFont() == nullptr)
+        exit(84);
     auto font = _font.getFont();
 
-    SDL_Color textColor = {255, 255, 255, 255};
-    auto surface = _surface.createTextSurface(font.get(), text, textColor);
+    auto surface = _surface.createTextSurface(font.get(), text,
+        SDLColor::convertColor(color));
     if (!surface)
         return;
     auto texture = _texture.createTextTexture(renderer, surface.get());

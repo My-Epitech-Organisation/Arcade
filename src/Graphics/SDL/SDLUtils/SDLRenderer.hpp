@@ -25,6 +25,8 @@ class SDLRenderer {
         decltype(&SDL_DestroyRenderer)> getRenderer();
     void clearScreen();
     void refreshScreen();
+    void destroyRenderer();
+    SDL_Renderer* getRendererPtr() const { return _renderer.get(); }
  private:
     std::unique_ptr<SDL_Renderer,
         decltype(&SDL_DestroyRenderer)> _renderer;

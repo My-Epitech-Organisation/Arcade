@@ -50,9 +50,18 @@ void GTKModule::init(float x, float y) {
 }
 
 void GTKModule::stop() {
+    if (!_running) return;
     _running = false;
 
+    _eventManager = GTK::GTKEvent(nullptr);
+
     _textures.clear();
+
+    while (g_main_context_iteration(nullptr, FALSE)) {}
+
+    if (_window.getWindow()) {
+        gtk_widget_set_visible(_window.getWindow().get(), FALSE);
+    }
 
     if (_app) {
         g_application_quit(G_APPLICATION(_app.get()));
@@ -60,7 +69,8 @@ void GTKModule::stop() {
         while (g_main_context_iteration(nullptr, FALSE)) {}
 
         _app.reset();
-    }  _app.reset();
+    }
+    _renderer = GTK::GTKRenderer();
 }
 
 void GTKModule::clearScreen() {

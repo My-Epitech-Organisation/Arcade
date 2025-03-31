@@ -31,6 +31,9 @@ class DLLoader {
     void setLibPath(const std::string& libPath);
     std::unique_ptr<T> getInstanceUPtr(
         const std::string& entryPointName);
+    const std::string& getLibPath() const {
+        return _libPath;
+    }
 };
 
 template <typename T>

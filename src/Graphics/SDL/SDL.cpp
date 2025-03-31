@@ -21,6 +21,8 @@ SDLModule::~SDLModule() {
 }
 
 void SDLModule::init(float x, float y) {
+    if (_initialized)
+        return;
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
         throw std::runtime_error("SDL could not initialize! SDL Error: "
             + std::string(SDL_GetError()));
@@ -42,18 +44,18 @@ void SDLModule::init(float x, float y) {
     _renderer.createRenderer(_window.getWindow());
     _windowWidth = static_cast<int>(x);
     _windowHeight = static_cast<int>(y);
+    _initialized = true;
 }
 
 void SDLModule::stop() {
-    if (_renderer.getRenderer()) {
-        _renderer.getRenderer().reset();
-    }
-    if (_window.getWindow()) {
-        _window.getWindow().reset();
-    }
+    if (!_initialized)
+        return;
+    _renderer.destroyRenderer();
+    _window.destroyWindow();
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
+    _initialized = false;
 }
 
 void SDLModule::clearScreen() {
@@ -92,8 +94,10 @@ int x, int y, Arcade::Color color) {
 void SDLModule::pollEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT)
+        if (event.type == SDL_QUIT) {
             _running = false;
+            stop();
+        }
     }
 }
 
@@ -119,6 +123,10 @@ bool SDLModule::isMouseButtonPressed(int button) const {
 
 std::pair<size_t, size_t> SDLModule::getMousePosition() const {
     return _event.getMousePosition();
+}
+
+const std::string& SDLModule::getName() const {
+    return _name;
 }
 
 extern "C" __attribute__((constructor))
