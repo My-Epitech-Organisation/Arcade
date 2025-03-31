@@ -22,7 +22,8 @@ class OpenGLRenderer {
     void init(GLFWwindow* window);
     void clearScreen();
     void refreshScreen(GLFWwindow* window);
-    unsigned int compileShader(const char* vertexShaderSource, const char* fragmentShaderSource);
+    unsigned int compileShader(const char* vertexShaderSource,
+        const char* fragmentShaderSource);
 
  private:
     unsigned int _shaderProgram = 0;

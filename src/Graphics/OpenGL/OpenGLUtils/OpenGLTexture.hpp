@@ -17,21 +17,26 @@
 namespace GL {
 
 class OpenGLTexture {
+ private:
+    struct TextureData {
+        GLuint id;
+        int width;
+        int height;
+    };
+
+    std::unordered_map<std::string, TextureData> _textures;
+    GLuint _VAO;
+    GLuint _VBO;
+    GLuint _shaderProgram;
+    bool _isInitialized;
+
  public:
-    OpenGLTexture() : _quadVAO(0), _quadVBO(0), _shaderProgram(0) {}
-    ~OpenGLTexture() = default;
+    OpenGLTexture();
+    ~OpenGLTexture();
 
     void init();
-    unsigned int loadTexture(const std::string& texturePath);
-    void renderTexture(int x, int y, unsigned int textureID, int windowWidth, int windowHeight);
-    
- private:
-    std::unordered_map<std::string, unsigned int> _textures;
-    unsigned int _quadVAO = 0;
-    unsigned int _quadVBO = 0;
-    unsigned int _shaderProgram = 0;
-    void initShaders();
-    void initRenderData();
+    void draw(int x, int y, const std::string &textureId);
+    bool loadTexture(const std::string &filename, const std::string &id);
 };
 
 }  // namespace GL

@@ -9,10 +9,12 @@ set(OPENGL_UTILS_SRC
     OpenGLUtils/OpenGLText.cpp
     OpenGLUtils/OpenGLTexture.cpp
     OpenGLUtils/OpenGLWindow.cpp
+    OpenGLUtils/OpenGLEvent.cpp
 )
 
 add_library(arcade_opengl SHARED
     OpenGL.cpp
+    # OpenGLKeys.cpp
     ${OPENGL_UTILS_SRC}
 )
 

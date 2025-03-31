@@ -50,7 +50,7 @@ void OpenGLRenderer::refreshScreen(GLFWwindow* window) {
 }
 
 unsigned int OpenGLRenderer::compileShader(const char* vertexShaderSource,
-    const char* fragmentShaderSource) {
+const char* fragmentShaderSource) {
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
