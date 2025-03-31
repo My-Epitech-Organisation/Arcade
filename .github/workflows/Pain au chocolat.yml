@@ -152,6 +152,10 @@ jobs:
           has_error=0
           while IFS= read -r line; do
             file=$(echo "$line" | awk -F':' '{print $1}')
+            # Skip stb_image.h file from checks
+            if [[ "$file" == *"src/Graphics/OpenGL/OpenGLUtils/stb_image.h"* ]]; then
+              continue
+            fi
             line_num=$(echo "$line" | awk -F':' '{print $2}')
             msg=$(echo "$line" | awk -F':' '{print $3}')
             # Extract severity and type from message using regex
