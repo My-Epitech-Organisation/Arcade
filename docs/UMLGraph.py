@@ -96,21 +96,21 @@ uml.node("SystemManager", label="""<
 </TABLE>>""", shape="none")
 
 # Components
-uml.node("PositionComponent", label="""<
+uml.node("ECS/Components/PositionComponent", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
     <TR><TD><B>PositionComponent</B></TD></TR>
     <TR><TD ALIGN="LEFT">+ x: int</TD></TR>
     <TR><TD ALIGN="LEFT">+ y: int</TD></TR>
 </TABLE>>""", shape="none")
 
-uml.node("VelocityComponent", label="""<
+uml.node("ECS/Components/VelocityComponent", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
     <TR><TD><B>VelocityComponent</B></TD></TR>
     <TR><TD ALIGN="LEFT">+ dx: int</TD></TR>
     <TR><TD ALIGN="LEFT">+ dy: int</TD></TR>
 </TABLE>>""", shape="none")
 
-uml.node("SpriteComponent", label="""<
+uml.node("ECS/Components/SpriteComponent", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
     <TR><TD><B>SpriteComponent</B></TD></TR>
     <TR><TD ALIGN="LEFT">+ path: string</TD></TR>
@@ -125,9 +125,9 @@ uml.node("MovementSystem", label="""<
     <TR><TD ALIGN="LEFT">+ update()</TD></TR>
 </TABLE>>""", shape="none")
 
-uml.node("AEventManager", label="""<
+uml.node("EventManager", label="""<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-    <TR><TD><B>AEventManager</B></TD></TR>
+    <TR><TD><B>EventManager</B></TD></TR>
     <TR><TD ALIGN="LEFT">- _keyEvents: vector&lt;pair&lt;int, bool&gt;&gt;</TD></TR>
     <TR><TD ALIGN="LEFT">- _mouseX: size_t</TD></TR>
     <TR><TD ALIGN="LEFT">- _mouseY: size_t</TD></TR>
@@ -150,7 +150,7 @@ uml.node("WindowManager", label="""<
 
 # Relationships
 # Interface implementations
-uml.edge("IEventManager", "AEventManager", arrowhead="vee", label="implements")
+uml.edge("IEventManager", "EventManager", arrowhead="vee", label="implements")
 uml.edge("ISystem", "MovementSystem", arrowhead="vee", label="implements")
 uml.edge("IGameModule", "EntityManager", arrowhead="vee", label="uses")
 uml.edge("IDisplayModule", "EntityManager", arrowhead="vee", label="uses")
@@ -171,9 +171,9 @@ uml.edge("SystemManager", "ISystem", arrowhead="vee", label="manages")
 uml.edge("MovementSystem", "ComponentManager", arrowhead="vee", label="uses")
 
 # Component relationships
-uml.edge("ComponentManager", "PositionComponent", arrowhead="vee", label="manages")
-uml.edge("ComponentManager", "VelocityComponent", arrowhead="vee", label="manages")
-uml.edge("ComponentManager", "SpriteComponent", arrowhead="vee", label="manages")
+uml.edge("ComponentManager", "ECS/Components/PositionComponent", arrowhead="vee", label="manages")
+uml.edge("ComponentManager", "ECS/Components/VelocityComponent", arrowhead="vee", label="manages")
+uml.edge("ComponentManager", "ECS/Components/SpriteComponent", arrowhead="vee", label="manages")
 
 # Event relationships
 uml.edge("IGameModule", "IEventManager", arrowhead="vee", label="uses")

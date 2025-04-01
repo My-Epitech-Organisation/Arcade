@@ -104,7 +104,7 @@ extern "C" {
     void fini_allegro5(void) {
     }
 
-    Arcade::IDisplayModule* entryPoint(void) {
+    Arcade::IArcadeModule* entryPoint(void) {
         return new Allegro5();
     }
 }

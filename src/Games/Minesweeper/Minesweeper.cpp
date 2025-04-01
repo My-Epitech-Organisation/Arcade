@@ -6,133 +6,73 @@
 ** Minesweeper game module implementation
 */
 #include <iostream>
+#include <memory>
+#include <vector>
+#include <random>
+#include <algorithm>
 #include "Games/Minesweeper/Minesweeper.hpp"
 #include "Shared/Models/KeysType.hpp"
 #include "Shared/Models/EventType.hpp"
 #include "Shared/Interface/Core/IEventManager.hpp"
+#include "Games/Minesweeper/System/GameLogic.hpp"
+#include "Games/Minesweeper/System/RenderSystem.hpp"
+#include "Games/Minesweeper/System/EventSubSystem.hpp"
+#include "Games/Minesweeper/Components/Board.hpp"
+#include "Games/Minesweeper/Components/Cell.hpp"
+#include "Games/Minesweeper/Components/Bomb.hpp"
+#include "ECS/Components/Position/PositionComponent.hpp"
+#include "ECS/Components/Sprite/SpriteComponent.hpp"
+#include "Games/Minesweeper/MinesweeperFactory.hpp"
 
 namespace Arcade {
 
-    MinesweeperEntity::MinesweeperEntity(int id, int x, int y, char symbol)
-    : _id(id), _x(x), _y(y), _symbol(symbol) {}
-
-int MinesweeperEntity::getId() const {
-    return _id;
-}
-
-int MinesweeperEntity::getX() const {
-    return _x;
-}
-
-int MinesweeperEntity::getY() const {
-    return _y;
-}
-
-char MinesweeperEntity::getSymbol() const {
-    return _symbol;
-}
-
-MinesweeperGame::MinesweeperGame(std::shared_ptr<Arcade::IEventManager> eventManager)
-    : _eventManager(eventManager), _gameOver(false), _gameWon(false),
-      _cursorX(0), _cursorY(0), _width(15), _height(15),
-      _mineCount(30), _entityIdCounter(0), _inputCooldown(0.0f) {
-    // Constructor implementation
-}
-
-MinesweeperGame::~MinesweeperGame() {
-    stop();
-}
-
-void MinesweeperGame::init() {
+void MinesweeperGame::init(std::shared_ptr<IEventManager> eventManager,
+    std::shared_ptr<IComponentManager> componentManager,
+    std::shared_ptr<IEntityManager> entityManager) {
     _gameOver = false;
     _gameWon = false;
-    _cursorX = 0;
-    _cursorY = 0;
-    _entityIdCounter = 0;
-    _entities.clear();
-    _inputCooldown = 0.0f;
+    _eventManager = eventManager;
+    _componentManager = componentManager;
+    _entityManager = entityManager;
 
     createBoard();
-    updateEntities();
+    // Initialize the event system first
+    _eventSystem = std::make_shared<EventSubSystem>(
+        _componentManager, _entityManager, _eventManager);
+    // Add other systems
+    _systems.push_back(std::make_shared<GameLogic>(_componentManager, _entityManager));
+    _systems.push_back(std::make_shared<RenderSystem>(_componentManager, _entityManager,
+                                                        std::make_pair(10u, 10u))); // Add board dimensions
+    _systems.push_back(_eventSystem);
+}
 
-    if (_eventManager) {
-        KeyEvent upevent(Keys::UP, EventType::KEY_PRESSED);
-        _eventManager->subscribe(upevent, [this]() {
-            moveCursor(0, -1);
-            return true;
-        });
-
-        KeyEvent downevent(Keys::DOWN, EventType::KEY_PRESSED);
-        _eventManager->subscribe(downevent, [this]() {
-            moveCursor(0, 1);
-            return true;
-        });
-        
-        KeyEvent leftevent(Keys::LEFT, EventType::KEY_PRESSED);
-        _eventManager->subscribe(leftevent, [this]() {
-            moveCursor(-1, 0);
-            return true;
-        });
-        
-        KeyEvent rightevent(Keys::RIGHT, EventType::KEY_PRESSED);
-        _eventManager->subscribe(rightevent, [this]() {
-            moveCursor(1, 0);
-            return true;
-        });
-        
-        KeyEvent spaceevent(Keys::SPACE, EventType::KEY_PRESSED);
-        _eventManager->subscribe(spaceevent, [this]() {
-            revealCell();
-            return true;
-        });
-        
-        KeyEvent fevent(Keys::F, EventType::KEY_PRESSED);
-        _eventManager->subscribe(fevent, [this]() {
-            flagCell();
-            return true;
-        });
-
-        KeyEvent qevent(Keys::Q, EventType::KEY_PRESSED);
-        _eventManager->subscribe(qevent, [this]() {
+void MinesweeperGame::update() {
+    // Check for victory condition
+    Arcade::Entity boardEntity = 0;
+    for (const auto &entities: _entityManager->getEntities()) {
+        if (entities.second == "Board") {
+            boardEntity = entities.first;
+            break;
+        }
+    }
+    if (boardEntity != 0) {
+        auto comp = _componentManager->getComponentByType(boardEntity, ComponentType::BOARD);
+        auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>(comp);
+        if (board && !board->isGameOver()) {
+            _gameWon = checkVictory(boardEntity);
+            if (_gameWon) {
+                board->setGameWon(true);
+            }
+        }
+        // Update game over status
+        if (board && board->isGameOver()) {
             _gameOver = true;
-            return true;
-        });
-
-        KeyEvent revent(Keys::R, EventType::KEY_PRESSED);
-        _eventManager->subscribe(revent, [this]() {
-            stop();
-            init();
-            return true;
-        });
+        }
     }
-}
-
-void MinesweeperGame::update(float deltaTime) {
-    if (_inputCooldown > 0) {
-        _inputCooldown -= deltaTime;
+    // Update all systems
+    for (const auto& system : _systems) {
+        system->update();
     }
-    
-    // We don't need to check for key presses here anymore as they're handled by event callbacks
-    
-    if (_board && _board->isGameOver()) {
-        _gameOver = true;
-    }
-
-    if (_board && _board->hasWon()) {
-        _gameWon = true;
-    }
-
-    // Always refresh entities
-    updateEntities();
-}
-
-void MinesweeperGame::stop() {
-    _entities.clear();
-    _board.reset();
-}
-
-std::vector<std::shared_ptr<IEntity>> MinesweeperGame::getEntities() const {
-    return _entities;
 }
 
 bool MinesweeperGame::isGameOver() const {
@@ -143,147 +83,100 @@ bool MinesweeperGame::hasWon() const {
     return _gameWon;
 }
 
-void MinesweeperGame::createBoard() {
-    _board = std::make_unique<Minesweeper::Board>(_width, _height, _mineCount);
-    _board->initialize();
-}
-
-void MinesweeperGame::updateEntities() {
-    _entities.clear();
-
-    // Create entities for each cell on the board
-    if (_board) {
-        for (size_t y = 0; y < _board->getHeight(); ++y) {
-            for (size_t x = 0; x < _board->getWidth(); ++x) {
-                const Minesweeper::Cell& cell = _board->getCell(x, y);
-                char symbol = cell.getDisplayChar();
-                
-                auto entity = std::make_shared<MinesweeperEntity>(
-                    generateEntityId(), 
-                    static_cast<int>(x), 
-                    static_cast<int>(y), 
-                    symbol);
-                
-                _entities.push_back(entity);
-            }
-        }
-    }
-
-    // Create cursor entity (shown with different character to distinguish it)
-    // Use a higher Z value to ensure the cursor is rendered on top
-    auto cursorEntity = std::make_shared<MinesweeperEntity>(
-        generateEntityId(), _cursorX, _cursorY, '@');
-    
-    _entities.push_back(cursorEntity);
-
-    // Add game status entities if needed
-    if (_gameOver) {
-        auto gameOverEntity = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 1, _height + 1, 'G');
-        _entities.push_back(gameOverEntity);
-        
-        auto gameOverEntity2 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 2, _height + 1, 'A');
-        _entities.push_back(gameOverEntity2);
-        
-        auto gameOverEntity3 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 3, _height + 1, 'M');
-        _entities.push_back(gameOverEntity3);
-        
-        auto gameOverEntity4 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 4, _height + 1, 'E');
-        _entities.push_back(gameOverEntity4);
-        
-        auto gameOverEntity5 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 5, _height + 1, ' ');
-        _entities.push_back(gameOverEntity5);
-        
-        auto gameOverEntity6 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 6, _height + 1, 'O');
-        _entities.push_back(gameOverEntity6);
-        
-        auto gameOverEntity7 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 7, _height + 1, 'V');
-        _entities.push_back(gameOverEntity7);
-        
-        auto gameOverEntity8 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 8, _height + 1, 'E');
-        _entities.push_back(gameOverEntity8);
-        
-        auto gameOverEntity9 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 9, _height + 1, 'R');
-        _entities.push_back(gameOverEntity9);
-    } else if (_gameWon) {
-        auto winEntity = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 1, _height + 1, 'Y');
-        _entities.push_back(winEntity);
-        
-        auto winEntity2 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 2, _height + 1, 'O');
-        _entities.push_back(winEntity2);
-        
-        auto winEntity3 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 3, _height + 1, 'U');
-        _entities.push_back(winEntity3);
-        
-        auto winEntity4 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 4, _height + 1, ' ');
-        _entities.push_back(winEntity4);
-        
-        auto winEntity5 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 5, _height + 1, 'W');
-        _entities.push_back(winEntity5);
-        
-        auto winEntity6 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 6, _height + 1, 'I');
-        _entities.push_back(winEntity6);
-        
-        auto winEntity7 = std::make_shared<MinesweeperEntity>(
-            generateEntityId(), 7, _height + 1, 'N');
-        _entities.push_back(winEntity7);
-    }
-}
-
-void MinesweeperGame::moveCursor(int dx, int dy) {
-    if (_inputCooldown <= 0) {
-        int newX = _cursorX + dx;
-        int newY = _cursorY + dy;
-
-        if (newX >= 0 && static_cast<size_t>(newX) < _board->getWidth() &&
-            newY >= 0 && static_cast<size_t>(newY) < _board->getHeight()) {
-            _cursorX = newX;
-            _cursorY = newY;
-            _inputCooldown = 0.15f; // Cooldown to prevent too rapid movement
-        }
-    }
-}
-
-void MinesweeperGame::revealCell() {
-    if (_inputCooldown <= 0 && !_gameOver && !_gameWon) {
-        _board->revealCell(_cursorX, _cursorY);
-        _inputCooldown = 0.2f; // Cooldown to prevent accidental double-clicks
-    }
-}
-
-void MinesweeperGame::flagCell() {
-    if (_inputCooldown <= 0 && !_gameOver && !_gameWon) {
-        _board->flagCell(_cursorX, _cursorY);
-        _inputCooldown = 0.2f;
-    }
-}
-
-int MinesweeperGame::generateEntityId() {
-    return _entityIdCounter++;
+void MinesweeperGame::stop() {
+    _gameOver = true;
 }
 
 extern "C" {
-    Arcade::IGameModule* entryPoint(std::shared_ptr<Arcade::IEventManager> eventManager) {
-        return new Arcade::MinesweeperGame(eventManager);
+    // Inside the extern "C" block
+    IArcadeModule* entryPoint(void) {
+        try {
+            return new MinesweeperGame();
+        } catch (const std::exception& e) {
+            std::cerr << "Error creating MinesweeperGame instance: " << e.what() << std::endl;
+            return nullptr;
+        }
     }
-
-    void destroy(Arcade::IGameModule* instance) {
+    void destroy(IGameModule* instance) {
         delete instance;
     }
 }
 
+void MinesweeperGame::createBoard() {
+    // Board dimensions and properties
+    size_t width = 10;
+    size_t height = 10;
+    size_t mineCount = 10;
+    float cellSize = 20.0f;
+    // Board position (centered on screen with some offset)
+    float screenWidth = 800.0f;  // Assume default screen size
+    float screenHeight = 600.0f;
+    float boardWidth = width * cellSize;
+    float boardHeight = height * cellSize;
+    float boardX = (screenWidth - boardWidth) / 2;
+    float boardY = (screenHeight - boardHeight) / 2;
+    // Use our factory to create the board and all cells
+    Minesweeper::MinesweeperFactory factory(_entityManager, _componentManager);
+    // Create board entity with position
+    Arcade::Entity boardEntity = factory.createBoard(boardX, boardY, width, height, mineCount);
+    // Initialize the game board with cells
+    factory.initializeGame(boardEntity, boardX, boardY, cellSize);
+}
+
+bool MinesweeperGame::checkVictory(Arcade::Entity boardEntity) {
+    auto comp = _componentManager->getComponentByType(boardEntity, ComponentType::BOARD);
+    auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>(comp);
+    if (!board) return false;
+    size_t width = board->getWidth();
+    size_t height = board->getHeight();
+    // Check if all non-mine cells are revealed
+    for (size_t y = 0; y < height; y++) {
+        for (size_t x = 0; x < width; x++) {
+            Arcade::Entity cellEntity = board->getCellEntity(x, y);
+            auto comp2 = _componentManager->getComponentByType(cellEntity, ComponentType::CELL);
+            auto cell = std::dynamic_pointer_cast<Arcade::Minesweeper::Cell>(comp2);
+            if (!cell) continue;
+            // If a non-mine cell is not revealed, game is not won yet
+            if (!cell->isMine() && cell->getState() != Arcade::Minesweeper::Cell::REVEALED) {
+                return false;
+            }
+        }
+    }
+    // All non-mine cells are revealed, victory!
+    return true;
+}
+
+std::string MinesweeperGame::getSpecialCompSprite(size_t id) const {
+    // Check for BombComponent
+    auto component = _componentManager->getComponentByType(id, ComponentType::BOMB);
+    auto bombComponent = std::dynamic_pointer_cast<Arcade::Minesweeper::BombComponent>(component);
+    if (bombComponent) {
+        // Return the appropriate sprite path based on bomb state
+        if (bombComponent->isRevealed()) {
+            return "assets/minesweeper/mine.png";  // Revealed bomb sprite
+        } else {
+            return "assets/minesweeper/hidden.png";  // Hidden bomb sprite
+        }
+    }
+    auto comp2 = _componentManager->getComponentByType(id, ComponentType::CELL);
+    auto cellComponent = std::dynamic_pointer_cast<Arcade::Minesweeper::Cell>(comp2);
+    if (cellComponent) {
+        // Return appropriate cell sprite based on state and adjacent mines
+        if (cellComponent->getState() == Arcade::Minesweeper::Cell::FLAGGED) {
+            return "assets/minesweeper/flag.png";
+        } else if (cellComponent->getState() == Arcade::Minesweeper::Cell::REVEALED && !cellComponent->isMine()) {
+            // For revealed non-mine cells, show number of adjacent mines
+            int adjacentMines = cellComponent->getAdjacentMines();
+            if (adjacentMines > 0) {
+                return "assets/minesweeper/number_" + std::to_string(adjacentMines) + ".png";
+            } else {
+                return "assets/minesweeper/empty.png";  // No adjacent mines
+            }
+        } else if (cellComponent->getState() == Arcade::Minesweeper::Cell::HIDDEN) {
+            return "assets/minesweeper/hidden.png";
+        }
+    }
+    // If no special component is found or no special rendering is needed, return empty string
+    return "";
+}
 }  // namespace Arcade

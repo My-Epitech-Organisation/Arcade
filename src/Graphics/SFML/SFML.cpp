@@ -51,6 +51,7 @@ void SFML::drawEntity(int x, int y, char symbol) {
 }
 
 void SFML::drawTexture(int x, int y, const std::string& texturePath) {
+    std::cout << "MArin suce gouluement des queues" << std::endl;
     auto texture = loadTexture(texturePath);
     if (!texture) {
         return;
@@ -59,6 +60,7 @@ void SFML::drawTexture(int x, int y, const std::string& texturePath) {
     sf::Sprite sprite;
     sprite.setTexture(*texture);
     sprite.setPosition(static_cast<float>(x), static_cast<float>(y));
+    sprite.setScale(0.2f, 0.2f);
 
     _window->draw(sprite);
 }

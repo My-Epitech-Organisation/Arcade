@@ -1,10 +1,10 @@
 add_library(arcade_velocity SHARED VelocityComponent.cpp)
 
 set_target_properties(arcade_velocity PROPERTIES PREFIX "" OUTPUT_NAME "arcade_velocity")
-target_include_directories(arcade_velocity PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../.. ${CMAKE_CURRENT_SOURCE_DIR}/..)
+target_include_directories(arcade_velocity PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../.. ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_ROOT}/src/Shared)
 if(ENABLE_COVERAGE)
     target_compile_options(arcade_velocity PRIVATE -O0 -g --coverage -fprofile-arcs -ftest-coverage)
-    target_link_libraries(arcade_velocity PRIVATE arcade_event --coverage)
+    target_link_libraries(arcade_velocity PRIVATE --coverage)
 else ()
-    target_link_libraries(arcade_velocity PRIVATE arcade_event)
+    target_link_libraries(arcade_velocity PRIVATE)
 endif()

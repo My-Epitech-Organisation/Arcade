@@ -10,8 +10,8 @@
     #define SRC_GRAPHICS_OPENGL_OPENGLKEYS_HPP_
     #include <GLFW/glfw3.h>
     #include <unordered_map>
-    #include "Models/KeysType.hpp"
-    #include "Models/MouseButtonType.hpp"
+    #include "Shared/Models/KeysType.hpp"
+    #include "Shared/Models/MouseButtonType.hpp"
 
 namespace Arcade {
 

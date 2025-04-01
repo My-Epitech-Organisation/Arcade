@@ -10,8 +10,8 @@
 #include <vector>
 #include <string>
 #include "Menu/Menu.hpp"
-#include "Interface/Display/IDisplayModule.hpp"
-#include "Models/ColorType.hpp"
+#include "Shared/Interface/Display/IDisplayModule.hpp"
+#include "Shared/Models/ColorType.hpp"
 
 namespace Arcade {
 
@@ -89,6 +89,9 @@ void Menu::displayGraphicsSelection(
 const std::vector<std::string> &graphicsLibs, size_t selectedGraphics) {
     displaySelectionMenu("SELECT GRAPHICS LIBRARY",
         graphicsLibs, selectedGraphics);
+    for (auto &lib : graphicsLibs) {
+        std::cout << lib << std::endl;
+    }
 }
 
 void Menu::setWindow(std::shared_ptr<Window> window) {

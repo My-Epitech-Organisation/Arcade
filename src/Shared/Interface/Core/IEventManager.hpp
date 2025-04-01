@@ -5,7 +5,6 @@
 ** File description:
 ** IEventManager interface
 */
-// Copyright 2025 <Epitech>
 /**
  * @file IEventManager.hpp
  * @brief Interface for managing user input events in the Arcade project.
@@ -14,29 +13,56 @@
  * keyboard and mouse events, including retrieving event states and polling for new events.
  */
 
-#ifndef SRC_SHARED_INTERFACE_CORE_IEVENTMANAGER_HPP_
-    #define SRC_SHARED_INTERFACE_CORE_IEVENTMANAGER_HPP_
-    #include <functional>
-    #include <string>
-    #include "Interface/Core/IEvent.hpp"
-    #include "EventManager/KeyEvent/KeyEvent.hpp"
+ #ifndef SRC_SHARED_INTERFACE_CORE_IEVENTMANAGER_HPP_
+ #define SRC_SHARED_INTERFACE_CORE_IEVENTMANAGER_HPP_
+ #include <functional>
+ #include <utility>
+ #include "Interface/Core/IEvent.hpp"
 namespace Arcade {
 
 /**
- * @class IEventManager
- * @brief Interface for event management.
- *
- * The IEventManager interface provides methods for handling user input events,
- * including keyboard and mouse input, event polling, and retrieving the current
- * mouse position.
- */
+* @class IEventManager
+* @brief Interface for event management.
+*
+* The IEventManager interface provides methods for handling user input events,
+* including keyboard and mouse input, event polling, and retrieving the current
+* mouse position.
+*/
 class IEventManager {
- public:
-    virtual ~IEventManager() = default;
-    using Callback = std::function<void()>;
-    virtual void subscribe(const KeyEvent& eventType,
-        const Callback callback) = 0;
-    virtual void publish(const KeyEvent& eventType) = 0;
+public:
+ /**
+  * @brief Virtual destructor.
+  */
+ virtual ~IEventManager() = default;
+
+ /**
+  * @brief Type definition for event callback functions.
+  */
+ using Callback = std::function<void()>;
+
+ /**
+  * @brief Subscribe to a keyboard event with a callback function.
+  *
+  * @param eventType The keyboard event to subscribe to.
+  * @param callback The function to call when the event occurs.
+  */
+ virtual void subscribe(const IEvent& eventType,
+     const Callback callback) = 0;
+
+ /**
+  * @brief Publish a keyboard event to all subscribers.
+  *
+  * @param eventType The keyboard event to publish.
+  */
+ virtual void publish(const IEvent& eventType) = 0;
+
+
+ /**
+  * @brief Retrieves the current position of the mouse.
+  *
+  * @return A pair containing the x and y coordinates of the mouse position.
+  */
+ virtual std::pair<std::size_t, std::size_t> getMousePosition() const = 0;
 };
 }  // namespace Arcade
 

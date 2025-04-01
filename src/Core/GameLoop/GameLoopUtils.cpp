@@ -9,7 +9,8 @@
 #include <iostream>
 #include "GameLoop/GameLoop.hpp"
 #include "EventManager/KeyEvent/KeyEvent.hpp"
-#include "Models/EventType.hpp"
+#include "EventManager/KeyEvent/MouseEvent.hpp"
+#include "Shared/Models/EventType.hpp"
 
 namespace Arcade {
 

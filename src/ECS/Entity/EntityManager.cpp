@@ -10,17 +10,19 @@
 #include <vector>
 #include "ECS/Entity/EntityManager.hpp"
 
-Entity EntityManager::createEntity() {
-    return _nextEntityId++;
+Entity EntityManager::createEntity(std::string name) {
+    Entity newEntity = _nextEntityId++;
+    _activeEntities[newEntity] = name;
+    return newEntity;
 }
 
 void EntityManager::destroyEntity(Entity entity) {
-    auto it = std::find(_activeEntities.begin(), _activeEntities.end(), entity);
+    auto it = _activeEntities.find(entity);
 
     if (it != _activeEntities.end())
         _activeEntities.erase(it);
 }
 
-const std::vector<Entity>& EntityManager::getEntities() const {
+const std::unordered_map<Entity, std::string>& EntityManager::getEntities() const {
     return _activeEntities;
 }

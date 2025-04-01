@@ -10,19 +10,34 @@
     #define SRC_SHARED_INTERFACE_ECS_ICOMPONENTMANAGER_HPP_
     #include <string>
     #include <memory>
-    #include "Interface/ECS/IComponent.hpp"
-    #include "Interface/ECS/IEntity.hpp"
+    #include <vector>
+    #include "Shared/Interface/ECS/IComponent.hpp"
+    #include "Shared/Interface/ECS/IEntity.hpp"
+    #include "Shared/Models/ComponentType.hpp"
 
 namespace Arcade {
 class IComponentManager {
  public:
     virtual ~IComponentManager() = default;
-    virtual void registerComponent(std::shared_ptr<IEntity> entity,
+    // Register a component
+    virtual void registerComponent(Entity entity,
         std::shared_ptr<IComponent> component) = 0;
-    virtual IComponent* getComponent(std::shared_ptr<IEntity> entity,
+    // Get component by entity and component type
+    virtual std::shared_ptr<IComponent> getComponentByType(Entity entity,
+        ComponentType type) = 0;
+    // Get component by entity and type name (for backward compatibility)
+    virtual std::shared_ptr<IComponent> getComponentBase(Entity entity,
+        const std::string& typeName) = 0;
+    // Get all components of a specific type
+    virtual std::vector<std::shared_ptr<IComponent>> getAllComponentsByType(
+        ComponentType type) = 0;
+    // Unregister a component
+    virtual void unregisterComponent(Entity entity,
         const std::string& componentName) = 0;
-    virtual void unregisterComponent(std::shared_ptr<IEntity> entity,
-        const std::string& componentName) = 0;
+    // Get all components for an entity
+    virtual std::vector<std::shared_ptr<IComponent>> getEntityComponents(Entity entity) = 0;
+    // Get all components
+    virtual std::vector<std::shared_ptr<IComponent>> getAllComponents() = 0;
 };
 }  // namespace Arcade
 

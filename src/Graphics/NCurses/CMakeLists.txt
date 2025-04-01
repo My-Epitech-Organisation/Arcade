@@ -19,19 +19,18 @@ target_include_directories(arcade_ncurses PUBLIC
     ${CURSES_INCLUDE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_ROOT}/src/Shared
 )
 
 if(ENABLE_COVERAGE)
     target_compile_options(arcade_ncurses PUBLIC -O0 -g --coverage -fprofile-arcs -ftest-coverage)
     target_link_libraries(arcade_ncurses PUBLIC
-        arcade_event
         arcade_ecs
         ${CURSES_LIBRARIES}
         --coverage
     )
 else()
     target_link_libraries(arcade_ncurses PUBLIC
-        arcade_event
         arcade_ecs
         ${CURSES_LIBRARIES}
     )

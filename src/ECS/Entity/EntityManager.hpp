@@ -17,6 +17,7 @@
 #ifndef SRC_ECS_ENTITY_ENTITYMANAGER_HPP_
     #define SRC_ECS_ENTITY_ENTITYMANAGER_HPP_
     #include <iostream>
+    #include <unordered_map>
     #include <vector>
     #include "Shared/Interface/ECS/IEntity.hpp"
     #include "Shared/Interface/ECS/IEntityManager.hpp"
@@ -38,7 +39,7 @@ class EntityManager : public Arcade::IEntityManager {
      *
      * @return The newly created entity identifier.
      */
-    Entity createEntity();
+    Entity createEntity(std::string name);
 
     /**
      * @brief Destroys an existing entity.
@@ -54,11 +55,11 @@ class EntityManager : public Arcade::IEntityManager {
      *
      * @return A constant reference to a vector containing all active entity identifiers.
      */
-    const std::vector<Entity>& getEntities() const;
+    const std::unordered_map<Entity, std::string>& getEntities() const;
 
  private:
     Entity _nextEntityId = 0;  /// Tracks the next available entity identifier.
-    std::vector<Entity> _activeEntities;  /// Stores currently active entities.
+    std::unordered_map<Entity, std::string> _activeEntities;  /// Stores currently active entities.
 };
 
 #endif  // SRC_ECS_ENTITY_ENTITYMANAGER_HPP_

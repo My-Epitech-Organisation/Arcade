@@ -21,13 +21,14 @@ target_include_directories(arcade_gtk PUBLIC
     ${GTK4_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_ROOT}/src/Shared
 )
 
 if(ENABLE_COVERAGE)
     target_compile_options(arcade_gtk PUBLIC -O0 -g --coverage -fprofile-arcs -ftest-coverage)
-    target_link_libraries(arcade_gtk PUBLIC ${GTK4_LIBRARIES} arcade_event arcade_ecs --coverage)
+    target_link_libraries(arcade_gtk PUBLIC ${GTK4_LIBRARIES} arcade_ecs --coverage)
 else()
-    target_link_libraries(arcade_gtk PUBLIC ${GTK4_LIBRARIES} arcade_event arcade_ecs)
+    target_link_libraries(arcade_gtk PUBLIC ${GTK4_LIBRARIES} arcade_ecs)
 endif()
 
 target_link_options(arcade_gtk PUBLIC ${GTK4_LDFLAGS})

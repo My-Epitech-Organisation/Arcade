@@ -12,6 +12,7 @@
 #include <iostream>
 #include "NCurses/NCurses.hpp"
 #include "NCurses/NCursesColor.hpp"
+#include "Interface/IArcadeModule.hpp"
 
 NCursesModule::~NCursesModule() {
     stop();
@@ -116,7 +117,7 @@ extern "C" {
     void fini_ncurses(void) {
     }
 
-    Arcade::IDisplayModule* entryPoint(void) {
+    Arcade::IArcadeModule* entryPoint(void) {
         return new NCursesModule();
     }
 }

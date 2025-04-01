@@ -11,68 +11,48 @@
 
 #include <memory>
 #include <vector>
-#include <string>
-#include "Games/Minesweeper/Board.hpp"
 #include "Shared/Interface/Game/IGameModule.hpp"
-#include "Shared/Interface/ECS/IEntity.hpp"
+#include "Shared/Interface/ECS/IComponentManager.hpp"
+#include "Shared/Interface/ECS/IEntityManager.hpp"
+#include "Shared/Interface/ECS/ISystem.hpp"
 #include "Shared/Interface/Core/IEventManager.hpp"
-#include "Shared/Models/EventType.hpp"
-#include "Shared/Models/KeysType.hpp"
+#include "Games/Minesweeper/System/EventSubSystem.hpp"
+#include "Games/Minesweeper/Components/Board.hpp"
+#include "Games/Minesweeper/MinesweeperFactory.hpp"
 
 namespace Arcade {
 
-class MinesweeperEntity : public IEntity {
- private:
-   int _id;
-   int _x;
-   int _y;
-   char _symbol;
-
- public:
-   MinesweeperEntity(int id, int x, int y, char symbol);
-
-   int getId() const;
-   int getX() const;
-   int getY() const;
-   char getSymbol() const;
-};
-
 class MinesweeperGame : public IGameModule {
  public:
-   // Fix the constructor declaration
-   explicit MinesweeperGame(std::shared_ptr<Arcade::IEventManager> eventManager = nullptr);
-   ~MinesweeperGame() override;
+    // Inside the MinesweeperGame class
+    MinesweeperGame() :
+        _gameOver(false),
+        _gameWon(false) {}
 
-   void init() override;
-   void update(float deltaTime) override;
-   void stop() override;
-   
-   std::vector<std::shared_ptr<IEntity>> getEntities() const override;
-   bool isGameOver() const override;
-   bool hasWon() const override;
+    ~MinesweeperGame() override = default;
+
+    void init(std::shared_ptr<IEventManager> eventManager,
+        std::shared_ptr<IComponentManager> componentManager,
+        std::shared_ptr<IEntityManager> entityManager) override;
+    void update() override;
+    bool isGameOver() const override;
+    bool hasWon() const override;
+    void stop() override;
+    std::string getSpecialCompSprite(size_t id) const override;
 
  private:
-   void createBoard();
-   void updateEntities();
-   void moveCursor(int dx, int dy);
-   void revealCell();
-   void flagCell();
-   int generateEntityId();
+    void createBoard();
+    bool checkVictory(Arcade::Entity boardEntity);
 
-   // Fix the event manager member variable
-   std::shared_ptr<Arcade::IEventManager> _eventManager;
-   bool _gameOver;
-   bool _gameWon;
-   int _cursorX;
-   int _cursorY;
-   size_t _width;
-   size_t _height;
-   int _mineCount;
-   int _entityIdCounter;
-   float _inputCooldown;
-   std::vector<std::shared_ptr<IEntity>> _entities;
-   std::unique_ptr<Minesweeper::Board> _board;
+    std::shared_ptr<IEventManager> _eventManager;
+    std::shared_ptr<IComponentManager> _componentManager;
+    std::shared_ptr<IEntityManager> _entityManager;
+    std::shared_ptr<EventSubSystem> _eventSystem;
+    std::vector<std::shared_ptr<ISystem>> _systems;
+    bool _gameOver;
+    bool _gameWon;
 };
+
 }  // namespace Arcade
 
 #endif  // SRC_GAMES_MINESWEEPER_MINESWEEPER_HPP_

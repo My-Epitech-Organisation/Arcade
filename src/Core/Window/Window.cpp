@@ -12,13 +12,14 @@
 #include <iostream>
 #include "Window/Window.hpp"
 #include "EventManager/KeyEvent/RawInputState.hpp"
+#include "Core/EventManager/EventManager.hpp"
 
 namespace Arcade {
 
 Window::Window(std::shared_ptr<IDisplayModule> displayModule,
-std::shared_ptr<AEventManager> eventManager)
+std::shared_ptr<IEventManager> eventManager)
 : _displayModule(std::move(displayModule)),
-_eventManager(eventManager),
+_eventManager(dynamic_cast<EventManager*>(eventManager.get())),
 _width(800),
 _height(600),
 _title("Arcade"),
@@ -92,7 +93,7 @@ bool Window::isKeyPressed(int keyCode) {
     return _eventManager->isKeyPressed(static_cast<Keys>(keyCode));
 }
 
-std::shared_ptr<IEventManager> Window::getEventManager() const {
+std::shared_ptr<EventManager> Window::getEventManager() const {
     return _eventManager;
 }
 

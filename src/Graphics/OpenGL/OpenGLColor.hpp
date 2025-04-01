@@ -10,7 +10,7 @@
 #define SRC_GRAPHICS_OPENGL_OPENGLCOLOR_HPP_
 
 #include <array>
-#include "Models/ColorType.hpp"
+#include "Shared/Models/ColorType.hpp"
 
 class OpenGLColor {
  public:

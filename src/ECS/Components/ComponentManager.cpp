@@ -1,33 +1,100 @@
-// Copyright 2025 <Epitech>
-/*
-** EPITECH PROJECT, 2025
-** B-OOP-400 Arcade
-** File description:
-** Component Manager
-*/
+#include "ECS/Components/ComponentManager.hpp"
+#include <iostream>
 
-#include <unordered_map>
-#include "Components/ComponentManager.hpp"
-#include "Shared/Models/EntityType.hpp"
+namespace Arcade {
 
-template <typename T>
-void ComponentManager<T>::registerComponent(Arcade::Entity entity,
-    T component) {
-    components[entity] = component;
+void ComponentManager::registerComponent(Entity entity,
+                                       std::shared_ptr<IComponent> component) {
+    if (!component) return;
+    
+    // Store component by its type
+    ComponentType type = component->getType();
+    _componentsByType[entity][type] = component;
+    
+    // Also store by typeid for template support
+    _typeNameMap[typeid(*component).name()] = type;
 }
 
-template <typename T>
-void ComponentManager<T>::removeComponent(Arcade::Entity entity) {
-    components.erase(entity);
+void ComponentManager::unregisterComponent(Entity entity,
+                                         const std::string& componentName) {
+    // Implementation depends on how you identify components by name
+    // This is a simple approach - remove all components for the entity
+    if (_componentsByType.find(entity) != _componentsByType.end()) {
+        _componentsByType.erase(entity);
+    }
 }
 
-template <typename T>
-T* ComponentManager<T>::getComponent(Arcade::Entity entity) {
-    auto it = components.find(entity);
-    return (it != components.end()) ? &it->second : nullptr;
+std::vector<std::shared_ptr<IComponent>> ComponentManager::getAllComponents() {
+    std::vector<std::shared_ptr<IComponent>> result;
+    for (const auto& [entity, componentMap] : _componentsByType) {
+        for (const auto& [type, component] : componentMap) {
+            result.push_back(component);
+        }
+    }
+    return result;
 }
 
-template <typename T>
-std::unordered_map<Arcade::Entity, T>& ComponentManager<T>::getAll() {
-    return components;
+std::shared_ptr<IComponent> ComponentManager::getComponentBase(Entity entity, 
+                                                            const std::string& typeName) {
+    if (_componentsByType.find(entity) == _componentsByType.end()) {
+        return nullptr;
+    }
+
+    // Try to find component type from type name
+    if (_typeNameMap.find(typeName) == _typeNameMap.end()) {
+        return nullptr;
+    }
+
+    ComponentType type = _typeNameMap[typeName];
+    auto& entityComponents = _componentsByType[entity];
+    
+    if (entityComponents.find(type) == entityComponents.end()) {
+        return nullptr;
+    }
+    
+    return entityComponents[type];
 }
+
+// Implement the remaining methods:
+
+std::shared_ptr<IComponent> ComponentManager::getComponentByType(Entity entity, ComponentType type) {
+    // Check if entity exists
+    if (_componentsByType.find(entity) == _componentsByType.end()) {
+        return nullptr;
+    }
+    
+    // Check if entity has component of this type
+    auto& entityComponents = _componentsByType[entity];
+    if (entityComponents.find(type) == entityComponents.end()) {
+        return nullptr;
+    }
+    
+    return entityComponents[type];
+}
+
+std::vector<std::shared_ptr<IComponent>> ComponentManager::getAllComponentsByType(ComponentType type) {
+    std::vector<std::shared_ptr<IComponent>> result;
+    
+    for (const auto& [entity, componentMap] : _componentsByType) {
+        auto it = componentMap.find(type);
+        if (it != componentMap.end()) {
+            result.push_back(it->second);
+        }
+    }
+    
+    return result;
+}
+
+std::vector<std::shared_ptr<IComponent>> ComponentManager::getEntityComponents(Entity entity) {
+    std::vector<std::shared_ptr<IComponent>> result;
+    
+    if (_componentsByType.find(entity) != _componentsByType.end()) {
+        for (const auto& [type, component] : _componentsByType[entity]) {
+            result.push_back(component);
+        }
+    }
+    
+    return result;
+}
+
+} // namespace Arcade

@@ -16,10 +16,9 @@
 #include <memory>
 #include <map>
 #include <cstring>
-#include "Interface/Display/IDisplayModule.hpp"
-#include "Interface/Game/IGameModule.hpp"
-#include "Interface/Core/IStateManager.hpp"
-#include "EventManager/AEventManager.hpp"
+#include "Shared/Interface/Display/IDisplayModule.hpp"
+#include "Shared/Interface/Game/IGameModule.hpp"
+#include "Shared/Interface/Core/IStateManager.hpp"
 #include "Window/Window.hpp"
 #include "Menu/Menu.hpp"
 #include "DLLoader/DLLoader.hpp"
@@ -131,7 +130,8 @@ class GameLoop : public IStateManager {
     void handleLeftClickGameSelection(int x, int y, int centerX);
     void handleLeftClickGraphicsSelection(int x, int y, int centerX);
     void subscribeLeftClickEvent();
-    std::shared_ptr<AEventManager> _eventManager;
+    void loadCommonComponents();
+    std::shared_ptr<IEventManager> _eventManager;
         /** The event manager for handling input events. */
     std::shared_ptr<Window> _window; /** The window instance for rendering. */
     std::unique_ptr<Menu> _menu; /** The menu instance for user interaction. */
@@ -147,6 +147,7 @@ class GameLoop : public IStateManager {
         /** List of available graphics libraries. */
     std::vector<std::string> _gameLibs;
         /** List of available game libraries. */
+    std::vector<std::string> _componentsLibs;
     size_t _selectedGraphics;
         /** Index of the currently selected graphics library. */
     size_t _selectedGame;
@@ -154,7 +155,14 @@ class GameLoop : public IStateManager {
     const std::string _libDir = "./lib/";
         /** Directory containing the libraries. */
     std::map<std::string, void*> _loadedLibHandles;
-        /** Map of loaded library handles. */
+        /** Map of loaded library handles. **/
+    std::vector<std::shared_ptr<IComponent>> _commonComponents;
+        /** List of components used in the game. */
+
+    std::shared_ptr<IEntityManager> _entityManager;
+        /** The entity manager for managing game entities. */
+    std::shared_ptr<IComponentManager> _componentManager;
+        /** The component manager for managing game components. */
 
     static constexpr int TITLE_Y = 50;
         /** Y-coordinate for the title display. */

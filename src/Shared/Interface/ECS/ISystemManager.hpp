@@ -9,7 +9,7 @@
 #ifndef SRC_SHARED_INTERFACE_ECS_ISYSTEMMANAGER_HPP_
     #define SRC_SHARED_INTERFACE_ECS_ISYSTEMMANAGER_HPP_
     #include <memory>
-    #include "Interface/ECS/ISystem.hpp"
+    #include "Shared/Interface/ECS/ISystem.hpp"
 
 namespace Arcade {
 class ISystemManager {

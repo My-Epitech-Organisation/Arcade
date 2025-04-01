@@ -11,11 +11,12 @@
 
 #include <memory>
 #include <string>
-#include "Interface/Core/IWindowModule.hpp"
-#include "Interface/Display/IDisplayModule.hpp"
-#include "EventManager/AEventManager.hpp"
-#include "Models/KeysType.hpp"
-#include "Models/ColorType.hpp"
+#include "Shared/Interface/Core/IWindowModule.hpp"
+#include "Shared/Interface/Display/IDisplayModule.hpp"
+#include "Shared/Models/KeysType.hpp"
+#include "Shared/Models/ColorType.hpp"
+#include "Shared/EventManager/KeyEvent/RawInputState.hpp"
+#include "Core/EventManager/EventManager.hpp"
 
 /**
  * @file Window.hpp
@@ -41,7 +42,7 @@ class Window : public IWindowModule {
      * @param eventManager A shared pointer to the event manager for handling input events.
      */
     explicit Window(std::shared_ptr<IDisplayModule> displayModule,
-                    std::shared_ptr<AEventManager> eventManager);
+                    std::shared_ptr<IEventManager> eventManager);
 
     /**
      * @brief Destroys the Window object and releases resources.
@@ -143,12 +144,12 @@ class Window : public IWindowModule {
      *
      * @return A shared pointer to the event manager.
      */
-    std::shared_ptr<IEventManager> getEventManager() const;
+    std::shared_ptr<EventManager> getEventManager() const;
 
  private:
     std::shared_ptr<IDisplayModule> _displayModule;
         /// The display module used for rendering.
-    std::shared_ptr<AEventManager> _eventManager;
+    std::shared_ptr<EventManager> _eventManager;
         /// The event manager for handling input events.
     int _width;  /// The width of the window in pixels.
     int _height;  /// The height of the window in pixels.

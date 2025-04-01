@@ -14,7 +14,7 @@
     #include <utility>
     #include <unordered_map>
     #include <functional>
-    #include "../../Shared/Interface/Display/IDisplayModule.hpp"
+    #include "Interface/Display/IDisplayModule.hpp"
     #include "GTKUtils/GTKWindow.hpp"
     #include "GTKUtils/GTKRenderer.hpp"
     #include "GTKUtils/GTKTexture.hpp"

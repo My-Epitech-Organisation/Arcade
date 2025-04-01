@@ -9,9 +9,9 @@
 #ifndef SRC_SHARED_EVENTMANAGER_KEYEVENT_KEYEVENT_HPP_
     #define SRC_SHARED_EVENTMANAGER_KEYEVENT_KEYEVENT_HPP_
 
-    #include "Interface/Core/IEvent.hpp"
-    #include "Models/EventType.hpp"
-    #include "Models/KeysType.hpp"
+    #include "Shared/Interface/Core/IEvent.hpp"
+    #include "Shared/Models/EventType.hpp"
+    #include "Shared/Models/KeysType.hpp"
 
 namespace Arcade {
 class KeyEvent : public IEvent {
