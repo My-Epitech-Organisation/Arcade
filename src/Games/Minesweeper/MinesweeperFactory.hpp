@@ -1,3 +1,4 @@
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
@@ -5,8 +6,8 @@
 ** Factory for creating Minesweeper game entities
 */
 
-#ifndef SRC_GAMES_MINESWEEPER_FACTORY_HPP_
-#define SRC_GAMES_MINESWEEPER_FACTORY_HPP_
+#ifndef SRC_GAMES_MINESWEEPER_MINESWEEPERFACTORY_HPP_
+#define SRC_GAMES_MINESWEEPER_MINESWEEPERFACTORY_HPP_
 
 #include <memory>
 #include "Shared/Interface/ECS/IEntityManager.hpp"
@@ -21,17 +22,20 @@ namespace Arcade {
 namespace Minesweeper {
 
 class MinesweeperFactory {
-public:
+ public:
     MinesweeperFactory(
         std::shared_ptr<Arcade::IEntityManager> entityManager,
         std::shared_ptr<Arcade::IComponentManager> componentManager)
         : _entityManager(entityManager), _componentManager(componentManager) {}
 
-    Arcade::Entity createBoard(float x, float y, size_t width, size_t height, size_t mineCount);
-    Arcade::Entity createCell(float x, float y, size_t gridX, size_t gridY, bool hasMine);
-    void initializeGame(Arcade::Entity boardEntity, float startX, float startY, float cellSize);
+    Arcade::Entity createBoard(float x, float y, size_t width,
+        size_t height, size_t mineCount);
+    Arcade::Entity createCell(float x, float y, size_t gridX,
+        size_t gridY, bool hasMine);
+    void initializeGame(Arcade::Entity boardEntity, float startX,
+        float startY, float cellSize);
 
-private:
+ private:
     std::shared_ptr<Arcade::IEntityManager> _entityManager;
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
 };
@@ -39,4 +43,4 @@ private:
 }  // namespace Minesweeper
 }  // namespace Arcade
 
-#endif  // SRC_GAMES_MINESWEEPER_FACTORY_HPP_
+#endif  // SRC_GAMES_MINESWEEPER_MINESWEEPERFACTORY_HPP_

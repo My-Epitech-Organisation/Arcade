@@ -1,3 +1,4 @@
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
@@ -5,12 +6,12 @@
 ** Bomb Component for Minesweeper
 */
 
-#ifndef SRC_GAMES_MINESWEEPER_BOMBCOMPONENT_HPP_
-#define SRC_GAMES_MINESWEEPER_BOMBCOMPONENT_HPP_
-#include <memory>
-#include "Shared/Interface/ECS/IComponent.hpp"
-#include "Shared/Models/ComponentType.hpp"
-#include "ECS/Components/Sprite/SpriteComponent.hpp"
+#ifndef SRC_GAMES_MINESWEEPER_COMPONENTS_BOMB_HPP_
+    #define SRC_GAMES_MINESWEEPER_COMPONENTS_BOMB_HPP_
+    #include <memory>
+    #include "Shared/Interface/ECS/IComponent.hpp"
+    #include "Shared/Models/ComponentType.hpp"
+    #include "ECS/Components/Sprite/SpriteComponent.hpp"
 
 namespace Arcade {
 namespace Minesweeper {
@@ -48,4 +49,4 @@ class BombComponent : public Arcade::IComponent {
 }  // namespace Minesweeper
 }  // namespace Arcade
 
-#endif  // SRC_GAMES_MINESWEEPER_BOMBCOMPONENT_HPP_
+#endif  // SRC_GAMES_MINESWEEPER_COMPONENTS_BOMB_HPP_

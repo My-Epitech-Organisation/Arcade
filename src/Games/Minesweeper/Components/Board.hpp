@@ -1,3 +1,4 @@
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
@@ -5,17 +6,16 @@
 ** Minesweeper Board class
 */
 
-#ifndef SRC_GAMES_MINESWEEPER_BOARD_HPP_
-#define SRC_GAMES_MINESWEEPER_BOARD_HPP_
-
-#include <vector>
-#include <string>
-#include <unordered_map>
-#include <memory>
-#include "Games/Minesweeper/Components/Cell.hpp"
-#include "Shared/Interface/ECS/IComponent.hpp"
-#include "Shared/Interface/ECS/IEntity.hpp"
-#include "ECS/Components/Position/PositionComponent.hpp"
+#ifndef SRC_GAMES_MINESWEEPER_COMPONENTS_BOARD_HPP_
+    #define SRC_GAMES_MINESWEEPER_COMPONENTS_BOARD_HPP_
+    #include <vector>
+    #include <string>
+    #include <unordered_map>
+    #include <memory>
+    #include "Games/Minesweeper/Components/Cell.hpp"
+    #include "Shared/Interface/ECS/IComponent.hpp"
+    #include "Shared/Interface/ECS/IEntity.hpp"
+    #include "ECS/Components/Position/PositionComponent.hpp"
 
 namespace Arcade {
 namespace Minesweeper {
@@ -54,11 +54,10 @@ class Board : public Arcade::IComponent {
     bool _gameOver;
     bool _gameWon;
     bool _gameInitialized;
-    // Store a 2D grid of cell entities
     std::vector<std::vector<Arcade::Entity>> _cellEntities;
 };
 
 }  // namespace Minesweeper
 }  // namespace Arcade
 
-#endif  // SRC_GAMES_MINESWEEPER_BOARD_HPP_
+#endif  // SRC_GAMES_MINESWEEPER_COMPONENTS_BOARD_HPP_

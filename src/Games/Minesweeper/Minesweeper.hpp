@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 #include "Shared/Interface/Game/IGameModule.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "Shared/Interface/ECS/IEntityManager.hpp"
@@ -24,7 +25,6 @@ namespace Arcade {
 
 class MinesweeperGame : public IGameModule {
  public:
-    // Inside the MinesweeperGame class
     MinesweeperGame() :
         _gameOver(false),
         _gameWon(false) {}
