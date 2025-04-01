@@ -27,7 +27,6 @@ class GTKEvent {
     size_t _mouseY;
     std::vector<gulong> _signalHandlerIds;
     std::shared_ptr<GTKEventCallback> _callbackHandler;
-    void disconnectSignals();
     void connectSignals();
 
  public:
@@ -50,6 +49,7 @@ class GTKEvent {
     void setMouseButtonPressed(guint button);
     void setMouseButtonReleased(guint button);
     void setMousePosition(double x, double y);
+    void disconnectSignals();
 };
 
 class GTKEventCallback : public std::enable_shared_from_this<GTKEventCallback> {
@@ -63,22 +63,20 @@ class GTKEventCallback : public std::enable_shared_from_this<GTKEventCallback> {
 
     void setEvent(GTKEvent* event);
 
-    static void keyPressed(GtkEventControllerKey* controller,
-                            guint keyval, guint keycode,
-                            GdkModifierType state, gpointer data);
+    static void keyPressed(GtkEventControllerKey* controller, guint keyval,
+      guint keycode, GdkModifierType state, gpointer data);
 
-    static void keyReleased(GtkEventControllerKey* controller,
-                            guint keyval, guint keycode,
-                            GdkModifierType state, gpointer data);
+    static void keyReleased(GtkEventControllerKey* controller, guint keyval,
+      guint keycode, GdkModifierType state, gpointer data);
 
-    static void mousePressed(GtkGestureClick* gesture,
-                            int n_press, double x, double y, gpointer data);
+    static void mousePressed(GtkGestureClick* gesture, int n_press, double x,
+      double y, gpointer data);
 
-    static void mouseReleased(GtkGestureClick* gesture,
-                            int n_press, double x, double y, gpointer data);
+    static void mouseReleased(GtkGestureClick* gesture, int n_press, double x,
+      double y, gpointer data);
 
-    static void mouseMoved(GtkEventControllerMotion* controller,
-                            double x, double y, gpointer data);
+    static void mouseMoved(GtkEventControllerMotion* controller, double x,
+      double y, gpointer data);
 };
 
 }  // namespace GTK

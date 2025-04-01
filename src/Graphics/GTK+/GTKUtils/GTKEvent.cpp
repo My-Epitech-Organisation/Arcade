@@ -70,19 +70,24 @@ void GTKEvent::disconnectSignals() {
     if (_window) {
         for (gulong id : _signalHandlerIds) {
             if (id > 0) {
-                g_signal_handler_disconnect(_window, id);
+                if (GTK_IS_WIDGET(_window) &&
+                    g_signal_handler_is_connected(_window, id)) {
+                    g_signal_handler_disconnect(_window, id);
+                } else {
+                    std::cerr << "Handler " << id <<
+                        " is not connected to window " <<
+                        static_cast<void*>(_window) << std::endl;
+                }
             }
         }
         _signalHandlerIds.clear();
+        _window = nullptr;
     }
-
-    _window = nullptr;
 }
 
 void GTKEvent::connectSignals() {
     if (!_window) return;
 
-    // Create callback handler if needed
     if (!_callbackHandler) {
         _callbackHandler = std::make_shared<GTKEventCallback>(this);
     } else {
@@ -130,7 +135,6 @@ _mouseY(0) {
         _window = window;
         connectSignals();
     }
-    // connectSignals();
 }
 
 GTKEvent::~GTKEvent() {

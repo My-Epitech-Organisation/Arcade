@@ -30,6 +30,7 @@ class GTKWindow {
         void (*drawCallback)(GtkDrawingArea*, cairo_t*, int, int, gpointer),
         gpointer userData);
     void showWindow();
+    void resetDrawingArea();
 
     std::shared_ptr<GtkWidget> getWindow() const;
     std::shared_ptr<GtkWidget> getDrawingArea() const;
