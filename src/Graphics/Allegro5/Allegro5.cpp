@@ -23,6 +23,7 @@ void Allegro5::init(float x, float y) {
     }
 
     al_install_keyboard();
+    al_install_mouse();
     al_init_image_addon();
 
     _window.createWindow(static_cast<int>(x), static_cast<int>(y));
@@ -56,7 +57,7 @@ void Allegro5::drawTexture(int x, int y, const std::string& texturePath) {
 
 void Allegro5::drawText(const std::string& text, int x,
 int y, Arcade::Color color) {
-    _text.drawText(x, y, text);
+    _text.drawText(x, y, text, color);
 }
 
 void Allegro5::pollEvents() {
