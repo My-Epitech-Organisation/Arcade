@@ -201,6 +201,7 @@ DIR* GameLoop::openLibraryDirectory() {
 void GameLoop::processLibraryEntry(struct dirent* entry) {
     std::string filename(entry->d_name);
     if (isIgnoredFile(filename)) return;
+
     std::string path = _libDir + filename;
     void* handle = dlopen(path.c_str(), RTLD_LAZY);
     if (!handle) {
@@ -241,6 +242,7 @@ void* handle, IArcadeModule* (*entryPoint)()) {
         _loadedLibHandles[path] = handle;
         return true;
     }
+
     IArcadeModule* instance = nullptr;
     try {
         instance = entryPoint();

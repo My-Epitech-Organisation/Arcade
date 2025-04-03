@@ -14,6 +14,7 @@
     #include <memory>
     #include <string>
     #include "Allegro5Utils/Allegro5Font.hpp"
+    #include "Models/ColorType.hpp"
 
 namespace Allegro {
 
@@ -27,7 +28,7 @@ class Allegro5Text {
     ~Allegro5Text() = default;
 
     void init();
-    void drawText(int x, int y, const std::string& text);
+    void drawText(int x, int y, const std::string& text, Arcade::Color color);
 };
 
 }  // namespace Allegro

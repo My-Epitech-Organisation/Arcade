@@ -29,6 +29,11 @@ std::unique_ptr<SDL_Renderer, decltype(&SDL_DestroyRenderer)>
         [](SDL_Renderer*){});
 }
 
+void SDL::SDLRenderer::destroyRenderer() {
+    SDL_DestroyRenderer(_renderer.get());
+    _renderer.reset();
+}
+
 void SDL::SDLRenderer::clearScreen() {
     SDL_RenderClear(_renderer.get());
 }

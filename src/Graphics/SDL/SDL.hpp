@@ -39,6 +39,7 @@ class SDLModule : public Arcade::IDisplayModule {
     int _windowWidth = 0;
     int _windowHeight = 0;
     bool _running = true;
+    bool _initialized = false;
 
  public:
     SDLModule() : _name("SDL2") {}

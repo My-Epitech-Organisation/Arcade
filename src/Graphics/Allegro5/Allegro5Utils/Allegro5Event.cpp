@@ -27,18 +27,14 @@ void Allegro5Event::init() {
         throw std::runtime_error("Failed to create event queue");
     }
     al_register_event_source(_eventQueue.get(), al_get_keyboard_event_source());
+    al_register_event_source(_eventQueue.get(), al_get_mouse_event_source());
 }
 
 void Allegro5Event::pollEvents() {
     ALLEGRO_EVENT event;
     while (al_get_next_event(_eventQueue.get(), &event)) {
-        if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+        if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
             _running = false;
-        } else if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
-            if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
-                _running = false;
-            }
-        }
     }
 }
 
