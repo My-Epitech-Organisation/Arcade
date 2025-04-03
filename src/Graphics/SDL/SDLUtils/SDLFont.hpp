@@ -17,8 +17,10 @@ namespace SDL {
 class SDLFont {
  private:
     std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)> _font;
+    bool _fontValid = false;
  public:
-    SDLFont() : _font(nullptr, TTF_CloseFont) {}
+    SDLFont();
+    ~SDLFont();
     void loadFont(int fontSize);
     std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)> getFont();
 };

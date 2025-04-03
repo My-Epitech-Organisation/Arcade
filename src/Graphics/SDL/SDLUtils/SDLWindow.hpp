@@ -24,6 +24,7 @@ class SDLWindow {
     SDLWindow() : _window(nullptr, SDL_DestroyWindow) {}
     void createWindow(int width, int height);
     std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> getWindow();
+    void destroyWindow();
     int getHeight() const;
     int getWidth() const;
 };

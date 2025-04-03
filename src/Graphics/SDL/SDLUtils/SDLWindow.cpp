@@ -40,6 +40,11 @@ int SDL::SDLWindow::getHeight() const {
     return _windowHeight;
 }
 
+void SDL::SDLWindow::destroyWindow() {
+    SDL_DestroyWindow(_window.get());
+    _window.reset();
+}
+
 int SDL::SDLWindow::getWidth() const {
     return _windowWidth;
 }

@@ -50,17 +50,52 @@ void GTKModule::init(float x, float y) {
 }
 
 void GTKModule::stop() {
-    _running = false;
+    if (!_running) return;
 
+    _running = false;
     _textures.clear();
+
+    _eventManager.disconnectSignals();
+    _eventManager = GTK::GTKEvent(nullptr);
+
+    if (_window.getWindow()) {
+        gtk_widget_set_visible(_window.getWindow().get(), FALSE);
+        int timeout = 0;
+        while (g_main_context_iteration(nullptr, TRUE) && timeout++ < 1000) {
+            std::cout << timeout << std::endl;
+        }
+        if (GTK_IS_WINDOW(_window.getWindow().get())) {
+            GtkWindow* window = GTK_WINDOW(_window.getWindow().get());
+            gtk_window_destroy(window);
+        }
+
+        int timeout2 = 0;
+        while (g_main_context_iteration(nullptr, TRUE) && timeout2++ < 3) {
+            std::cout << timeout2 << std::endl;
+        }
+
+        _window.resetDrawingArea();
+    }
 
     if (_app) {
         g_application_quit(G_APPLICATION(_app.get()));
-
-        while (g_main_context_iteration(nullptr, FALSE)) {}
-
+        int timeout3 = 0;
+        std::cout << "trying to quit app" << std::endl;
+        while (g_main_context_iteration(nullptr, TRUE) && timeout3++ < 3) {
+            std::cout << timeout3 << std::endl;
+        }
+        std::cout << "Quitted app" << std::endl;
         _app.reset();
-    }  _app.reset();
+    }
+
+    _renderer = GTK::GTKRenderer();
+
+    GdkDisplay* display = gdk_display_get_default();
+    if (display) {
+        gdk_display_flush(display);
+        gdk_display_close(display);
+        g_object_unref(display);
+    }
 }
 
 void GTKModule::clearScreen() {
@@ -111,8 +146,10 @@ void GTKModule::drawText(const std::string &text, int x, int y,
 void GTKModule::pollEvents() {
     _eventManager.handleEvents();
 
-    if (!_window.getWindow() || !GTK_IS_WINDOW(_window.getWindow().get()))
+    if (!_window.getWindow() || !GTK_IS_WINDOW(_window.getWindow().get())) {
         _running = false;
+        stop();
+    }
 }
 
 bool GTKModule::isOpen() const {

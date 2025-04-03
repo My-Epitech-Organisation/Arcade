@@ -42,7 +42,9 @@ _gameLoader(".") {
         throw;
     }
     loadAvailableLibraries();
-    auto it = std::find(_graphicsLibs.begin(), _graphicsLibs.end(), initialLib);
+    std::string initialLibFormatted = "./" + initialLib;
+    auto it = std::find(_graphicsLibs.begin(),
+        _graphicsLibs.end(), initialLibFormatted);
     if (it != _graphicsLibs.end())
         _selectedGraphics = std::distance(_graphicsLibs.begin(), it);
 }
@@ -151,7 +153,7 @@ void GameLoop::processLibraryEntry(struct dirent* entry) {
     std::string filename(entry->d_name);
     if (isIgnoredFile(filename)) return;
 
-    std::string path = _libDir + "/" + filename;
+    std::string path = _libDir + filename;
     void* handle = dlopen(path.c_str(), RTLD_LAZY);
     if (!handle) {
         std::cerr << "Error loading " << path << ": " << dlerror() << std::endl;
@@ -185,6 +187,13 @@ bool GameLoop::processLibraryHandle(const std::string& path, void* handle) {
 
 bool GameLoop::processLibraryInstance(const std::string& path,
 void* handle, IArcadeModule* (*entryPoint)()) {
+    std::string initialLibFormatted = "./" + _graphicsLoader.getLibPath();
+    if (path == initialLibFormatted) {
+        _graphicsLibs.push_back(path);
+        _loadedLibHandles[path] = handle;
+        return true;
+    }
+
     IArcadeModule* instance = nullptr;
     try {
         instance = entryPoint();
