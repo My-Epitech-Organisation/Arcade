@@ -4,9 +4,11 @@ set(SRC
     Minesweeper.cpp
     MinesweeperFactory.cpp
     Components/Board.cpp
+    Components/GameStats.cpp
     System/EventSubSystem.cpp
     System/GameLogic.cpp
     System/RenderSystem.cpp
+    System/UISystem.cpp
 )
 
 add_library(${NAME} SHARED ${SRC})

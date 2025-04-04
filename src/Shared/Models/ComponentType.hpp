@@ -16,6 +16,7 @@ enum class ComponentType {
     BOMB,
     CELL,
     BOARD,
+    TEXT,
     CUSTOM_BASE = 1000
 };
 

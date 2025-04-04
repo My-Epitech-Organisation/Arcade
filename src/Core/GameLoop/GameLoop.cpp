@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <cstring>
 #include <iostream>
+#include <vector>
 #include <algorithm>
 #include <utility>
 #include <chrono>
@@ -26,6 +27,7 @@
 #include "ECS/Components/ComponentManager.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
+#include "ECS/Components/Text/TextComponent.hpp"
 
 namespace Arcade {
 GameLoop::GameLoop(const std::string& initialLib)
@@ -138,7 +140,18 @@ void GameLoop::updateGame() {
     if (_currentGame) {
         _currentGame->update();
         auto entities = _entityManager->getEntities();
+        std::vector<std::shared_ptr<TextComponent>> textComponents;
         for (const auto& [entityId, entityName] : entities) {
+            auto textComp = _componentManager->getComponentByType(entityId,
+                ComponentType::TEXT);
+            auto textComponent = std::dynamic_pointer_cast<TextComponent>
+                (textComp);
+
+            if (textComponent && textComponent->visible) {
+                textComponents.push_back(textComponent);
+                continue;
+            }
+
             auto position = _componentManager->getComponentByType(entityId,
                 ComponentType::POSITION);
             auto positionComponent = std::dynamic_pointer_cast
@@ -170,20 +183,9 @@ void GameLoop::updateGame() {
             _currentGraphics->drawEntity(x, y, '?');
         }
 
-        if (_currentGame->isGameOver()) {
-            if (_currentGame->hasWon()) {
-                std::string winMessage = "YOU WIN!!!!!";
-                _window->drawText(winMessage, _window->getWidth() / 2 - 50,
-                    _window->getHeight() / 2, Color::GREEN);
-            } else {
-                std::string looseMessage = "GAME OVER";
-                _window->drawText(looseMessage, _window->getWidth() / 2 - 50,
-                    _window->getHeight() / 2, Color::RED);
-            }
-
-            _window->drawText("Press ESC to return to menu",
-                _window->getWidth() / 2 - 100,
-                _window->getHeight() / 2 + 30, Color::WHITE);
+        for (const auto& textComponent : textComponents) {
+            _currentGraphics->drawText(textComponent->text,
+                textComponent->x, textComponent->y, textComponent->color);
         }
     } else {
         std::cout << "[DEBUG] No current game to update" << std::endl;
