@@ -1,10 +1,10 @@
 add_library(arcade_position SHARED PositionComponent.cpp)
 
 set_target_properties(arcade_position PROPERTIES PREFIX "" OUTPUT_NAME "arcade_position")
-target_include_directories(arcade_position PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../.. ${CMAKE_CURRENT_SOURCE_DIR}/..)
+target_include_directories(arcade_position PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../.. ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_ROOT}/src/Shared)
 if(ENABLE_COVERAGE)
     target_compile_options(arcade_position PRIVATE -O0 -g --coverage -fprofile-arcs -ftest-coverage)
-    target_link_libraries(arcade_position PRIVATE arcade_event --coverage)
+    target_link_libraries(arcade_position PRIVATE --coverage)
 else ()
-    target_link_libraries(arcade_position PRIVATE arcade_event)
+    target_link_libraries(arcade_position PRIVATE)
 endif()

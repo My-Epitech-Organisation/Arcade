@@ -190,7 +190,7 @@ extern "C" {
     void fini_gtk(void) {
     }
 
-    Arcade::IDisplayModule* entryPoint(void) {
+    Arcade::IArcadeModule* entryPoint(void) {
         return new GTKModule();
     }
 }

@@ -54,7 +54,6 @@ target_link_directories(arcade_sdl2 PUBLIC
 if(ENABLE_COVERAGE)
     target_compile_options(arcade_sdl2 PUBLIC -O0 -g --coverage -fprofile-arcs -ftest-coverage)
     target_link_libraries(arcade_sdl2 PUBLIC
-        arcade_event
         arcade_ecs
         ${SDL2_LIBRARIES}
         ${SDL2_IMAGE_LIBRARIES}
@@ -63,7 +62,6 @@ if(ENABLE_COVERAGE)
     )
 else()
     target_link_libraries(arcade_sdl2 PUBLIC
-        arcade_event
         arcade_ecs
         ${SDL2_LIBRARIES}
         ${SDL2_IMAGE_LIBRARIES}

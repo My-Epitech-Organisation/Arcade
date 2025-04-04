@@ -9,7 +9,8 @@
 #include <iostream>
 #include "GameLoop/GameLoop.hpp"
 #include "EventManager/KeyEvent/KeyEvent.hpp"
-#include "Models/EventType.hpp"
+#include "EventManager/KeyEvent/MouseEvent.hpp"
+#include "Shared/Models/EventType.hpp"
 
 namespace Arcade {
 
@@ -119,8 +120,6 @@ void GameLoop::subscribeRightClickEvent() {
         EventType::MOUSE_BUTTON_PRESSED, 0, 0);
     _eventManager->subscribe(rightClickEvent, [this]() {
         if (_state == GAME_SELECTION || _state == GRAPHICS_SELECTION) {
-            _state = MAIN_MENU;
-        } else if (_state == GAME_PLAYING) {
             _state = MAIN_MENU;
         }
     });

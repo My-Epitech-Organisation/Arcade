@@ -13,10 +13,19 @@
 #include <iostream>
 #include <algorithm>
 #include <utility>
+#include <chrono>
+#include <thread>
 #include <memory>
 #include <string>
-#include "EventManager/EventManager.hpp"
-#include "Interface/IArcadeModule.hpp"
+#include "Core/EventManager/EventManager.hpp"
+#include "Shared/Interface/IArcadeModule.hpp"
+#include "Shared/Interface/Display/IDisplayModule.hpp"
+#include "Shared/Interface/ECS/IComponent.hpp"
+#include "Shared/Interface/Game/IGameModule.hpp"
+#include "ECS/Entity/EntityManager.hpp"
+#include "ECS/Components/ComponentManager.hpp"
+#include "ECS/Components/Position/PositionComponent.hpp"
+#include "ECS/Components/Sprite/SpriteComponent.hpp"
 
 namespace Arcade {
 GameLoop::GameLoop(const std::string& initialLib)
@@ -26,15 +35,18 @@ _selectedGame(0),
 _graphicsLoader(initialLib),
 _gameLoader(".") {
     _eventManager = std::make_shared<EventManager>();
+    _entityManager = std::make_shared<EntityManager>();
+    _componentManager = std::make_shared<ComponentManager>();
     subscribeEvents();
     subscribeNavEvents();
     subscribeMouseEvents();
     try {
         _graphicsLoader.setLibPath(initialLib);
         _currentGraphics = _graphicsLoader.getInstanceUPtr("entryPoint");
+        loadCommonComponents();
         if (!_currentGraphics)
             throw std::runtime_error("Failed to load initial graphics library");
-        _window = std::make_shared<Window>(std::move(_currentGraphics),
+        _window = std::make_shared<Window>(_currentGraphics,
             _eventManager);
         _menu = std::make_unique<Menu>(_window);
     } catch (const std::exception& e) {
@@ -51,17 +63,37 @@ _gameLoader(".") {
 
 
 GameLoop::~GameLoop() {
+    _currentGame.reset();
+
+    if (_window) {
+        if (_eventManager)
+            _eventManager->unsubscribeAll();
+
+        _window->setDisplayModule(nullptr);
+        _window.reset();
+    }
+
+    _componentManager.reset();
+    _entityManager.reset();
+
+    _eventManager.reset();
 }
 
 void GameLoop::run() {
     auto running = std::make_shared<bool>(true);
+    auto lastFrameTime = std::chrono::high_resolution_clock::now();
 
     while (*running) {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float deltaTime = std::chrono::duration<float>
+            (currentTime - lastFrameTime).count();
+        lastFrameTime = currentTime;
         handleEvents(running);
-        if (!running) break;
+        if (!*running) break;
         _window->clearScreen();
         handleState();
         _window->refreshScreen();
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
     cleanup();
 }
@@ -102,14 +134,59 @@ void GameLoop::displayGameSelection() {
 void GameLoop::displayGraphicsSelection() {
     _menu->displayGraphicsSelection(_graphicsLibs, _selectedGraphics);
 }
-
 void GameLoop::updateGame() {
     if (_currentGame) {
-        _currentGame->update(0.016f);
-        auto entities = _currentGame->getEntities();
-        for (const auto& entity : entities) {
-            // Render each entity (implementation depends on your entity system)
+        _currentGame->update();
+        auto entities = _entityManager->getEntities();
+        for (const auto& [entityId, entityName] : entities) {
+            auto position = _componentManager->getComponentByType(entityId,
+                ComponentType::POSITION);
+            auto positionComponent = std::dynamic_pointer_cast
+                <PositionComponent>(position);
+            if (!positionComponent) {
+                continue;
+            }
+
+            int x = static_cast<int>(positionComponent->x);
+            int y = static_cast<int>(positionComponent->y);
+
+            auto sprite = _componentManager->getComponentByType(entityId,
+                ComponentType::SPRITE);
+            auto spriteComponent = std::dynamic_pointer_cast<SpriteComponent>
+                (sprite);
+            if (spriteComponent) {
+                _currentGraphics->drawTexture(x, y,
+                    spriteComponent->spritePath);
+                continue;
+            }
+
+            std::string specialCompo = _currentGame->getSpecialCompSprite
+                (entityId);
+            if (specialCompo != "") {
+                _currentGraphics->drawTexture(x, y, specialCompo);
+                continue;
+            }
+
+            _currentGraphics->drawEntity(x, y, '?');
         }
+
+        if (_currentGame->isGameOver()) {
+            if (_currentGame->hasWon()) {
+                std::string winMessage = "YOU WIN!!!!!";
+                _window->drawText(winMessage, _window->getWidth() / 2 - 50,
+                    _window->getHeight() / 2, Color::GREEN);
+            } else {
+                std::string looseMessage = "GAME OVER";
+                _window->drawText(looseMessage, _window->getWidth() / 2 - 50,
+                    _window->getHeight() / 2, Color::RED);
+            }
+
+            _window->drawText("Press ESC to return to menu",
+                _window->getWidth() / 2 - 100,
+                _window->getHeight() / 2 + 30, Color::WHITE);
+        }
+    } else {
+        std::cout << "[DEBUG] No current game to update" << std::endl;
     }
 }
 
@@ -207,6 +284,8 @@ void* handle, IArcadeModule* (*entryPoint)()) {
         _graphicsLibs.push_back(path);
     } else if (dynamic_cast<IGameModule*>(instance)) {
         _gameLibs.push_back(path);
+    } else if (dynamic_cast<IComponent*>(instance)) {
+        _componentsLibs.push_back(path);
     } else {
         std::cerr << "Unknown module type in " << path << std::endl;
     }
@@ -215,12 +294,48 @@ void* handle, IArcadeModule* (*entryPoint)()) {
     _loadedLibHandles[path] = handle;
     return true;
 }
+
 void GameLoop::loadAndStartGame() {
     try {
-        _gameLoader.setLibPath(_gameLibs[_selectedGame]);
-        _currentGame = _gameLoader.getInstanceUPtr("entryPoint");
         if (_currentGame) {
-            _currentGame->init();
+            _currentGame->stop();
+            _currentGame.reset();
+        }
+        subscribeEvents();
+        subscribeNavEvents();
+        subscribeMouseEvents();
+        _gameLoader.setLibPath(_gameLibs[_selectedGame]);
+        typedef IArcadeModule* (*EntryPointFunc)(
+            std::shared_ptr<IEventManager>,
+            std::shared_ptr<IComponentManager>,
+            std::shared_ptr<IEntityManager>);
+        auto handle = dlopen(_gameLibs[_selectedGame].c_str(), RTLD_LAZY);
+        if (!handle) {
+            throw std::runtime_error(dlerror());
+        }
+        auto entryPoint = reinterpret_cast<EntryPointFunc>(
+            dlsym(handle, "entryPoint"));
+        if (!entryPoint) {
+            dlclose(handle);
+            throw std::runtime_error(dlerror());
+        }
+        if (_entityManager) {
+            _entityManager.reset();
+            _entityManager = std::make_shared<EntityManager>();
+        }
+        _currentGame = std::shared_ptr<IGameModule>(
+            static_cast<IGameModule*>(entryPoint(_eventManager,
+                _componentManager, _entityManager)),
+            [handle](IGameModule* ptr) {
+                typedef void (*DestroyFunc)(IGameModule*);
+                auto destroy = reinterpret_cast<DestroyFunc>(
+                    dlsym(handle, "destroy"));
+                if (destroy) destroy(ptr);
+                dlclose(handle);
+            });
+        if (_currentGame) {
+            _currentGame->init(_eventManager,
+                _componentManager, _entityManager);
             _state = GAME_PLAYING;
         }
     } catch (const std::exception& e) {
@@ -230,17 +345,74 @@ void GameLoop::loadAndStartGame() {
 
 void GameLoop::loadGraphicsLibraries() {
     try {
+        if (_currentGame) {
+            _currentGame->stop();
+            _currentGame.reset();
+        }
+
+        if (_entityManager) {
+            auto entities = _entityManager->getEntities();
+            for (const auto& entity : entities) {
+                _entityManager->destroyEntity(entity.first);
+            }
+        }
+
+        if (_componentManager)
+            _componentManager = std::make_shared<ComponentManager>();
+
+        if (_eventManager) {
+            std::cout << "loadgraphic lib" << std::endl;
+            _eventManager->unsubscribeAll();
+        }
+
         std::string newLibPath = _graphicsLibs[_selectedGraphics];
         _graphicsLoader.setLibPath(newLibPath);
         auto newGraphics = _graphicsLoader.getInstanceUPtr("entryPoint");
-        auto sharedPtr =
-            std::shared_ptr<IDisplayModule>(std::move(newGraphics));
+        auto sharedPtr = std::shared_ptr<IDisplayModule>(
+            std::move(newGraphics));
         if (sharedPtr) {
+            _currentGraphics = sharedPtr;
+
             _window->setDisplayModule(sharedPtr);
+
+            subscribeEvents();
+            subscribeNavEvents();
+            subscribeMouseEvents();
             _state = MAIN_MENU;
         }
     } catch (const std::exception& e) {
         std::cerr << "Error loading graphics: " << e.what() << std::endl;
+    }
+}
+
+void GameLoop::loadCommonComponents() {
+    try {
+        for (auto libPath = _componentsLibs.begin();
+            libPath != _componentsLibs.end(); ++libPath) {
+            auto handle = dlopen(libPath->c_str(), RTLD_LAZY);
+            if (!handle) {
+                std::cerr << "Error loading " << *libPath << ": "
+                    << dlerror() << std::endl;
+                continue;
+            }
+            auto entryPoint = reinterpret_cast<IArcadeModule* (*)()>
+                (dlsym(handle, "entryPoint"));
+            if (!entryPoint) {
+                std::cerr << "Error finding entryPoint in "
+                    << *libPath << ": " << dlerror() << std::endl;
+                dlclose(handle);
+                continue;
+            }
+            IArcadeModule* instance = entryPoint();
+            if (instance) {
+                IComponent* componentPtr = static_cast<IComponent*>(instance);
+                _commonComponents.push_back
+                    (std::shared_ptr<IComponent>(componentPtr));
+            }
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error loading common components: "
+            << e.what() << std::endl;
     }
 }
 

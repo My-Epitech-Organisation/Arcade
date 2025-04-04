@@ -10,8 +10,8 @@
 #include <vector>
 #include <string>
 #include "Menu/Menu.hpp"
-#include "Interface/Display/IDisplayModule.hpp"
-#include "Models/ColorType.hpp"
+#include "Shared/Interface/Display/IDisplayModule.hpp"
+#include "Shared/Models/ColorType.hpp"
 
 namespace Arcade {
 

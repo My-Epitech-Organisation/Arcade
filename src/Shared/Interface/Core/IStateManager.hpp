@@ -9,7 +9,7 @@
 #ifndef SRC_SHARED_INTERFACE_CORE_ISTATEMANAGER_HPP_
     #define SRC_SHARED_INTERFACE_CORE_ISTATEMANAGER_HPP_
     #include <memory>
-    #include "Interface/Core/IGameState.hpp"
+    #include "Shared/Interface/Core/IGameState.hpp"
 
 namespace Arcade {
 class IStateManager {

@@ -9,9 +9,9 @@
 #ifndef SRC_SHARED_EVENTMANAGER_KEYEVENT_MOUSEEVENT_HPP_
     #define SRC_SHARED_EVENTMANAGER_KEYEVENT_MOUSEEVENT_HPP_
 
-    #include "Interface/Core/IEvent.hpp"
-    #include "Models/EventType.hpp"
-    #include "Models/MouseButtonType.hpp"
+    #include "Shared/Interface/Core/IEvent.hpp"
+    #include "Shared/Models/EventType.hpp"
+    #include "Shared/Models/MouseButtonType.hpp"
 
 namespace Arcade {
 class MouseEvent : public IEvent {

@@ -82,7 +82,7 @@ void SDLModule::drawTexture(int x, int y, const std::string &texturePath) {
         return;
 
     _texture.renderTexture(renderer.get(), texture.get(),
-        _windowWidth, _windowHeight);
+        x, y);
 }
 
 void SDLModule::drawText(const std::string &text,

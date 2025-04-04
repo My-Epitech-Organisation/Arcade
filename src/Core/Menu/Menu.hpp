@@ -12,7 +12,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "Interface/Core/IGameState.hpp"
+#include "Shared/Interface/Core/IGameState.hpp"
 #include "Window/Window.hpp"
 
 /**

@@ -12,13 +12,14 @@
 #include <iostream>
 #include "Window/Window.hpp"
 #include "EventManager/KeyEvent/RawInputState.hpp"
+#include "Core/EventManager/EventManager.hpp"
 
 namespace Arcade {
 
 Window::Window(std::shared_ptr<IDisplayModule> displayModule,
-std::shared_ptr<AEventManager> eventManager)
+std::shared_ptr<IEventManager> eventManager)
 : _displayModule(std::move(displayModule)),
-_eventManager(eventManager),
+_eventManager(std::move(eventManager)),
 _width(800),
 _height(600),
 _title("Arcade"),
@@ -29,6 +30,21 @@ _isShuttingDown(false) {
 
 Window::~Window() {
     _isShuttingDown = true;
+
+    if (_eventManager) {
+        try {
+            _eventManager->unsubscribeAll();
+        } catch (const std::exception& e) {
+            std::cerr << "Exception during event manager cleanup: "
+                << e.what() << std::endl;
+        } catch (...) {
+            std::cerr << "Unknown exception during event manager cleanup"
+                << std::endl;
+        }
+    }
+
+    _eventManager.reset();
+
     if (_displayModule) {
         try {
             _displayModule->stop();
@@ -108,6 +124,7 @@ IDisplayModule* Window::getDisplayModule() {
     if (_isShuttingDown) return nullptr;
     return _displayModule.get();
 }
+
 void Window::setDisplayModule(std::shared_ptr<IDisplayModule> displayModule) {
     _isShuttingDown = false;
     cleanupCurrentDisplayModule();

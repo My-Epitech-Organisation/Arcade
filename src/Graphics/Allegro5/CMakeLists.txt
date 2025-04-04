@@ -19,13 +19,13 @@ target_include_directories(arcade_allegro5 PUBLIC
     ${ALLEGRO5_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_ROOT}/src/Shared
 )
 target_link_directories(arcade_allegro5 PUBLIC ${ALLEGRO5_LIBRARY_DIRS})
 
 if(ENABLE_COVERAGE)
     target_compile_options(arcade_allegro5 PUBLIC -O0 -g --coverage -fprofile-arcs -ftest-coverage ${ALLEGRO5_CFLAGS})
     target_link_libraries(arcade_allegro5 PUBLIC
-        arcade_event
         arcade_ecs
         ${ALLEGRO5_LIBRARIES}
         --coverage
@@ -33,7 +33,6 @@ if(ENABLE_COVERAGE)
 else()
     target_compile_options(arcade_allegro5 PUBLIC ${ALLEGRO5_CFLAGS})
     target_link_libraries(arcade_allegro5 PUBLIC
-        arcade_event
         arcade_ecs
         ${ALLEGRO5_LIBRARIES}
     )

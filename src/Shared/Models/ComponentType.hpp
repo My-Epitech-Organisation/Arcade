@@ -13,6 +13,9 @@ enum class ComponentType {
     POSITION,
     VELOCITY,
     SPRITE,
+    BOMB,
+    CELL,
+    BOARD,
     CUSTOM_BASE = 1000
 };
 

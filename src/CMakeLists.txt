@@ -1,4 +1,3 @@
-add_subdirectory(Shared)
 add_subdirectory(ECS)
 add_subdirectory(Core)
 add_subdirectory(Games)
