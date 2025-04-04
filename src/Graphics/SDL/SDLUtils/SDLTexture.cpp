@@ -33,18 +33,19 @@ std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>
     if (!textTexture) {
         std::cerr << "Unable to create texture from rendered text: "
             << SDL_GetError() << std::endl;
+        exit(84);
     }
     return textTexture;
 }
 
 void SDL::SDLTexture::renderTexture(SDL_Renderer* renderer,
-    SDL_Texture* texture, int windowWidth, int windowHeight) {
+    SDL_Texture* texture, int x, int y) {
     int w, h;
     SDL_QueryTexture(texture, nullptr, nullptr, &w, &h);
 
     SDL_Rect destRect;
-    destRect.x = (windowWidth - w) / 2;
-    destRect.y = (windowHeight - h) / 2;
+    destRect.x = x;
+    destRect.y = y;
     destRect.w = w;
     destRect.h = h;
 

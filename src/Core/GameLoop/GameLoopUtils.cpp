@@ -121,8 +121,6 @@ void GameLoop::subscribeRightClickEvent() {
     _eventManager->subscribe(rightClickEvent, [this]() {
         if (_state == GAME_SELECTION || _state == GRAPHICS_SELECTION) {
             _state = MAIN_MENU;
-        } else if (_state == GAME_PLAYING) {
-            _state = MAIN_MENU;
         }
     });
 }

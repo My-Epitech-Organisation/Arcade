@@ -1,3 +1,4 @@
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
@@ -9,12 +10,6 @@
 #include <iostream>
 
 void GameLogic::update() {
-    std::cout << "Marin logic de la pute" << std::endl;
     auto entities = _entityManager->getEntities();
-    for (const auto& entity : entities) {
-        // auto board = _componentManager->getAllComponents<Arcade::Minesweeper::Board>(entity);
-        // if (board) {
-        //     // Update game logic here
-        // }
-    }
+    for (const auto& entity : entities) {}
 }

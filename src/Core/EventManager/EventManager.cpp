@@ -19,8 +19,12 @@
 namespace Arcade {
 
 EventManager::EventManager()
-: _mouseX(0), _mouseY(0) {}
-
+: _mouseX(0), _mouseY(0), _displayModule(nullptr) {
+    _subscribers.clear();
+    _mouseSubscribers.clear();
+    _keyStates.clear();
+    _mouseButtonStates.clear();
+}
 
 void EventManager::updateKeyState(const RawInputState& state) {
     for (const auto& [key, isPressed] : state.keyStates) {
@@ -82,6 +86,11 @@ void EventManager::setMousePosition(std::size_t x, std::size_t y) {
 
 std::pair<std::size_t, std::size_t> EventManager::getMousePosition() const {
     return std::make_pair(_mouseX, _mouseY);
+}
+
+void EventManager::unsubscribeAll() {
+    _subscribers.clear();
+    _mouseSubscribers.clear();
 }
 
 }  // namespace Arcade

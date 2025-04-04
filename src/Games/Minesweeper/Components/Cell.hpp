@@ -1,3 +1,4 @@
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
@@ -5,19 +6,19 @@
 ** Minesweeper Cell class
 */
 
-#ifndef SRC_GAMES_MINESWEEPER_CELL_HPP_
-#define SRC_GAMES_MINESWEEPER_CELL_HPP_
-#include <string>
-#include <memory>
-#include "Shared/Interface/ECS/IComponent.hpp"
-#include "Shared/Models/ComponentType.hpp"
+#ifndef SRC_GAMES_MINESWEEPER_COMPONENTS_CELL_HPP_
+    #define SRC_GAMES_MINESWEEPER_COMPONENTS_CELL_HPP_
+    #include <string>
+    #include <memory>
+    #include "Shared/Interface/ECS/IComponent.hpp"
+    #include "Shared/Models/ComponentType.hpp"
 
 namespace Arcade {
 namespace Minesweeper {
 
 class Cell : public Arcade::IComponent {
  public:
-    Cell(bool hasMine = false, int adjacentMines = 0)
+    explicit Cell(bool hasMine = false, int adjacentMines = 0)
         : _state(HIDDEN), _adjacentMines(adjacentMines), _hasMine(hasMine) {}
     ~Cell() = default;
 
@@ -55,4 +56,4 @@ class Cell : public Arcade::IComponent {
 }  // namespace Minesweeper
 }  // namespace Arcade
 
-#endif  // SRC_GAMES_MINESWEEPER_CELL_HPP_
+#endif  // SRC_GAMES_MINESWEEPER_COMPONENTS_CELL_HPP_

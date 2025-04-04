@@ -6,11 +6,11 @@
 ** OpenGL key mapping implementation
 */
 
-#include "OpenGLKeys.hpp"
+#include <unordered_map>
+#include "OpenGL/OpenGLKeys.hpp"
 
 namespace Arcade {
 
-// Define the static mapping 
 const std::unordered_map<Keys, int> OpenGLKeyMap::_keyMap = {
     {Keys::UP, GLFW_KEY_UP},
     {Keys::DOWN, GLFW_KEY_DOWN},

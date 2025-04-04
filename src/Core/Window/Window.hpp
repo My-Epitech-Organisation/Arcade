@@ -144,12 +144,12 @@ class Window : public IWindowModule {
      *
      * @return A shared pointer to the event manager.
      */
-    std::shared_ptr<EventManager> getEventManager() const;
+    std::shared_ptr<IEventManager> getEventManager() const;
 
  private:
     std::shared_ptr<IDisplayModule> _displayModule;
         /// The display module used for rendering.
-    std::shared_ptr<EventManager> _eventManager;
+    std::shared_ptr<IEventManager> _eventManager;
         /// The event manager for handling input events.
     int _width;  /// The width of the window in pixels.
     int _height;  /// The height of the window in pixels.

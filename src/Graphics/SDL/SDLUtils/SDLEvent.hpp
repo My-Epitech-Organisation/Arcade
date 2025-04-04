@@ -19,7 +19,7 @@ class SDLEvent {
  public:
     ~SDLEvent() = default;
 
-    bool isKeyPressed(int keyCode);
+    bool isKeyPressed(int keyCode) const;
     bool isMouseButtonPressed(int button) const;
     std::pair<size_t, size_t> getMousePosition() const;
 };

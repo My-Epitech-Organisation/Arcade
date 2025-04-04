@@ -16,6 +16,7 @@ set(SRC
     ${SRCUTILS}/SDLText.cpp
     ${SRCUTILS}/SDLTexture.cpp
     ${SRCUTILS}/SDLWindow.cpp
+    ${SRCUTILS}/SDLEvent.cpp
 )
 add_library(arcade_sdl2 SHARED ${SRC})
 
@@ -42,7 +43,6 @@ target_include_directories(arcade_sdl2 PUBLIC
     ${SDL2_TTF_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_ROOT}/src/Shared
 )
 
 target_link_directories(arcade_sdl2 PUBLIC

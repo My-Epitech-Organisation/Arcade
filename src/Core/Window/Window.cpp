@@ -19,7 +19,7 @@ namespace Arcade {
 Window::Window(std::shared_ptr<IDisplayModule> displayModule,
 std::shared_ptr<IEventManager> eventManager)
 : _displayModule(std::move(displayModule)),
-_eventManager(dynamic_cast<EventManager*>(eventManager.get())),
+_eventManager(std::move(eventManager)),
 _width(800),
 _height(600),
 _title("Arcade"),
@@ -30,6 +30,21 @@ _isShuttingDown(false) {
 
 Window::~Window() {
     _isShuttingDown = true;
+
+    if (_eventManager) {
+        try {
+            _eventManager->unsubscribeAll();
+        } catch (const std::exception& e) {
+            std::cerr << "Exception during event manager cleanup: "
+                << e.what() << std::endl;
+        } catch (...) {
+            std::cerr << "Unknown exception during event manager cleanup"
+                << std::endl;
+        }
+    }
+
+    _eventManager.reset();
+
     if (_displayModule) {
         try {
             _displayModule->stop();
@@ -93,7 +108,7 @@ bool Window::isKeyPressed(int keyCode) {
     return _eventManager->isKeyPressed(static_cast<Keys>(keyCode));
 }
 
-std::shared_ptr<EventManager> Window::getEventManager() const {
+std::shared_ptr<IEventManager> Window::getEventManager() const {
     return _eventManager;
 }
 
@@ -109,6 +124,7 @@ IDisplayModule* Window::getDisplayModule() {
     if (_isShuttingDown) return nullptr;
     return _displayModule.get();
 }
+
 void Window::setDisplayModule(std::shared_ptr<IDisplayModule> displayModule) {
     _isShuttingDown = false;
     cleanupCurrentDisplayModule();

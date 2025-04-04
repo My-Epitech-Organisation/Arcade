@@ -12,7 +12,7 @@
 #include "Models/KeysType.hpp"
 
 namespace SDL {
-bool SDLEvent::isKeyPressed(int keyCode) {
+bool SDLEvent::isKeyPressed(int keyCode) const {
     SDL_Keycode sdlKey = Arcade::SDLKeyMap::getSDLKey(
         static_cast<Arcade::Keys>(keyCode));
     SDL_Scancode scanCode = SDL_GetScancodeFromKey(sdlKey);

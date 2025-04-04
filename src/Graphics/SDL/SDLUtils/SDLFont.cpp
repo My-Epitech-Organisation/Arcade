@@ -9,7 +9,19 @@
 #include <iostream>
 #include <memory>
 
+SDL::SDLFont::SDLFont() : _font(nullptr, TTF_CloseFont) {
+    TTF_Init();
+}
+
+SDL::SDLFont::~SDLFont() {
+    if (_fontValid) {
+        _font.reset();
+        _fontValid = false;
+    }
+}
+
 void SDL::SDLFont::loadFont(int fontSize) {
+    if (_fontValid) return;
     auto newFont = std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)>(
         TTF_OpenFont("assets/fonts/arial.ttf", fontSize),
         TTF_CloseFont);
@@ -18,8 +30,8 @@ void SDL::SDLFont::loadFont(int fontSize) {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
         return;
     }
-
     _font.swap(newFont);
+    _fontValid = true;
 }
 
 std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)> SDL::SDLFont::getFont() {

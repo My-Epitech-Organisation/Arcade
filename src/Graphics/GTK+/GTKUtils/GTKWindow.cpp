@@ -47,4 +47,8 @@ std::shared_ptr<GtkWidget> GTKWindow::getDrawingArea() const {
     return _drawingArea;
 }
 
+void GTKWindow::resetDrawingArea() {
+    _drawingArea.reset();
+}
+
 }  // namespace GTK

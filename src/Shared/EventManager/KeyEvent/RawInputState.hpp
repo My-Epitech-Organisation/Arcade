@@ -10,8 +10,8 @@
     #define SRC_SHARED_EVENTMANAGER_KEYEVENT_RAWINPUTSTATE_HPP_
 
 #include <unordered_map>
-#include "Shared/Models/KeysType.hpp"
-#include "Shared/Models/MouseButtonType.hpp"
+#include "../../Models/KeysType.hpp"
+#include "../../Models/MouseButtonType.hpp"
 
 /**
  * @file RawInputState.hpp

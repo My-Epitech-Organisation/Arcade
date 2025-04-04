@@ -89,9 +89,6 @@ void Menu::displayGraphicsSelection(
 const std::vector<std::string> &graphicsLibs, size_t selectedGraphics) {
     displaySelectionMenu("SELECT GRAPHICS LIBRARY",
         graphicsLibs, selectedGraphics);
-    for (auto &lib : graphicsLibs) {
-        std::cout << lib << std::endl;
-    }
 }
 
 void Menu::setWindow(std::shared_ptr<Window> window) {
