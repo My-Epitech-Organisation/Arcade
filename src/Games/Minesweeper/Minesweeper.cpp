@@ -2,15 +2,6 @@
 /*
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade    #define SRC_GAMES_MINESWEEPER_COMPONENTS_BOARD_HPP_
-
-    #include <vector>
-    #include <string>
-    #include <unordered_map>
-    #include <memory>
-    #include "Games/Minesweeper/Components/Cell.hpp"
-    #include "Shared/Interface/ECS/IComponent.hpp"
-    #include "Shared/Interface/ECS/IEntity.hpp"
-    #include "ECS/Components/Position/PositionComponent.hpp"
 ** File description:
 ** Minesweeper game module implementation
 */
@@ -76,6 +67,9 @@ std::shared_ptr<IEntityManager> entityManager) {
         _entityManager));
     _systems.push_back(std::make_shared<RenderSystem>(_componentManager,
         _entityManager, std::make_pair(10u, 10u)));
+    _systems.push_back(std::make_shared<UISystem>(_componentManager,
+        _entityManager));
+
     _systems.push_back(_eventSystem);
 }
 
@@ -91,15 +85,37 @@ void MinesweeperGame::update() {
         ComponentType::BOARD);
     auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>
         (comp);
-    if (board && !board->isGameOver()) {
-        _gameWon = checkVictory(boardEntity);
-        if (_gameWon) {
-            board->setGameWon(true);
-            board->setGameOver(true);
+    auto statsComp = _componentManager->getComponentByType(boardEntity,
+        ComponentType::CUSTOM_BASE);
+    auto gameStats = std::dynamic_pointer_cast
+        <Arcade::Minesweeper::GameStats>(statsComp);
+    if (board && gameStats) {
+        if (!board->isGameOver()) {
+            gameStats->updateTime();
+
+            if (gameStats->isTimeUp()) {
+                board->setGameOver(true);
+                _gameOver = true;
+                _gameWon = false;
+            }
         }
+
+        if (!board->isGameOver()) {
+            _gameWon = checkVictory(boardEntity);
+            if (_gameWon) {
+                int timeBonus = gameStats->getTimeRemaining() * 10;
+                gameStats->addTimeBonus(timeBonus);
+
+                board->setGameWon(true);
+                board->setGameOver(true);
+                _gameOver = true;
+            }
+        }
+
+        if (board->isGameOver())
+            _gameOver = true;
     }
-    if (board && board->isGameOver())
-        _gameOver = true;
+
     for (const auto& system : _systems) {
         system->update();
     }

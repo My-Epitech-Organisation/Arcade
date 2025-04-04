@@ -11,6 +11,8 @@
 #include <memory>
 #include <queue>
 #include <set>
+#include <vector>
+#include <random>
 #include "Games/Minesweeper/System/EventSubSystem.hpp"
 #include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
 #include "Shared/EventManager/KeyEvent/MouseEvent.hpp"
@@ -20,6 +22,8 @@
 #include "Games/Minesweeper/Components/Board.hpp"
 #include "Games/Minesweeper/Components/Cell.hpp"
 #include "Games/Minesweeper/Components/Bomb.hpp"
+#include "Games/Minesweeper/Components/GameStats.hpp"
+#include "Games/Minesweeper/MinesweeperFactory.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 
@@ -30,7 +34,7 @@ std::shared_ptr<Arcade::IEntityManager> entityManager,
 std::shared_ptr<Arcade::IEventManager> eventManager)
 : _componentManager(componentManager),
 _entityManager(entityManager),
-_eventManager(eventManager) {
+_eventManager(eventManager), _firstClick(true) {
     subscribeToEvents();
 }
 
@@ -68,6 +72,19 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
     cellsToReveal.push({cellX, cellY});
     processedCells.insert({cellX, cellY});
 
+    Arcade::Entity boardEntity = 0;
+    for (const auto& entity : _entityManager->getEntities()) {
+        if (entity.second == "Board") {
+            boardEntity = entity.first;
+            break;
+        }
+    }
+
+    auto statsComp = _componentManager->getComponentByType(boardEntity,
+        ComponentType::CUSTOM_BASE);
+    auto gameStats = std::dynamic_pointer_cast<Arcade::Minesweeper::GameStats>
+        (statsComp);
+
     while (!cellsToReveal.empty()) {
         auto [currentX, currentY] = cellsToReveal.front();
         cellsToReveal.pop();
@@ -102,6 +119,8 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
 
                     neighborCell->setState(
                         Arcade::Minesweeper::Cell::REVEALED);
+                    if (gameStats)
+                        gameStats->revealSafeCell();
 
                     if (neighborCell->getAdjacentMines() > 0) {
                         std::string neighborNumberSpritePath =
@@ -127,6 +146,135 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
                     if (neighborCell->getAdjacentMines() == 0)
                         cellsToReveal.push({neighborX, neighborY});
                 }
+            }
+        }
+    }
+}
+
+void EventSubSystem::handleFirstClick(size_t boardHeight, size_t boardWidth,
+int cellX, int cellY, std::shared_ptr<Arcade::Minesweeper::Board> board) {
+    std::vector<std::pair<size_t, size_t>> mineCells;
+    std::vector<std::pair<size_t, size_t>> safeCells;
+
+    for (size_t y = 0; y < boardHeight; y++) {
+        for (size_t x = 0; x < boardWidth; x++) {
+            if (abs(static_cast<int>(x) - cellX) <= 1 &&
+                abs(static_cast<int>(y) - cellY) <= 1) {
+                continue;
+            }
+
+            auto currentEntity = board->getCellEntity(x, y);
+            auto currentComp = _componentManager->getComponentByType(
+                currentEntity, ComponentType::CELL);
+            auto currentCell = std::dynamic_pointer_cast
+                <Arcade::Minesweeper::Cell> (currentComp);
+
+            if (currentCell && currentCell->hasMine())
+                mineCells.push_back({x, y});
+            else
+                safeCells.push_back({x, y});
+        }
+    }
+
+    for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+            int nx = cellX + dx;
+            int ny = cellY + dy;
+
+            if (nx >= 0 && nx < static_cast<int>(boardWidth) &&
+                ny >= 0 && ny < static_cast<int>(boardHeight)) {
+                auto neighborEntity = board->getCellEntity(nx, ny);
+                auto neighborComp = _componentManager->getComponentByType(
+                    neighborEntity, ComponentType::CELL);
+                auto neighborCell = std::dynamic_pointer_cast
+                    <Arcade::Minesweeper::Cell> (neighborComp);
+
+                if (neighborCell && neighborCell->hasMine()) {
+                    neighborCell->setHasMine(false);
+
+                    auto bombComp = _componentManager->getComponentByType(
+                        neighborEntity, ComponentType::BOMB);
+                    if (bombComp) {
+                        _componentManager->unregisterComponent(
+                            neighborEntity, typeid(*bombComp).name());
+                    }
+
+                    if (!safeCells.empty()) {
+                        std::random_device rd;
+                        std::mt19937 gen(rd());
+                        std::uniform_int_distribution<size_t>
+                            dist(0, safeCells.size() - 1);
+                        size_t randomIndex = dist(gen);
+
+                        auto [sx, sy] = safeCells[randomIndex];
+                        auto safeEntity = board->getCellEntity(sx, sy);
+                        auto safeComp = _componentManager->getComponentByType(
+                            safeEntity, ComponentType::CELL);
+                        auto safeCell = std::dynamic_pointer_cast
+                            <Arcade::Minesweeper::Cell> (safeComp);
+
+                        if (safeCell) {
+                            safeCell->setHasMine(true);
+
+                            auto spriteComp = _componentManager->
+                                getComponentByType(safeEntity,
+                                    ComponentType::SPRITE);
+                            auto hiddenSprite = std::dynamic_pointer_cast
+                                <SpriteComponent> (spriteComp);
+
+                            if (hiddenSprite) {
+                                auto revealedSprite = std::make_shared
+                                    <SpriteComponent> (
+                                        "assets/minesweeper/mine.png");
+
+                                auto bombComponent = std::make_shared
+                                    <Minesweeper::BombComponent>
+                                        (hiddenSprite, revealedSprite);
+                                _componentManager->registerComponent(
+                                    safeEntity, bombComponent);
+                            }
+                        }
+
+                        safeCells.erase(safeCells.begin() + randomIndex);
+                    }
+                }
+            }
+        }
+    }
+
+    for (size_t y = 0; y < boardHeight; y++) {
+        for (size_t x = 0; x < boardWidth; x++) {
+            auto currentEntity = board->getCellEntity(x, y);
+            auto currentComp = _componentManager->getComponentByType(
+                currentEntity, ComponentType::CELL);
+            auto currentCell = std::dynamic_pointer_cast
+                <Arcade::Minesweeper::Cell> (currentComp);
+
+            if (currentCell && !currentCell->hasMine()) {
+                size_t adjacentMines = 0;
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dx = -1; dx <= 1; dx++) {
+                        if (dx == 0 && dy == 0) continue;
+
+                        int nx = static_cast<int>(x) + dx;
+                        int ny = static_cast<int>(y) + dy;
+
+                        if (nx >= 0 && nx < static_cast<int>(boardWidth) &&
+                            ny >= 0 && ny < static_cast<int>(boardHeight)) {
+                            auto neighEntity = board->getCellEntity(nx, ny);
+                            auto neighComp = _componentManager->
+                                getComponentByType(neighEntity,
+                                    ComponentType::CELL);
+                            auto neighCell = std::dynamic_pointer_cast
+                                <Arcade::Minesweeper::Cell>(neighComp);
+
+                            if (neighCell && neighCell->hasMine())
+                                adjacentMines++;
+                        }
+                    }
+                }
+
+                currentCell->setAdjacentMines(adjacentMines);
             }
         }
     }
@@ -171,8 +319,15 @@ void EventSubSystem::handleLeftClick() {
         auto cell = std::dynamic_pointer_cast<Arcade::Minesweeper::Cell>
             (cellComp);
 
-        if (!cell || cell->getState() ==
-            Arcade::Minesweeper::Cell::FLAGGED) return;
+        if (!cell ||
+            cell->getState() == Arcade::Minesweeper::Cell::FLAGGED ||
+            cell->getState() == Arcade::Minesweeper::Cell::REVEALED) return;
+
+        if (_firstClick) {
+            _firstClick = false;
+            if (cell->hasMine() || cell->getAdjacentMines() > 0)
+                handleFirstClick(boardHeight, boardWidth, cellX, cellY, board);
+        }
 
         cell->setState(Arcade::Minesweeper::Cell::REVEALED);
 
@@ -191,6 +346,12 @@ void EventSubSystem::handleLeftClick() {
             bombComponent->reveal();
             board->setGameOver(true);
         } else {
+            auto statsComp = _componentManager->getComponentByType(boardEntity,
+                ComponentType::CUSTOM_BASE);
+            auto gameStats = std::dynamic_pointer_cast
+                <Arcade::Minesweeper::GameStats> (statsComp);
+            if (gameStats)
+                gameStats->revealSafeCell();
             if (cell->getAdjacentMines() > 0) {
                 std::string numberSpritePath = "assets/minesweeper/number_" +
                     std::to_string(cell->getAdjacentMines()) + ".png";
@@ -256,31 +417,42 @@ void EventSubSystem::handleRightClick() {
 
         if (!cell) return;
 
+        auto statsComp = _componentManager->getComponentByType(boardEntity,
+            ComponentType::CUSTOM_BASE);
+        auto gameStats = std::dynamic_pointer_cast
+            <Arcade::Minesweeper::GameStats> (statsComp);
+
         if (cell->getState() == Arcade::Minesweeper::Cell::HIDDEN) {
             cell->setState(Arcade::Minesweeper::Cell::FLAGGED);
 
             auto flagSprite = std::make_shared<SpriteComponent>
                 ("assets/minesweeper/flag.png");
             _componentManager->registerComponent(cellEntity, flagSprite);
+
+            if (gameStats)
+                gameStats->addFlag();
         } else if (cell->getState() == Arcade::Minesweeper::Cell::FLAGGED) {
             cell->setState(Arcade::Minesweeper::Cell::HIDDEN);
 
             auto hiddenSprite = std::make_shared<SpriteComponent>
                 ("assets/minesweeper/hidden.png");
             _componentManager->registerComponent(cellEntity, hiddenSprite);
+
+            if (gameStats)
+                gameStats->removeFlag();
         }
     }
 }
 
 void EventSubSystem::handleKeyR() {
-    Arcade::Entity boardEntity = 0;
+    _firstClick = true;
+    Arcade::Entity boardEntity = -1;
     for (const auto& entity : _entityManager->getEntities()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;
         }
     }
-    if (boardEntity == 0) return;
 
     auto boardComp = _componentManager->getComponentByType(boardEntity,
         ComponentType::BOARD);
@@ -291,40 +463,45 @@ void EventSubSystem::handleKeyR() {
     board->setGameOver(false);
     board->setGameWon(false);
 
-    for (size_t y = 0; y < board->getHeight(); y++) {
-        for (size_t x = 0; x < board->getWidth(); x++) {
+    auto posComp = _componentManager->getComponentByType(boardEntity,
+        ComponentType::POSITION);
+    auto boardPos = std::dynamic_pointer_cast<PositionComponent>(posComp);
+
+    if (!boardPos) return;
+
+    float boardX = boardPos->x;
+    float boardY = boardPos->y;
+    size_t width = board->getWidth();
+    size_t height = board->getHeight();
+    size_t mineCount = board->getMineCount();
+    int cellSize = 100;
+
+    auto statsComp = _componentManager->getComponentByType(boardEntity,
+        ComponentType::CUSTOM_BASE);
+    auto gameStats = std::dynamic_pointer_cast<Arcade::Minesweeper::GameStats>
+        (statsComp);
+    if (gameStats)
+        gameStats->reset();
+
+    for (size_t y = 0; y < height; y++) {
+        for (size_t x = 0; x < width; x++) {
             Arcade::Entity cellEntity = board->getCellEntity(x, y);
             if (cellEntity == 0) continue;
 
-            auto cellComp = _componentManager->getComponentByType(cellEntity,
-                ComponentType::CELL);
-            auto cell = std::dynamic_pointer_cast<Arcade::Minesweeper::Cell>
-                (cellComp);
-
-            if (!cell) continue;
-
-            cell->setState(Arcade::Minesweeper::Cell::HIDDEN);
-
-            auto hiddenSprite = std::make_shared<SpriteComponent>
-                ("assets/minesweeper/hidden.png");
-            _componentManager->registerComponent(cellEntity, hiddenSprite);
-
-            auto bombComp = _componentManager->getComponentByType(cellEntity,
-                ComponentType::BOMB);
-            auto bomb = std::dynamic_pointer_cast
-                <Arcade::Minesweeper::BombComponent>(bombComp);
-
-            if (bomb) {
-                auto revealedSprite = std::make_shared<SpriteComponent>
-                    ("assets/minesweeper/mine.png");
-                auto newBomb = std::make_shared
-                    <Arcade::Minesweeper::BombComponent>(hiddenSprite,
-                        revealedSprite);
-
-                _componentManager->registerComponent(cellEntity, newBomb);
+            auto components = _componentManager->getEntityComponents
+                (cellEntity);
+            for (const auto& component : components) {
+                _componentManager->unregisterComponent(cellEntity,
+                    typeid(*component).name());
             }
+
+            _entityManager->destroyEntity(cellEntity);
         }
     }
+
+    Arcade::Minesweeper::MinesweeperFactory factory(_entityManager,
+        _componentManager);
+    factory.initializeGame(boardEntity, boardX, boardY, cellSize);
 }
 
 void EventSubSystem::update() {

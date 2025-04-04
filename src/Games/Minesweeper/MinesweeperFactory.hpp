@@ -17,6 +17,7 @@
 #include "Games/Minesweeper/Components/Board.hpp"
 #include "Games/Minesweeper/Components/Cell.hpp"
 #include "Games/Minesweeper/Components/Bomb.hpp"
+#include "Games/Minesweeper/Components/GameStats.hpp"
 
 namespace Arcade {
 namespace Minesweeper {

@@ -20,6 +20,8 @@
 #include "Games/Minesweeper/System/EventSubSystem.hpp"
 #include "Games/Minesweeper/Components/Board.hpp"
 #include "Games/Minesweeper/MinesweeperFactory.hpp"
+#include "Games/Minesweeper/System/UISystem.hpp"
+#include "Games/Minesweeper/Components/GameStats.hpp"
 
 namespace Arcade {
 

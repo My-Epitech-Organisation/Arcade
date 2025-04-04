@@ -34,6 +34,9 @@ class EventSubSystem : public Arcade::ISystem {
         size_t boardHeight, std::shared_ptr<Arcade::Minesweeper::Board> board);
     void handleRightClick();
     void handleKeyR();
+    void handleFirstClick(size_t boardHeight, size_t boardWidth, int cellX,
+        int cellY, std::shared_ptr<Arcade::Minesweeper::Board> board);
+    bool _firstClick = true;
 };
 }  // namespace Arcade
 

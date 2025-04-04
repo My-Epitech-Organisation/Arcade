@@ -23,6 +23,8 @@ size_t width, size_t height, size_t mineCount) {
     auto boardComponent = std::make_shared<Board>(width, height, mineCount);
     boardComponent->setName("Board");
     _componentManager->registerComponent(boardEntity, boardComponent);
+    auto gameStats = std::make_shared<GameStats>(mineCount, 300);
+    _componentManager->registerComponent(boardEntity, gameStats);
     return boardEntity;
 }
 
