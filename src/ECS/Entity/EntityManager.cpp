@@ -7,6 +7,8 @@
 */
 
 #include <algorithm>
+#include <string>
+#include <unordered_map>
 #include <vector>
 #include "ECS/Entity/EntityManager.hpp"
 
@@ -23,6 +25,7 @@ void EntityManager::destroyEntity(Entity entity) {
         _activeEntities.erase(it);
 }
 
-const std::unordered_map<Entity, std::string>& EntityManager::getEntities() const {
+const std::unordered_map<Entity, std::string>&
+    EntityManager::getEntities() const {
     return _activeEntities;
 }

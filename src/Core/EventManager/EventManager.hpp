@@ -39,8 +39,9 @@ class EventManager : public IEventManager {
  public:
     // Hash structures for event subscription maps
     struct PairHash {
-       std::size_t operator()(const std::pair<EventType, Keys>& p) const noexcept {
-          return std::hash<int>()(static_cast<int>(p.first)) ^
+        std::size_t operator()(const std::pair<EventType, Keys>& p)
+            const noexcept {
+            return std::hash<int>()(static_cast<int>(p.first)) ^
                 std::hash<int>()(static_cast<int>(p.second));
        }
     };
@@ -69,8 +70,8 @@ class EventManager : public IEventManager {
     * @param eventType The keyboard event to subscribe to.
     * @param callback The function to call when the event occurs.
     */
-   void subscribe(const IEvent& eventType,
-    const Callback callback) override {
+    void subscribe(const IEvent& eventType,
+        const Callback callback) override {
         auto found = std::pair<EventType, Keys>
             (eventType.getType(), eventType.getKey());
         if (dynamic_cast<const MouseEvent*>(&eventType) != nullptr) {
@@ -79,7 +80,7 @@ class EventManager : public IEventManager {
                 (mouseEvent->getType(), mouseEvent->getButton());
             _mouseSubscribers[mouseFound].push_back(callback);
             return;
-        } else if (dynamic_cast<const KeyEvent*>(&eventType) != nullptr) { // Replace with appropriate default arguments
+        } else if (dynamic_cast<const KeyEvent*>(&eventType) != nullptr) {
             auto keyEvent = dynamic_cast<const KeyEvent*>(&eventType);
             auto keyFound = std::pair<EventType, Keys>
                 (eventType.getType(), eventType.getKey());
@@ -103,7 +104,6 @@ class EventManager : public IEventManager {
             auto mouseFound = std::pair<EventType, MouseButton>
                 (mouseEvent->getType(), mouseEvent->getButton());
             for (auto& callback : _mouseSubscribers[mouseFound]) {
-                std::cout << "Mouse event published" << std::endl;
                 callback();
             }
             return;
@@ -122,7 +122,7 @@ class EventManager : public IEventManager {
     *
     * @param state The raw input state containing the current state of keys and mouse buttons.
     */
-    void updateInputState(const RawInputState& state);
+    void updateInputState(const RawInputState& state) override;
 
    /**
     * @brief Sets the pressed state of a specific key.
@@ -138,7 +138,7 @@ class EventManager : public IEventManager {
     * @param key The key to check.
     * @return True if the key is pressed, false otherwise.
     */
-    bool isKeyPressed(Keys key) const;
+    bool isKeyPressed(Keys key) const override;
 
    /**
     * @brief Sets the current position of the mouse.
@@ -146,7 +146,7 @@ class EventManager : public IEventManager {
     * @param x The x-coordinate of the mouse position.
     * @param y The y-coordinate of the mouse position.
     */
-    void setMousePosition(std::size_t x, std::size_t y);
+    void setMousePosition(std::size_t x, std::size_t y) override;
 
    /**
     * @brief Retrieves the current position of the mouse.
@@ -154,6 +154,8 @@ class EventManager : public IEventManager {
     * @return A pair containing the x and y coordinates of the mouse position.
     */
     std::pair<std::size_t, std::size_t> getMousePosition() const override;
+
+    void unsubscribeAll() override;
 
  private:
    /**

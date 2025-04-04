@@ -10,7 +10,6 @@
 #include <iostream>
 
 void GameLogic::update() {
-    std::cout << "Marin logic de la pute" << std::endl;
     auto entities = _entityManager->getEntities();
     for (const auto& entity : entities) {}
 }

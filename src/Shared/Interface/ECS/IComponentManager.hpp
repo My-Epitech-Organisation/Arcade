@@ -35,7 +35,8 @@ class IComponentManager {
     virtual void unregisterComponent(Entity entity,
         const std::string& componentName) = 0;
     // Get all components for an entity
-    virtual std::vector<std::shared_ptr<IComponent>> getEntityComponents(Entity entity) = 0;
+    virtual std::vector<std::shared_ptr<IComponent>>
+        getEntityComponents(Entity entity) = 0;
     // Get all components
     virtual std::vector<std::shared_ptr<IComponent>> getAllComponents() = 0;
 };

@@ -29,7 +29,7 @@ class MinesweeperGame : public IGameModule {
         _gameOver(false),
         _gameWon(false) {}
 
-    ~MinesweeperGame() override = default;
+    ~MinesweeperGame() override;
 
     void init(std::shared_ptr<IEventManager> eventManager,
         std::shared_ptr<IComponentManager> componentManager,

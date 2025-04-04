@@ -13,7 +13,6 @@
 
 
 void RenderSystem::update() {
-    std::cout << "Marin render la pute" << std::endl;
     auto entities = _entityManager->getEntities();
     for (const auto& entity : entities) {}
 }

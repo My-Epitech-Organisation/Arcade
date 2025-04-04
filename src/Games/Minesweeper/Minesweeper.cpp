@@ -37,6 +37,29 @@
 
 namespace Arcade {
 
+MinesweeperGame::~MinesweeperGame() {
+    _systems.clear();
+    _eventSystem.reset();
+
+    if (_entityManager && _componentManager) {
+        auto entities = _entityManager->getEntities();
+        for (const auto& entity : entities) {
+            auto components = _componentManager->getEntityComponents(
+                entity.first);
+            for (const auto& component : components) {
+                _componentManager->unregisterComponent(entity.first,
+                    typeid(*component).name());
+            }
+
+            _entityManager->destroyEntity(entity.first);
+        }
+    }
+
+    _componentManager.reset();
+    _entityManager.reset();
+    _eventManager.reset();
+}
+
 void MinesweeperGame::init(std::shared_ptr<IEventManager> eventManager,
 std::shared_ptr<IComponentManager> componentManager,
 std::shared_ptr<IEntityManager> entityManager) {
@@ -52,31 +75,31 @@ std::shared_ptr<IEntityManager> entityManager) {
     _systems.push_back(std::make_shared<GameLogic>(_componentManager,
         _entityManager));
     _systems.push_back(std::make_shared<RenderSystem>(_componentManager,
- _entityManager, std::make_pair(10u, 10u)));
+        _entityManager, std::make_pair(10u, 10u)));
     _systems.push_back(_eventSystem);
 }
 
 void MinesweeperGame::update() {
     Arcade::Entity boardEntity = 0;
     for (const auto &entities : _entityManager->getEntities()) {
-        if (entities.second == "Board") {
+        if (entities.second.c_str() == "Board") {
             boardEntity = entities.first;
             break;
         }
     }
-    if (boardEntity != 0) {
-        auto comp = _componentManager->getComponentByType(boardEntity,
-            ComponentType::BOARD);
-        auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>
-            (comp);
-        if (board && !board->isGameOver()) {
-            _gameWon = checkVictory(boardEntity);
-            if (_gameWon)
-                board->setGameWon(true);
+    auto comp = _componentManager->getComponentByType(boardEntity,
+        ComponentType::BOARD);
+    auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>
+        (comp);
+    if (board && !board->isGameOver()) {
+        _gameWon = checkVictory(boardEntity);
+        if (_gameWon) {
+            board->setGameWon(true);
+            board->setGameOver(true);
         }
-        if (board && board->isGameOver())
-            _gameOver = true;
     }
+    if (board && board->isGameOver())
+        _gameOver = true;
     for (const auto& system : _systems) {
         system->update();
     }
@@ -92,6 +115,10 @@ bool MinesweeperGame::hasWon() const {
 
 void MinesweeperGame::stop() {
     _gameOver = true;
+    _componentManager.reset();
+    _entityManager.reset();
+    _systems.clear();
+    _eventSystem.reset();
 }
 
 extern "C" {
@@ -110,16 +137,18 @@ extern "C" {
 }
 
 void MinesweeperGame::createBoard() {
-    size_t width = 10;
-    size_t height = 10;
-    size_t mineCount = 10;
-    float cellSize = 20.0f;
     float screenWidth = 800.0f;
     float screenHeight = 600.0f;
+    size_t width = 8;
+    size_t height = 6;
+    float cellSize = 100.0f;  //! Change depending on sprite size
     float boardWidth = width * cellSize;
     float boardHeight = height * cellSize;
+
     float boardX = (screenWidth - boardWidth) / 2;
     float boardY = (screenHeight - boardHeight) / 2;
+    size_t totalCells = width * height;
+    size_t mineCount = static_cast<size_t>(totalCells * 0.15);
 
     Minesweeper::MinesweeperFactory factory(_entityManager, _componentManager);
 

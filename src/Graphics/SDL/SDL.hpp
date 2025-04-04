@@ -54,9 +54,7 @@ class SDLModule : public Arcade::IDisplayModule {
         Arcade::Color color) override;
     void pollEvents() override;
     bool isOpen() const override;
-    const std::string& getName() const override {
-        return _name;
-    };
+    const std::string& getName() const override;
     int getWidth() const override;
     int getHeight() const override;
     bool isKeyPressed(int keyCode) override;

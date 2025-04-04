@@ -24,7 +24,7 @@ class SDLTexture {
     std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)>
         createTextTexture(SDL_Renderer* renderer, SDL_Surface* surface);
     void renderTexture(SDL_Renderer* renderer, SDL_Texture* texture,
-        int windowWidth, int windowHeight);
+        int x, int y);
     void renderTextTexture(SDL_Renderer* renderer, SDL_Texture* texture,
         int x, int y, int width, int height);
  private:

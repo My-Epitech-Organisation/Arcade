@@ -19,6 +19,7 @@
     #include <iostream>
     #include <unordered_map>
     #include <vector>
+    #include <string>
     #include "Shared/Interface/ECS/IEntity.hpp"
     #include "Shared/Interface/ECS/IEntityManager.hpp"
 
@@ -59,7 +60,8 @@ class EntityManager : public Arcade::IEntityManager {
 
  private:
     Entity _nextEntityId = 0;  /// Tracks the next available entity identifier.
-    std::unordered_map<Entity, std::string> _activeEntities;  /// Stores currently active entities.
+    std::unordered_map<Entity, std::string>
+        _activeEntities;  /// Stores currently active entities.
 };
 
 #endif  // SRC_ECS_ENTITY_ENTITYMANAGER_HPP_

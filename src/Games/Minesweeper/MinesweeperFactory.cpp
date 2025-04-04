@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <vector>
 #include <memory>
+#include <iostream>
 #include "Games/Minesweeper/MinesweeperFactory.hpp"
 
 namespace Arcade {
@@ -28,21 +29,26 @@ size_t width, size_t height, size_t mineCount) {
 Entity Minesweeper::MinesweeperFactory::createCell(float x, float y,
 size_t gridX, size_t gridY, bool hasMine) {
     std::string cellName = "Cell_" + std::to_string(gridX) +
-    "_" + std::to_string(gridY);
+        "_" + std::to_string(gridY);
     Entity cellEntity = _entityManager->createEntity(cellName);
+
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(cellEntity, positionComponent);
+
     auto cellComponent = std::make_shared<Cell>(hasMine, 0);
     cellComponent->setName(cellName);
     cellComponent->_gridX = gridX;
     cellComponent->_gridY = gridY;
     _componentManager->registerComponent(cellEntity, cellComponent);
+
     auto hiddenSprite = std::make_shared<SpriteComponent>
-    ("assets/minesweeper/hidden.png");
+        ("assets/minesweeper/hidden.png");
+
     auto revealedSprite = hasMine ?
         std::make_shared<SpriteComponent>("assets/minesweeper/mine.png") :
         std::make_shared<SpriteComponent>("assets/minesweeper/empty.png");
     _componentManager->registerComponent(cellEntity, hiddenSprite);
+
     if (hasMine) {
         auto bombComponent = std::make_shared<BombComponent>(
             hiddenSprite,
@@ -88,6 +94,20 @@ Arcade::Entity boardEntity, float startX, float startY, float cellSize) {
         auto cellComponent = std::dynamic_pointer_cast<Cell>(component);
         if (cellComponent) {
             cellComponent->setHasMine(true);
+
+            auto spriteComp = _componentManager->getComponentByType(cellEntity,
+                ComponentType::SPRITE);
+            auto hiddenSprite = std::dynamic_pointer_cast<SpriteComponent>
+                (spriteComp);
+
+            if (hiddenSprite) {
+                auto revealedSprite = std::make_shared<SpriteComponent>
+                    ("assets/minesweeper/mine.png");
+
+                auto bombComponent = std::make_shared<BombComponent>
+                    (hiddenSprite, revealedSprite);
+                _componentManager->registerComponent(cellEntity, bombComponent);
+            }
         }
     }
     for (size_t y = 0; y < height; y++) {
