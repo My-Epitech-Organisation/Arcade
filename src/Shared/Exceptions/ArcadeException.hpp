@@ -6,8 +6,8 @@
 ** Base Exception class for Arcade project
 */
 
-#ifndef ARCADE_ARCADEEXCEPTION_HPP_
-#define ARCADE_ARCADEEXCEPTION_HPP_
+#ifndef SRC_SHARED_EXCEPTIONS_ARCADEEXCEPTION_HPP_
+#define SRC_SHARED_EXCEPTIONS_ARCADEEXCEPTION_HPP_
 
 #include <exception>
 #include <string>
@@ -37,4 +37,4 @@ class ArcadeException : public std::exception {
 
 }  // namespace Arcade
 
-#endif  // ARCADE_ARCADEEXCEPTION_HPP_
+#endif  // SRC_SHARED_EXCEPTIONS_ARCADEEXCEPTION_HPP_
