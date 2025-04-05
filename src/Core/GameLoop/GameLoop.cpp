@@ -395,6 +395,8 @@ void GameLoop::loadGraphicsLibraries() {
     } catch (const LibraryLoadException& e) {
         std::cerr << "Failed to load graphics library: "
                   << e.what() << std::endl;
+    } catch (const GraphicsException& e) {
+        std::cerr << "Graphics error: " << e.what() << std::endl;
     } catch (const ArcadeException& e) {
         std::cerr << "Error loading graphics libraries: "
                   << e.what() << std::endl;
