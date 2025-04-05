@@ -423,6 +423,8 @@ void GameLoop::loadCommonComponents() {
                     (std::shared_ptr<IComponent>(componentPtr));
             }
         }
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Library loading error: " << e.what() << std::endl;
     } catch (const ArcadeException& e) {
         std::cerr <<
             "Error loading common components: " << e.what() << std::endl;
