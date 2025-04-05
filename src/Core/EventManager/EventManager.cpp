@@ -94,8 +94,6 @@ void EventManager::updateInputState(const RawInputState& state) {
         updateMouseButtonState(state);
         updateMousePosition(state);
     } catch (const InputException& e) {
-        // Log the error but don't re-throw to prevent crashing the application
-        // due to input handling errors
         std::cerr << "Input processing error: " << e.what() << std::endl;
     } catch (const ArcadeException& e) {
         std::cerr <<
