@@ -249,6 +249,8 @@ void GameLoop::processLibraryEntry(struct dirent* entry) {
         if (!processLibraryHandle(path, handle)) {
             dlclose(handle);
         }
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Library error: " << e.what() << std::endl;
     } catch (const ArcadeException& e) {
         std::cerr << "Error processing library: " << e.what() << std::endl;
     }
