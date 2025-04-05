@@ -392,6 +392,9 @@ void GameLoop::loadGraphicsLibraries() {
             subscribeMouseEvents();
             _state = MAIN_MENU;
         }
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Failed to load graphics library: "
+                  << e.what() << std::endl;
     } catch (const ArcadeException& e) {
         std::cerr << "Error loading graphics libraries: "
                   << e.what() << std::endl;
