@@ -10,6 +10,7 @@
 #include <string>
 #include <exception>
 #include "GameLoop/GameLoop.hpp"
+#include "Shared/Exceptions/Exceptions.hpp"
 
 void printUsage(const std::string& programName) {
     std::cerr << "Usage: " << programName
@@ -29,8 +30,29 @@ int main(int argc, char *argv[]) {
         Arcade::GameLoop gameLoop(graphicsLibPath);
         gameLoop.run();
         return 0;
+    } catch (const Arcade::LibraryLoadException& e) {
+        std::cerr << "Library loading error: " << e.what() << std::endl;
+        return 84;
+    } catch (const Arcade::GraphicsException& e) {
+        std::cerr << "Graphics error: " << e.what() << std::endl;
+        return 84;
+    } catch (const Arcade::GameException& e) {
+        std::cerr << "Game error: " << e.what() << std::endl;
+        return 84;
+    } catch (const Arcade::InputException& e) {
+        std::cerr << "Input handling error: " << e.what() << std::endl;
+        return 84;
+    } catch (const Arcade::ResourceException& e) {
+        std::cerr << "Resource error: " << e.what() << std::endl;
+        return 84;
+    } catch (const Arcade::ArcadeException& e) {
+        std::cerr << "Arcade error: " << e.what() << std::endl;
+        return 84;
     } catch (const std::exception& e) {
         std::cerr << "Fatal error: " << e.what() << std::endl;
+        return 84;
+    } catch (...) {
+        std::cerr << "Unknown fatal error occurred" << std::endl;
         return 84;
     }
 }
