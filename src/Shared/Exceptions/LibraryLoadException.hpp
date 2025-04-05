@@ -6,10 +6,11 @@
 ** Exception class for library loading errors
 */
 
-#ifndef ARCADE_LIBRARYLOADEXCEPTION_HPP_
-#define ARCADE_LIBRARYLOADEXCEPTION_HPP_
+#ifndef SRC_SHARED_EXCEPTIONS_LIBRARYLOADEXCEPTION_HPP_
+#define SRC_SHARED_EXCEPTIONS_LIBRARYLOADEXCEPTION_HPP_
 
-#include "ArcadeException.hpp"
+#include <string>
+#include "Shared/Exceptions/ArcadeException.hpp"
 
 namespace Arcade {
 
@@ -28,4 +29,4 @@ class LibraryLoadException : public ArcadeException {
 
 }  // namespace Arcade
 
-#endif  // ARCADE_LIBRARYLOADEXCEPTION_HPP_
+#endif  // SRC_SHARED_EXCEPTIONS_LIBRARYLOADEXCEPTION_HPP_
