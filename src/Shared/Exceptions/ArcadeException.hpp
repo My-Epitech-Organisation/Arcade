@@ -13,9 +13,21 @@
 
 namespace Arcade {
 
+/**
+ * @brief Base exception class for all Arcade-related exceptions
+ */
 class ArcadeException : public std::exception {
  public:
+    /**
+     * @brief Constructor with error message
+     * @param message The error message
+     */
     explicit ArcadeException(const std::string& message);
+
+    /**
+     * @brief Get the error message
+     * @return The error message
+     */
     const char* what() const noexcept override;
 
  private:
