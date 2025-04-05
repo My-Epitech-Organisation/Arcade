@@ -105,6 +105,8 @@ void GameLoop::run() {
                   << e.what() << std::endl;
     } catch (const GameException& e) {
         std::cerr << "Game error during game loop: " << e.what() << std::endl;
+    } catch (const InputException& e) {
+        std::cerr << "Input error during game loop: " << e.what() << std::endl;
     } catch (const ArcadeException& e) {
         std::cerr << "Error during game loop: " << e.what() << std::endl;
     } catch (const std::exception& e) {
