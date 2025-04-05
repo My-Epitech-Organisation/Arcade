@@ -1,3 +1,4 @@
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2024
 ** Arcade
@@ -5,10 +6,11 @@
 ** Exception class for game logic errors
 */
 
-#ifndef ARCADE_GAMEEXCEPTION_HPP_
-#define ARCADE_GAMEEXCEPTION_HPP_
+#ifndef SRC_SHARED_EXCEPTIONS_GAMEEXCEPTION_HPP_
+#define SRC_SHARED_EXCEPTIONS_GAMEEXCEPTION_HPP_
 
-#include "ArcadeException.hpp"
+#include <string>
+#include "Shared/Exceptions/ArcadeException.hpp"
 
 namespace Arcade {
 
@@ -27,4 +29,4 @@ class GameException : public ArcadeException {
 
 }  // namespace Arcade
 
-#endif  // ARCADE_GAMEEXCEPTION_HPP_
+#endif  // SRC_SHARED_EXCEPTIONS_GAMEEXCEPTION_HPP_
