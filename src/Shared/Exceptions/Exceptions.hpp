@@ -1,3 +1,4 @@
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2024
 ** Arcade
@@ -5,14 +6,14 @@
 ** Header including all exception classes for the Arcade project
 */
 
-#ifndef ARCADE_EXCEPTIONS_HPP_
-#define ARCADE_EXCEPTIONS_HPP_
+#ifndef SRC_SHARED_EXCEPTIONS_EXCEPTIONS_HPP_
+#define SRC_SHARED_EXCEPTIONS_EXCEPTIONS_HPP_
 
-#include "ArcadeException.hpp"
-#include "GameException.hpp"
-#include "GraphicsException.hpp"
-#include "InputException.hpp"
-#include "LibraryLoadException.hpp"
-#include "ResourceException.hpp"
+#include "Shared/Exceptions/ArcadeException.hpp"
+#include "Shared/Exceptions/GameException.hpp"
+#include "Shared/Exceptions/GraphicsException.hpp"
+#include "Shared/Exceptions/InputException.hpp"
+#include "Shared/Exceptions/LibraryLoadException.hpp"
+#include "Shared/Exceptions/ResourceException.hpp"
 
-#endif  // ARCADE_EXCEPTIONS_HPP_
+#endif  // SRC_SHARED_EXCEPTIONS_EXCEPTIONS_HPP_
