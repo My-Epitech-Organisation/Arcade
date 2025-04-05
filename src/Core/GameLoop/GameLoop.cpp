@@ -100,6 +100,8 @@ void GameLoop::run() {
             std::this_thread::sleep_for(std::chrono::milliseconds(16));
         }
         cleanup();
+    } catch (const ArcadeException& e) {
+        std::cerr << "Error during game loop: " << e.what() << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Unexpected error during game loop: "
                   << e.what() << std::endl;
