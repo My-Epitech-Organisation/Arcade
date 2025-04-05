@@ -3,7 +3,7 @@
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
 ** File description:
-** ARcade Module interface
+** Exception Module interface
 */
 
 /**
@@ -11,8 +11,8 @@
  * @brief Interface for exception handling in the Arcade project
  */
 
-#ifndef ARCADE_IEXCEPTION_HPP_
-#define ARCADE_IEXCEPTION_HPP_
+#ifndef SRC_SHARED_INTERFACE_IEXCEPTION_HPP_
+#define SRC_SHARED_INTERFACE_IEXCEPTION_HPP_
 
 #include <string>
 #include <exception>
@@ -59,4 +59,4 @@ class IException : public std::exception {
 };
 }  // namespace arcade
 
-#endif  // ARCADE_IEXCEPTION_HPP_
+#endif  // SRC_SHARED_INTERFACE_IEXCEPTION_HPP_
