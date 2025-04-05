@@ -20,7 +20,7 @@ T* DLLoader<T>::getInstance(const std::string& entryPointName) {
     if (_handle == nullptr) {
         _handle = dlopen(_libPath.c_str(), RTLD_LAZY);
         if (_handle == nullptr) {
-            throw std::runtime_error("Error loading library: " + std::string(dlerror()));
+            throw Arcade::LibraryLoadException("Error loading library: " + std::string(dlerror()));
         }
     }
     dlerror();
@@ -29,7 +29,7 @@ T* DLLoader<T>::getInstance(const std::string& entryPointName) {
         dlsym(_handle, entryPointName.c_str()));
     const char* dlsym_error = dlerror();
     if (dlsym_error) {
-        throw std::runtime_error("Error finding entry point " + _libPath + ": " + dlsym_error);
+        throw Arcade::LibraryLoadException("Error finding entry point " + _libPath + ": " + dlsym_error);
     }
     return entryPoint();
 }
@@ -37,7 +37,9 @@ T* DLLoader<T>::getInstance(const std::string& entryPointName) {
 template <typename T>
 void DLLoader<T>::setLibPath(const std::string& libPath) {
     if (_handle != nullptr) {
-        dlclose(_handle);
+        if (dlclose(_handle) != 0) {
+            throw Arcade::LibraryLoadException("Error closing library: " + std::string(dlerror()));
+        }
         _handle = nullptr;
     }
     _libPath = libPath;
