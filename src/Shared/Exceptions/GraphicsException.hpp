@@ -1,3 +1,4 @@
+// Copyright 2025 <Epitech>
 /*
 ** EPITECH PROJECT, 2024
 ** Arcade
@@ -5,10 +6,11 @@
 ** Exception class for graphics rendering errors
 */
 
-#ifndef ARCADE_GRAPHICSEXCEPTION_HPP_
-#define ARCADE_GRAPHICSEXCEPTION_HPP_
+#ifndef SRC_SHARED_EXCEPTIONS_GRAPHICSEXCEPTION_HPP_
+#define SRC_SHARED_EXCEPTIONS_GRAPHICSEXCEPTION_HPP_
 
-#include "ArcadeException.hpp"
+#include <string>
+#include "Shared/Exceptions/ArcadeException.hpp"
 
 namespace Arcade {
 
@@ -27,4 +29,4 @@ class GraphicsException : public ArcadeException {
 
 }  // namespace Arcade
 
-#endif  // ARCADE_GRAPHICSEXCEPTION_HPP_
+#endif  // SRC_SHARED_EXCEPTIONS_GRAPHICSEXCEPTION_HPP_
