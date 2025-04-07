@@ -386,10 +386,8 @@ void GameLoop::loadGraphicsLibraries() {
         if (_componentManager)
             _componentManager = std::make_shared<ComponentManager>();
 
-        if (_eventManager) {
-            std::cout << "loadgraphic lib" << std::endl;
+        if (_eventManager)
             _eventManager->unsubscribeAll();
-        }
 
         std::string newLibPath = _graphicsLibs[_selectedGraphics];
         _graphicsLoader.setLibPath(newLibPath);
