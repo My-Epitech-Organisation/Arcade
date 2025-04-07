@@ -10,7 +10,7 @@
 #define SRC_SHARED_EXCEPTIONS_LIBRARYLOADEXCEPTION_HPP_
 
 #include <string>
-#include "Core/Exceptions/ArcadeException.hpp"
+#include "Core/Exceptions/Exception.hpp"
 
 namespace Arcade {
 
