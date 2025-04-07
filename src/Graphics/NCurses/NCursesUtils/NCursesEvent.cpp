@@ -37,8 +37,16 @@ bool NCurses::NCursesEvent::isMouseButtonPressed(int button) const {
     static bool hasEvent = false;
 
     if (!hasEvent) {
-        if (getmouse(&lastEvent) == OK) {
-            hasEvent = true;
+        int ch = getch();
+        if (ch == KEY_MOUSE) {
+            if (getmouse(&lastEvent) == OK) {
+                hasEvent = true;
+            } else {
+                return false;
+            }
+        } else if (ch != ERR) {
+            ungetch(ch);
+            return false;
         } else {
             return false;
         }
@@ -57,5 +65,6 @@ std::pair<size_t, size_t> NCurses::NCursesEvent::getMousePosition() const {
     if (getmouse(&event) == OK) {
         return {static_cast<size_t>(event.x), static_cast<size_t>(event.y)};
     }
-    return {0, 0};
+    static std::pair<size_t, size_t> lastPosition = {0, 0};
+    return lastPosition;
 }
