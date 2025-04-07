@@ -7,6 +7,7 @@
 */
 #include "NCursesUtils/NCursesWindow.hpp"
 #include <stdexcept>
+#include <cstdio>
 
 NCurses::NCursesWindow::~NCursesWindow() {
     if (_isOpen) {
@@ -22,6 +23,9 @@ void NCurses::NCursesWindow::createWindow(int width, int height) {
     nodelay(stdscr, TRUE);
     timeout(100);
 
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+    mouseinterval(0);
+    printf("\033[?1003h\n");
     _window = newwin(height, width, 0, 0);
     if (!_window) {
         endwin();
@@ -44,6 +48,8 @@ void NCurses::NCursesWindow::refreshWindow() {
 
 void NCurses::NCursesWindow::closeWindow() {
     if (!_isOpen) return;
+
+    printf("\033[?1003l\n");
 
     delwin(_window);
     endwin();
