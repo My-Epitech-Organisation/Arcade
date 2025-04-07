@@ -25,8 +25,24 @@ void NCursesModule::init(float width, float height) {
     try {
         _window.createWindow(_windowWidth, _windowHeight);
         _window.enableKeypad(true);
-        NCursesColor::initColorPairs();
-        _colorManager.initColors();
+
+        if (has_colors()) {
+            start_color();
+            NCursesColor::initColorPairs();
+            _colorManager.initColors();
+        } else {
+            std::cerr << "Terminal does not support colors" << std::endl;
+        }
+
+        clearScreen();
+        refreshScreen();
+
+        WINDOW* win = _window.getWindow();
+        if (win) {
+            box(win, 0, 0);
+            mvwprintw(win, 1, 1, "NCurses Module Initialized");
+            wrefresh(win);
+        }
     } catch (const std::exception &e) {
         std::cerr << "NCurses initialization error: " << e.what() << std::endl;
         _running = false;
@@ -76,6 +92,31 @@ void NCursesModule::pollEvents() {
         _running = false;
         return;
     }
+
+    int ch = _window.getChar();
+    if (ch == 27) {
+        ungetch(ch);
+    } else if (ch == KEY_RESIZE) {
+        endwin();
+        refresh();
+        clear();
+
+        int newMaxY, newMaxX;
+        getmaxyx(stdscr, newMaxY, newMaxX);
+        _windowWidth = newMaxX;
+        _windowHeight = newMaxY;
+
+        _window.closeWindow();
+        _window.createWindow(_windowWidth, _windowHeight);
+        _window.enableKeypad(true);
+        clearScreen();
+        refreshScreen();
+    } else if (ch == KEY_MOUSE) {
+        // Just acknowledge the mouse event, it will be handled by isMouseButtonPressed
+    } else if (ch != ERR) {
+        // Put back the character for isKeyPressed to detect
+        ungetch(ch);
+    }
 }
 
 bool NCursesModule::isOpen() const {
@@ -103,9 +144,8 @@ bool NCursesModule::isMouseButtonPressed(int button) const {
 }
 
 std::pair<size_t, size_t> NCursesModule::getMousePosition() const {
-    return {0, 0};
+    return _event.getMousePosition();
 }
-
 
 extern "C" {
     __attribute__((constructor))
