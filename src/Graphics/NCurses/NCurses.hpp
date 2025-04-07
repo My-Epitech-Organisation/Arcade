@@ -32,6 +32,18 @@
         int _windowWidth = 0;
         int _windowHeight = 0;
         bool _running = true;
+        float _pixelToCharX = 1.0f;  // Ratio for X-axis conversion
+        float _pixelToCharY = 1.0f;  // Ratio for Y-axis conversion
+        int _referencePixelWidth = 800;  // Reference pixel width
+        int _referencePixelHeight = 600; // Reference pixel height
+        int _verticalSpacing = 2;    // Vertical spacing between text lines
+        int _lineHeight = 1;       // Fixed line height in character units
+        std::map<int, int> _yPositionMap; // Maps pixel Y positions to character Y positions
+
+        // Convert pixel coordinates to character-based coordinates
+        int pixelToCharX(int x) const;
+        int pixelToCharY(int y);  // Non-const because it might modify the map
+        void calculateRatio();
 
      public:
         NCursesModule() : _name("NCurses") {}
