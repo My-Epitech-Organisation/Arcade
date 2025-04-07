@@ -7,7 +7,6 @@ set(SRC
     ${SRCCORE}/EventManager/EventManager.cpp
     ${SRCCORE}/GameLoop/GameLoop.cpp
     ${SRCCORE}/GameLoop/GameLoopUtils.cpp
-    # ${SRCCORE}/Menu/Menu.cpp
     ${SRCCORE}/Window/Window.cpp
 )
 
@@ -15,7 +14,6 @@ set(INC
     ${INCCORE}/DLLoader/DLLoader.hpp
     ${SRCCORE}/EventManager/EventManager.hpp
     ${INCCORE}/GameLoop/GameLoop.hpp
-    # ${INCCORE}/Menu/Menu.hpp
     ${INCCORE}/Window/Window.hpp
 )
 
