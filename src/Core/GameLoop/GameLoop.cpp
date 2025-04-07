@@ -28,6 +28,7 @@
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 #include "ECS/Components/Text/TextComponent.hpp"
+#include "Shared/Exceptions/Exceptions.hpp"
 
 namespace Arcade {
 GameLoop::GameLoop(const std::string& initialLib)
@@ -82,22 +83,39 @@ GameLoop::~GameLoop() {
 }
 
 void GameLoop::run() {
-    auto running = std::make_shared<bool>(true);
-    auto lastFrameTime = std::chrono::high_resolution_clock::now();
+    try {
+        auto running = std::make_shared<bool>(true);
+        auto lastFrameTime = std::chrono::high_resolution_clock::now();
 
-    while (*running) {
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float deltaTime = std::chrono::duration<float>
-            (currentTime - lastFrameTime).count();
-        lastFrameTime = currentTime;
-        handleEvents(running);
-        if (!*running) break;
-        _window->clearScreen();
-        handleState();
-        _window->refreshScreen();
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        while (*running) {
+            auto currentTime = std::chrono::high_resolution_clock::now();
+            float deltaTime = std::chrono::duration<float>
+                (currentTime - lastFrameTime).count();
+            lastFrameTime = currentTime;
+            handleEvents(running);
+            if (!*running) break;
+            _window->clearScreen();
+            handleState();
+            _window->refreshScreen();
+            std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        }
+        cleanup();
+    } catch (const GraphicsException& e) {
+        std::cerr << "Graphics error during game loop: "
+                  << e.what() << std::endl;
+    } catch (const GameException& e) {
+        std::cerr << "Game error during game loop: " << e.what() << std::endl;
+    } catch (const InputException& e) {
+        std::cerr << "Input error during game loop: " << e.what() << std::endl;
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Library error during game loop: "
+                  << e.what() << std::endl;
+    } catch (const ArcadeException& e) {
+        std::cerr << "Error during game loop: " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Unexpected error during game loop: "
+                  << e.what() << std::endl;
     }
-    cleanup();
 }
 
 void GameLoop::handleEvents(std::shared_ptr<bool> running) {
@@ -239,8 +257,14 @@ void GameLoop::processLibraryEntry(struct dirent* entry) {
         return;
     }
 
-    if (!processLibraryHandle(path, handle)) {
-        dlclose(handle);
+    try {
+        if (!processLibraryHandle(path, handle)) {
+            dlclose(handle);
+        }
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Library error: " << e.what() << std::endl;
+    } catch (const ArcadeException& e) {
+        std::cerr << "Error processing library: " << e.what() << std::endl;
     }
 }
 
@@ -380,8 +404,14 @@ void GameLoop::loadGraphicsLibraries() {
             subscribeMouseEvents();
             _state = MAIN_MENU;
         }
-    } catch (const std::exception& e) {
-        std::cerr << "Error loading graphics: " << e.what() << std::endl;
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Failed to load graphics library: "
+                  << e.what() << std::endl;
+    } catch (const GraphicsException& e) {
+        std::cerr << "Graphics error: " << e.what() << std::endl;
+    } catch (const ArcadeException& e) {
+        std::cerr << "Error loading graphics libraries: "
+                  << e.what() << std::endl;
     }
 }
 
@@ -391,17 +421,17 @@ void GameLoop::loadCommonComponents() {
             libPath != _componentsLibs.end(); ++libPath) {
             auto handle = dlopen(libPath->c_str(), RTLD_LAZY);
             if (!handle) {
-                std::cerr << "Error loading " << *libPath << ": "
-                    << dlerror() << std::endl;
-                continue;
+                throw LibraryLoadException(
+                    "Error loading " + *libPath + ": " + dlerror());
             }
             auto entryPoint = reinterpret_cast<IArcadeModule* (*)()>
                 (dlsym(handle, "entryPoint"));
             if (!entryPoint) {
-                std::cerr << "Error finding entryPoint in "
-                    << *libPath << ": " << dlerror() << std::endl;
+                std::string error =
+                    "Error finding entryPoint in " +
+                    *libPath + ": " + dlerror();
                 dlclose(handle);
-                continue;
+                throw LibraryLoadException(error);
             }
             IArcadeModule* instance = entryPoint();
             if (instance) {
@@ -410,8 +440,13 @@ void GameLoop::loadCommonComponents() {
                     (std::shared_ptr<IComponent>(componentPtr));
             }
         }
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Library loading error: " << e.what() << std::endl;
+    } catch (const ArcadeException& e) {
+        std::cerr <<
+            "Error loading common components: " << e.what() << std::endl;
     } catch (const std::exception& e) {
-        std::cerr << "Error loading common components: "
+        std::cerr << "Unexpected error loading common components: "
             << e.what() << std::endl;
     }
 }

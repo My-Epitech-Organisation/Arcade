@@ -12,6 +12,7 @@
     #include <iostream>
     #include <string>
     #include <memory>
+    #include "Shared/Exceptions/LibraryLoadException.hpp"
 
 template <typename T>
 class DLLoader {

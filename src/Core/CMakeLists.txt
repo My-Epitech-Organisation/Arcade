@@ -9,6 +9,7 @@ set(SRC
     ${SRCCORE}/GameLoop/GameLoopUtils.cpp
     ${SRCCORE}/Menu/Menu.cpp
     ${SRCCORE}/Window/Window.cpp
+    ${SRCCORE}/Exceptions/Exception.cpp
 )
 
 set(INC
@@ -17,6 +18,7 @@ set(INC
     ${INCCORE}/GameLoop/GameLoop.hpp
     ${INCCORE}/Menu/Menu.hpp
     ${INCCORE}/Window/Window.hpp
+    ${INCCORE}/Exceptions/Exception.hpp
 )
 
 add_library(arcade_core STATIC ${SRC} ${INC})

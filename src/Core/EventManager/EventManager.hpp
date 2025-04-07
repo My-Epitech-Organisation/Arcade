@@ -19,6 +19,7 @@
 #include "EventManager/KeyEvent/RawInputState.hpp"
 #include "Shared/Interface/Display/IDisplayModule.hpp"
 #include "Shared/Models/KeysType.hpp"
+#include "Shared/Exceptions/Exceptions.hpp"
 
 /**
  * @file EventManager.hpp
@@ -43,7 +44,7 @@ class EventManager : public IEventManager {
             const noexcept {
             return std::hash<int>()(static_cast<int>(p.first)) ^
                 std::hash<int>()(static_cast<int>(p.second));
-       }
+        }
     };
 
     struct MousePairHash {
@@ -69,6 +70,7 @@ class EventManager : public IEventManager {
     *
     * @param eventType The keyboard event to subscribe to.
     * @param callback The function to call when the event occurs.
+    * @throws InputException if the event type is invalid
     */
     void subscribe(const IEvent& eventType,
         const Callback callback) override {
@@ -87,7 +89,7 @@ class EventManager : public IEventManager {
             _subscribers[keyFound].push_back(callback);
             return;
         } else {
-            throw std::runtime_error("Invalid event type");
+            throw InputException("Invalid event type for subscription");
         }
     }
 
@@ -95,28 +97,10 @@ class EventManager : public IEventManager {
     * @brief Publish a keyboard event to all subscribers.
     *
     * @param eventType The keyboard event to publish.
+    * @throws InputException if there's an error during event publishing
     */
-    void publish(const IEvent& eventType) {
-        auto found = std::pair<EventType, Keys>
-            (eventType.getType(), eventType.getKey());
-        if (dynamic_cast<const MouseEvent*>(&eventType) != nullptr) {
-            auto mouseEvent = dynamic_cast<const MouseEvent*>(&eventType);
-            auto mouseFound = std::pair<EventType, MouseButton>
-                (mouseEvent->getType(), mouseEvent->getButton());
-            for (auto& callback : _mouseSubscribers[mouseFound]) {
-                callback();
-            }
-            return;
-        } else if (dynamic_cast<const KeyEvent*>(&eventType) != nullptr) {
-            auto keyEvent = dynamic_cast<const KeyEvent*>(&eventType);
-            auto keyFound = std::pair<EventType, Keys>
-                (eventType.getType(), eventType.getKey());
-            for (auto& callback : _subscribers[keyFound]) {
-                callback();
-            }
-            return;
-        }
-    }
+    void publish(const IEvent& eventType) override;
+
    /**
     * @brief Updates the input state based on raw input data.
     *
@@ -197,16 +181,19 @@ class EventManager : public IEventManager {
 
    /**
     * @brief Updates the state of keyboard keys from raw input.
+    * @throws InputException if there's an error during key state update
     */
     void updateKeyState(const RawInputState& state);
 
    /**
     * @brief Updates the state of mouse buttons from raw input.
+    * @throws InputException if there's an error during mouse button update
     */
     void updateMouseButtonState(const RawInputState& state);
 
    /**
     * @brief Updates the mouse position from raw input.
+    * @throws InputException if there's an error during mouse position update
     */
     void updateMousePosition(const RawInputState& state);
 };
