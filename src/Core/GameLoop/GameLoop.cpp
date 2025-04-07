@@ -35,7 +35,8 @@ GameLoop::GameLoop(const std::string& initialLib)
 _selectedGraphics(0),
 _selectedGame(0),
 _graphicsLoader(initialLib),
-_gameLoader(".") {
+_gameLoader("."),
+_menuLoader("./lib/arcade_menu.so") {
     _eventManager = std::make_shared<EventManager>();
     _entityManager = std::make_shared<EntityManager>();
     _componentManager = std::make_shared<ComponentManager>();
@@ -50,7 +51,10 @@ _gameLoader(".") {
             throw std::runtime_error("Failed to load initial graphics library");
         _window = std::make_shared<Window>(_currentGraphics,
             _eventManager);
-        _menu = std::make_unique<Menu>(_window);
+        _menu = _menuLoader.getInstanceUPtr("entryPoint");
+        if (!_menu)
+            throw std::runtime_error("Failed to load menu library");
+        _menu->setWindow(_window);
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         throw;
@@ -66,6 +70,7 @@ _gameLoader(".") {
 
 GameLoop::~GameLoop() {
     _currentGame.reset();
+    _menu.reset();
 
     if (_window) {
         if (_eventManager)
@@ -289,7 +294,8 @@ void* handle, IArcadeModule* (*entryPoint)()) {
     } else if (dynamic_cast<IComponent*>(instance)) {
         _componentsLibs.push_back(path);
     } else {
-        std::cerr << "Unknown module type in " << path << std::endl;
+        if (path != "./lib/arcade_menu.so")
+            std::cerr << "Unknown module type in " << path << std::endl;
     }
 
     delete instance;
