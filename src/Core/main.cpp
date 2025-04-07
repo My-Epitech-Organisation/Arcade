@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
         std::cerr << "Input handling error: " << e.what() << std::endl;
         return 84;
     } catch (const Arcade::ResourceException& e) {
-        std::cerr << "Resource error: " << e.what() << std::endl;
+        std::cerr << "Resources error: " << e.what() << std::endl;
         return 84;
     } catch (const Arcade::ArcadeException& e) {
         std::cerr << "Arcade error: " << e.what() << std::endl;
