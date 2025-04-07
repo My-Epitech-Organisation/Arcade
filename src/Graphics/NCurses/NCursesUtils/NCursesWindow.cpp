@@ -16,16 +16,24 @@ NCurses::NCursesWindow::~NCursesWindow() {
 }
 
 void NCurses::NCursesWindow::createWindow(int width, int height) {
-    initscr();
+    if (!isendwin()) {
+        initscr();
+    } else {
+        refresh();
+    }
     noecho();
     cbreak();
     curs_set(0);
     nodelay(stdscr, TRUE);
     timeout(100);
 
-    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+    mmask_t mouseMask = ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION;
+    mousemask(mouseMask, NULL);
     mouseinterval(0);
+
+    // Enable extended mouse tracking (works in xterm and similar)
     printf("\033[?1003h\n");
+
     _window = newwin(height, width, 0, 0);
     if (!_window) {
         endwin();
@@ -34,6 +42,7 @@ void NCurses::NCursesWindow::createWindow(int width, int height) {
     _windowHeight = height;
     _windowWidth = width;
     _isOpen = true;
+    wrefresh(_window);
 }
 
 void NCurses::NCursesWindow::clearWindow() {
@@ -49,11 +58,16 @@ void NCurses::NCursesWindow::refreshWindow() {
 void NCurses::NCursesWindow::closeWindow() {
     if (!_isOpen) return;
 
+    // Disable extended mouse tracking before closing
     printf("\033[?1003l\n");
 
-    delwin(_window);
+    if (_window) {
+        werase(_window);
+        wrefresh(_window);
+        delwin(_window);
+        _window = nullptr;
+    }
     endwin();
-    _window = nullptr;
     _isOpen = false;
 }
 
