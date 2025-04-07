@@ -14,7 +14,6 @@
 #include <memory>
 #include <utility>
 #include <map>
-#include "OpenGL/OpenGLKeys.hpp"
 
 namespace GL {
 

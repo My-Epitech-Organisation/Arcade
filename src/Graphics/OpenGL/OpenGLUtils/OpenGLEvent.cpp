@@ -11,6 +11,8 @@
 #include <map>
 #include <utility>
 #include "OpenGLUtils/OpenGLEvent.hpp"
+#include "OpenGL/OpenGLKeys.hpp"
+#include "Models/KeysType.hpp"
 
 namespace GL {
 
@@ -66,7 +68,10 @@ void OpenGLEvent::pollEvents(GLFWwindow* window) {
 }
 
 bool OpenGLEvent::isKeyPressed(int keyCode) const {
-    auto it = _keyStates.find(keyCode);
+    auto arcadeKey = static_cast<Arcade::Keys>(keyCode);
+    int glfwKey = Arcade::OpenGLKeyMap::getGLFWKey(arcadeKey);
+
+    auto it = _keyStates.find(glfwKey);
     if (it != _keyStates.end())
         return it->second;
     return false;

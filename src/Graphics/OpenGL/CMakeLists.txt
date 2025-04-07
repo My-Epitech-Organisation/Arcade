@@ -6,11 +6,11 @@ find_package(Freetype REQUIRED)
 find_package(glm REQUIRED)
 
 set(OPENGL_UTILS_SRC
+    OpenGLUtils/OpenGLEvent.cpp
     OpenGLUtils/OpenGLRenderer.cpp
     OpenGLUtils/OpenGLText.cpp
     OpenGLUtils/OpenGLTexture.cpp
     OpenGLUtils/OpenGLWindow.cpp
-    OpenGLUtils/OpenGLEvent.cpp
 )
 
 add_library(arcade_opengl SHARED
@@ -30,7 +30,6 @@ target_include_directories(arcade_opengl PUBLIC
 if(ENABLE_COVERAGE)
     target_compile_options(arcade_opengl PUBLIC -O0 -g --coverage -fprofile-arcs -ftest-coverage)
     target_link_libraries(arcade_opengl PUBLIC
-        arcade_event
         arcade_ecs
         GLEW::GLEW
         ${OPENGL_LIBRARIES}
@@ -40,7 +39,6 @@ if(ENABLE_COVERAGE)
     )
 else()
     target_link_libraries(arcade_opengl PUBLIC
-        arcade_event
         arcade_ecs
         GLEW::GLEW
         ${OPENGL_LIBRARIES}

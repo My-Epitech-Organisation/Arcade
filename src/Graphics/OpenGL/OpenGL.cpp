@@ -23,6 +23,7 @@ void OpenGLModule::init(float width, float height) {
         _windowWidth = static_cast<int>(width);
         _windowHeight = static_cast<int>(height);
         _window.init(width, height, _name);
+        _event.setupCallbacks(_window.getWindow());
         _text.init();
         _texture.init();
         _running = true;

@@ -127,10 +127,8 @@ void OpenGLText::init() {
     FT_Face face = nullptr;
 
     bool fontLoaded = false;
-    if (FT_New_Face(ft, "./assets/fonts/arial.ttf", 0, &face) == 0) {
-        std::cout << "Loaded font from: ./assets/fonts/arial.ttf" << std::endl;
+    if (FT_New_Face(ft, "./assets/fonts/arial.ttf", 0, &face) == 0)
         fontLoaded = true;
-    }
 
     if (!fontLoaded || !face) {
         std::cerr << "ERROR::FREETYPE: Failed to load font" << std::endl;
