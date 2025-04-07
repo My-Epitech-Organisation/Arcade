@@ -9,7 +9,7 @@
 #ifndef SRC_SHARED_EXCEPTIONS_EXCEPTIONS_HPP_
 #define SRC_SHARED_EXCEPTIONS_EXCEPTIONS_HPP_
 
-#include "Shared/Exceptions/ArcadeException.hpp"
+#include "Core/Exceptions/ArcadeException.hpp"
 #include "Shared/Exceptions/GameException.hpp"
 #include "Shared/Exceptions/GraphicsException.hpp"
 #include "Shared/Exceptions/InputException.hpp"

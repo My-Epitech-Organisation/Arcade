@@ -6,7 +6,7 @@
 ** Implementation of Base Exception class for Arcade project
 */
 
-#include "Core/Exception/ArcadeException.hpp"
+#include "Core/Exceptions/ArcadeException.hpp"
 #include <string>
 
 namespace Arcade {
