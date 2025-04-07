@@ -37,7 +37,7 @@ class IException : public std::exception {
    * @brief Returns the error message associated with this exception
    * @return const char* containing the error message
    */
-  virtual const char* what() const noexcept override = 0;
+  const char* what() const noexcept override = 0;
 
   /**
    * @brief Returns the name of the exception type
