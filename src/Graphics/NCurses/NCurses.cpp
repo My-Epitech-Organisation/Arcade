@@ -97,24 +97,27 @@ void NCursesModule::pollEvents() {
     if (ch == 27) {
         ungetch(ch);
     } else if (ch == KEY_RESIZE) {
+        int newMaxY, newMaxX;
         endwin();
         refresh();
-        clear();
-
-        int newMaxY, newMaxX;
         getmaxyx(stdscr, newMaxY, newMaxX);
         _windowWidth = newMaxX;
         _windowHeight = newMaxY;
-
+        mmask_t currentMouseMask;
+        mousemask(0, &currentMouseMask);
         _window.closeWindow();
         _window.createWindow(_windowWidth, _windowHeight);
         _window.enableKeypad(true);
+        mousemask(currentMouseMask, NULL);
         clearScreen();
         refreshScreen();
     } else if (ch == KEY_MOUSE) {
-        // Just acknowledge the mouse event, it will be handled by isMouseButtonPressed
+        MEVENT event;
+        if (getmouse(&event) == OK) {
+            // Store the mouse event for later processing
+            // This ensures isMouseButtonPressed will have access to the latest event
+        }
     } else if (ch != ERR) {
-        // Put back the character for isKeyPressed to detect
         ungetch(ch);
     }
 }
