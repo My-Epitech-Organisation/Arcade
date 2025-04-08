@@ -17,7 +17,6 @@
 
 namespace Arcade {
 
-// Update constructor to match the declaration in header
 Menu::Menu(std::shared_ptr<IWindowModule> window,
 std::shared_ptr<ScoreManager> scoreManager)
 : _window(window), _scoreManager(scoreManager) {}
@@ -140,27 +139,34 @@ void Menu::setWindow(std::shared_ptr<IWindowModule> window) {
     }
 }
 void Menu::displayNameInput(const std::string &currentInput) {
-    int centerX = _window->getWidth() / 2;
-    int centerY = _window->getHeight() / 2;
+    auto window = std::dynamic_pointer_cast<Window>(_window);
+    if (!window) {
+        throw std::runtime_error("Window cast failed");
+    }
+    int centerX = window->getWidth() / 2;
+    int centerY = window->getHeight() / 2;
 
     displayTitle("ENTER YOUR NAME");
 
     std::string displayName = currentInput + "_";
-    _window->drawText(displayName,
-                     centerX - (displayName.length() * 5),
-                     centerY,
-                     Color::GREEN);
+    window->drawText(displayName,
+        centerX - (displayName.length() * 5),
+        centerY, Color::GREEN);
 
-    _window->drawText("Press ENTER to confirm, ESC to cancel",
-                     centerX - 150,
-                     centerY + 60,
-                     Color::WHITE);
+    window->drawText("Press ENTER to confirm, ESC to cancel",
+        centerX - 150, centerY + 60, Color::WHITE);
+}
+
+void Menu::setScoreManager(std::shared_ptr<ScoreManager> scoreManager) {
+    _scoreManager = scoreManager;
+    if (!scoreManager)
+        throw std::runtime_error("Invalid window");
 }
 
 }  // namespace Arcade
 
 extern "C" {
     Arcade::IMenu* entryPoint() {
-        return new Arcade::Menu(nullptr);
+        return new Arcade::Menu(nullptr, nullptr);
     }
 }

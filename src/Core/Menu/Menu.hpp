@@ -31,7 +31,7 @@ class Menu : public IMenu {
      * @brief Constructs a Menu object.
      * @param window A shared pointer to the Window object used for rendering.
      */
-    Menu(std::shared_ptr<Window> window,
+    Menu(std::shared_ptr<IWindowModule> window,
         std::shared_ptr<ScoreManager> scoreManager = nullptr);
 
     /**
@@ -58,14 +58,7 @@ class Menu : public IMenu {
                            size_t selectedGraphics) override;
 
     void setWindow(std::shared_ptr<IWindowModule> window) override;
-
-    /**
-     * @brief Displays the name input screen.
-     * @param currentInput The current input text.
-     */
-    void displayNameInput(const std::string &currentInput);
-
-
+    void setScoreManager(std::shared_ptr<ScoreManager> scoreManager) override;
 
     /**
      * @brief Displays the name input screen.
