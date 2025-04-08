@@ -1,0 +1,69 @@
+{
+    "assets": {
+      "textures": {
+        "default": {
+          "path": "./assets/textures/default.png",
+          "char": " "
+        },
+        "minesweeper": {
+          "hidden": {
+            "path": "./assets/minesweeper/hidden.png",
+            "char": "#"
+          },
+          "flag": {
+            "path": "./assets/minesweeper/flag.png",
+            "char": "F"
+          },
+          "mine": {
+            "path": "./assets/minesweeper/mine.png",
+            "char": "*"
+          },
+          "revealed": {
+            "path": "./assets/minesweeper/revealed.png",
+            "char": " "
+          },
+          "empty": {
+            "path": "./assets/minesweeper/empty.png",
+            "char": " "
+          },
+          "numbers": {
+            "1": {
+              "path": "./assets/minesweeper/number_1.png",
+              "char": "1"
+            },
+            "2": {
+              "path": "./assets/minesweeper/number_2.png",
+              "char": "2"
+            },
+            "3": {
+              "path": "./assets/minesweeper/number_3.png",
+              "char": "3"
+            },
+            "4": {
+              "path": "./assets/minesweeper/number_4.png",
+              "char": "4"
+            },
+            "5": {
+              "path": "./assets/minesweeper/number_5.png",
+              "char": "5"
+            },
+            "6": {
+              "path": "./assets/minesweeper/number_6.png",
+              "char": "6"
+            },
+            "7": {
+              "path": "./assets/minesweeper/number_7.png",
+              "char": "7"
+            },
+            "8": {
+              "path": "./assets/minesweeper/number_8.png",
+              "char": "8"
+            }
+          }
+        }
+      },
+      "fonts": {
+        "default": "./assets/fonts/Arial.ttf"
+      }
+    }
+  }
