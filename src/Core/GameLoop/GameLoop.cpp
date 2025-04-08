@@ -6,7 +6,6 @@
 ** GameLoop
 */
 
-#include "GameLoop/GameLoop.hpp"
 #include <dirent.h>
 #include <sys/stat.h>
 #include <cstring>
@@ -18,6 +17,8 @@
 #include <thread>
 #include <memory>
 #include <string>
+#include "GameLoop/GameLoop.hpp"
+#include "Core/Score/ScoreManager.hpp"
 #include "Core/EventManager/EventManager.hpp"
 #include "Shared/Interface/IArcadeModule.hpp"
 #include "Shared/Interface/Display/IDisplayModule.hpp"
@@ -35,7 +36,10 @@ GameLoop::GameLoop(const std::string& initialLib)
 _selectedGraphics(0),
 _selectedGame(0),
 _graphicsLoader(initialLib),
-_gameLoader(".") {
+_gameLoader("."),
+_inputPlayerName(""),
+_scoreManager(std::make_shared<ScoreManager>()),
+_nameInputActive(false) {
     _eventManager = std::make_shared<EventManager>();
     _entityManager = std::make_shared<EntityManager>();
     _componentManager = std::make_shared<ComponentManager>();
@@ -50,7 +54,7 @@ _gameLoader(".") {
             throw std::runtime_error("Failed to load initial graphics library");
         _window = std::make_shared<Window>(_currentGraphics,
             _eventManager);
-        _menu = std::make_unique<Menu>(_window);
+        _menu = std::make_unique<Menu>(_window, _scoreManager);
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         throw;
@@ -300,6 +304,8 @@ void* handle, IArcadeModule* (*entryPoint)()) {
 void GameLoop::loadAndStartGame() {
     try {
         if (_currentGame) {
+            auto score = _currentGame->getScore();
+            _scoreManager->addScore(_gameLibs[_selectedGame], score);
             _currentGame->stop();
             _currentGame.reset();
         }
@@ -348,6 +354,8 @@ void GameLoop::loadAndStartGame() {
 void GameLoop::loadGraphicsLibraries() {
     try {
         if (_currentGame) {
+            auto score = _currentGame->getScore();
+            _scoreManager->addScore(_gameLibs[_selectedGame], score);
             _currentGame->stop();
             _currentGame.reset();
         }
@@ -363,7 +371,6 @@ void GameLoop::loadGraphicsLibraries() {
             _componentManager = std::make_shared<ComponentManager>();
 
         if (_eventManager) {
-            std::cout << "loadgraphic lib" << std::endl;
             _eventManager->unsubscribeAll();
         }
 

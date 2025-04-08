@@ -19,6 +19,7 @@ void GameLoop::subscribeEvents() {
     subscribeNum2Event();
     subscribeNum3Event();
     subscribeNum4Event();
+    subscribeNum5Event();
 }
 
 void GameLoop::subscribeNum1Event() {
@@ -53,6 +54,17 @@ void GameLoop::subscribeNum4Event() {
     _eventManager->subscribe(num4Event, [this]() {
         if (_state == MAIN_MENU) {
             _window->closeWindow();
+        }
+    });
+}
+
+
+void GameLoop::subscribeNum5Event() {
+    KeyEvent num5Event(Keys::NUM5, EventType::KEY_PRESSED);
+    _eventManager->subscribe(num5Event, [this]() {
+        if (_state == MAIN_MENU) {
+            _inputPlayerName = "";
+            _state = NAME_INPUT;
         }
     });
 }

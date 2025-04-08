@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include "Core/Score/ScoreManager.hpp"
 #include "Shared/Interface/Core/IGameState.hpp"
 #include "Window/Window.hpp"
 
@@ -47,7 +48,8 @@ class Menu {
      * @brief Constructs a Menu object.
      * @param window A shared pointer to the Window object used for rendering.
      */
-    explicit Menu(std::shared_ptr<Window> window);
+    Menu(std::shared_ptr<Window> window,
+        std::shared_ptr<ScoreManager> scoreManager = nullptr);
 
     /**
      * @brief Destroys the Menu object.
@@ -90,6 +92,7 @@ class Menu {
 
  private:
     std::shared_ptr<Window> _window;
+    std::shared_ptr<ScoreManager> _scoreManager;
         /** Shared pointer to the Window object used for rendering. */
     void displayTitle(const std::string &title);
     void displayMenuOption(const std::string &option,
@@ -98,7 +101,7 @@ class Menu {
         const std::string &value, int y, Color color);
     void displaySelectionMenu(const std::string &title,
         const std::vector<std::string> &options,
-        size_t selectedOption);
+        size_t selectedOption, bool showScores);
     static constexpr int TITLE_Y = 50;
         /** Y-coordinate for the title. */
     static constexpr int MENU_START_Y = 100;

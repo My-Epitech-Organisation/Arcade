@@ -232,4 +232,24 @@ std::string MinesweeperGame::getSpecialCompSprite(size_t id) const {
     }
     return "";
 }
+
+int MinesweeperGame::getScore() const {
+    auto temp = _entityManager->getEntities();
+    std::size_t board = -1;
+    for (auto& temp2 : temp) {
+        if (temp2.second == "Board") {
+            board = temp2.first;
+            break;
+        }
+    }
+
+    auto stat = _componentManager->getComponentByType(board,
+        ComponentType::CUSTOM_BASE);
+    auto gameStats = std::dynamic_pointer_cast
+        <Arcade::Minesweeper::GameStats>(stat);
+    if (gameStats)
+        return gameStats->getScore();
+    return 0;
+}
+
 }  // namespace Arcade

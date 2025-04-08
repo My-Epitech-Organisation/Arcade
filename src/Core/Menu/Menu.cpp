@@ -9,13 +9,16 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <memory>
 #include "Menu/Menu.hpp"
 #include "Shared/Interface/Display/IDisplayModule.hpp"
 #include "Shared/Models/ColorType.hpp"
 
 namespace Arcade {
 
-Menu::Menu(std::shared_ptr<Window> window) : _window(window) { }
+Menu::Menu(std::shared_ptr<Window> window,
+std::shared_ptr<ScoreManager> scoreManager)
+: _window(window), _scoreManager(scoreManager) {}
 
 Menu::~Menu() { }
 
@@ -64,7 +67,8 @@ size_t selectedGame) {
 
 void Menu::displaySelectionMenu(const std::string &title,
 const std::vector<std::string> &options,
-size_t selectedOption) {
+size_t selectedOption,
+bool showScores) {
     int centerX = _window->getWidth() / 2;
 
     displayTitle(title);
@@ -72,28 +76,35 @@ size_t selectedOption) {
     int yPos = MENU_START_Y;
     for (size_t i = 0; i < options.size(); i++) {
         Color color = (i == selectedOption) ? Color::GREEN : Color::WHITE;
-        displayMenuOption(options[i], centerX - 100, yPos, color);
+        std::string displayText = options[i];
+
+        if (showScores && _scoreManager) {
+            auto highScore = _scoreManager->getHighScore(options[i]);
+            displayText += "  -  High: " + highScore.first + " (" +
+                std::to_string(highScore.second) + ")";
+        }
+
+        displayMenuOption(displayText, centerX - 150, yPos, color);
         yPos += MENU_ITEM_HEIGHT;
     }
 
     displayMenuOption("Press ENTER to select, ESC to go back",
-        centerX - 100, yPos + 40, Color::WHITE);
+        centerX - 150, yPos + 40, Color::WHITE);
 }
 
 void Menu::displayGameSelection(
 const std::vector<std::string> &gameLibs, size_t selectedGame) {
-    displaySelectionMenu("SELECT GAME", gameLibs, selectedGame);
+    displaySelectionMenu("SELECT GAME", gameLibs, selectedGame, true);
 }
 
 void Menu::displayGraphicsSelection(
 const std::vector<std::string> &graphicsLibs, size_t selectedGraphics) {
     displaySelectionMenu("SELECT GRAPHICS LIBRARY",
-        graphicsLibs, selectedGraphics);
+        graphicsLibs, selectedGraphics, false);
 }
 
 void Menu::setWindow(std::shared_ptr<Window> window) {
     _window = window;
 }
-
 
 }  // namespace Arcade

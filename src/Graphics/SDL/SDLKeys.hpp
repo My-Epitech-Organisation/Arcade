@@ -47,10 +47,13 @@ const std::unordered_map<Keys, SDL_Keycode> SDLKeyMap::_keyMap = {
     {Keys::RIGHT, SDLK_RIGHT},
     {Keys::ENTER, SDLK_RETURN},
     {Keys::ESC, SDLK_ESCAPE},
+    {Keys::BACKSPACE, SDLK_BACKSPACE},  // Add this mapping
+    {Keys::NUM0, SDLK_0},
     {Keys::NUM1, SDLK_1},
     {Keys::NUM2, SDLK_2},
     {Keys::NUM3, SDLK_3},
     {Keys::NUM4, SDLK_4},
+    {Keys::NUM5, SDLK_5},  // Make sure this is mapped
     {Keys::A, SDLK_a},
     {Keys::B, SDLK_b},
     {Keys::C, SDLK_c},
