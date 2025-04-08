@@ -10,7 +10,7 @@
 #include <memory>
 #include <string>
 #include <iostream>
-#include "Window/Window.hpp"
+#include "Core/Window/Window.hpp"
 #include "EventManager/KeyEvent/RawInputState.hpp"
 #include "Core/EventManager/EventManager.hpp"
 

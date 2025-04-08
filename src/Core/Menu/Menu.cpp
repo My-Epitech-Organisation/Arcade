@@ -9,31 +9,45 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include "Menu/Menu.hpp"
+#include "Core/Menu/Menu.hpp"
+#include "Core/Window/Window.hpp"
 #include "Shared/Interface/Display/IDisplayModule.hpp"
 #include "Shared/Models/ColorType.hpp"
 
 namespace Arcade {
 
-Menu::Menu(std::shared_ptr<Window> window) : _window(window) { }
+// Update constructor to match the declaration in header
+Menu::Menu(std::shared_ptr<IWindowModule> window) : _window(window) { }
 
 Menu::~Menu() { }
 
 void Menu::displayTitle(const std::string &title) {
-    int centerX = _window->getWidth() / 2;
-    _window->drawText(title,
+    auto window = std::dynamic_pointer_cast<Window>(_window);
+    if (!window) {
+        throw std::runtime_error("Window cast failed");
+    }
+    int centerX = window->getWidth() / 2;
+    window->drawText(title,
         centerX - (title.size() * 5), TITLE_Y, Color::WHITE);
 }
 
 void Menu::displayMenuOption(const std::string &option,
 int x, int y, Color color) {
-    _window->drawText(option, x, y, color);
+    auto window = std::dynamic_pointer_cast<Window>(_window);
+    if (!window) {
+        throw std::runtime_error("Window cast failed");
+    }
+    window->drawText(option, x, y, color);
 }
 
 void Menu::displayStatus(const std::string &label,
 const std::string &value, int y, Color color) {
-    int width = _window->getWidth();
-    _window->drawText(label + ": " +
+    auto window = std::dynamic_pointer_cast<Window>(_window);
+    if (!window) {
+        throw std::runtime_error("Window cast failed");
+    }
+    int width = window->getWidth();
+    window->drawText(label + ": " +
         (value.empty() ? "None" : value), 10, y, color);
 }
 
@@ -41,8 +55,12 @@ void Menu::displayMainMenu(const std::vector<std::string> &graphicsLibs,
 const std::vector<std::string> &gameLibs,
 size_t selectedGraphics,
 size_t selectedGame) {
-    int centerX = _window->getWidth() / 2;
-    int height = _window->getHeight();
+    auto window = std::dynamic_pointer_cast<Window>(_window);
+    if (!window) {
+        throw std::runtime_error("Window cast failed");
+    }
+    int centerX = window->getWidth() / 2;
+    int height = window->getHeight();
 
     displayTitle("ARCADE");
 
@@ -65,7 +83,11 @@ size_t selectedGame) {
 void Menu::displaySelectionMenu(const std::string &title,
 const std::vector<std::string> &options,
 size_t selectedOption) {
-    int centerX = _window->getWidth() / 2;
+    auto window = std::dynamic_pointer_cast<Window>(_window);
+    if (!window) {
+        throw std::runtime_error("Window cast failed");
+    }
+    int centerX = window->getWidth() / 2;
 
     displayTitle(title);
 
@@ -91,9 +113,17 @@ const std::vector<std::string> &graphicsLibs, size_t selectedGraphics) {
         graphicsLibs, selectedGraphics);
 }
 
-void Menu::setWindow(std::shared_ptr<Window> window) {
+void Menu::setWindow(std::shared_ptr<IWindowModule> window) {
     _window = window;
+    if (!window) {
+        throw std::runtime_error("Invalid window");
+    }
 }
 
-
 }  // namespace Arcade
+
+extern "C" {
+    Arcade::IMenu* entryPoint() {
+        return new Arcade::Menu(nullptr);
+    }
+}

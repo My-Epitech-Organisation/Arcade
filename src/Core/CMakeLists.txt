@@ -7,7 +7,6 @@ set(SRC
     ${SRCCORE}/EventManager/EventManager.cpp
     ${SRCCORE}/GameLoop/GameLoop.cpp
     ${SRCCORE}/GameLoop/GameLoopUtils.cpp
-    ${SRCCORE}/Menu/Menu.cpp
     ${SRCCORE}/Window/Window.cpp
     ${SRCCORE}/Exceptions/Exception.cpp
 )
@@ -16,10 +15,13 @@ set(INC
     ${INCCORE}/DLLoader/DLLoader.hpp
     ${SRCCORE}/EventManager/EventManager.hpp
     ${INCCORE}/GameLoop/GameLoop.hpp
-    ${INCCORE}/Menu/Menu.hpp
     ${INCCORE}/Window/Window.hpp
     ${INCCORE}/Exceptions/Exception.hpp
 )
+
+add_subdirectory(Menu)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_library(arcade_core STATIC ${SRC} ${INC})
 target_include_directories(arcade_core PUBLIC ${INCCORE} ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_SOURCE_DIR}/../Shared)
