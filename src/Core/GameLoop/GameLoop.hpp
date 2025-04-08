@@ -141,7 +141,7 @@ class GameLoop : public IStateManager {
         /** The event manager for handling input events. */
     std::shared_ptr<Window> _window; /** The window instance for rendering. */
     std::shared_ptr<ScoreManager> _scoreManager;
-    std::shared_ptr<Menu> _menu; /** The menu instance for user interaction. */
+    std::shared_ptr<IMenu> _menu; /** The menu instance for user interaction. */
     DLLoader<IDisplayModule> _graphicsLoader;
         /** The dynamic loader for graphics libraries. */
     DLLoader<IGameModule> _gameLoader;
@@ -170,8 +170,10 @@ class GameLoop : public IStateManager {
         /** The entity manager for managing game entities. */
     std::shared_ptr<IComponentManager> _componentManager;
         /** The component manager for managing game components. */
+    DLLoader<IMenu> _menuLoader;
 
     std::string _inputPlayerName; /** Current input buffer for player name. */
+
 
     static constexpr int TITLE_Y = 50;
         /** Y-coordinate for the title display. */

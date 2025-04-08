@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <utility>
+#include <string>
 #include "EventManager/EventManager.hpp"
 #include "Shared/Models/KeysType.hpp"
 #include "Shared/Interface/Display/IDisplayModule.hpp"
@@ -27,44 +28,80 @@ EventManager::EventManager()
 }
 
 void EventManager::updateKeyState(const RawInputState& state) {
-    for (const auto& [key, isPressed] : state.keyStates) {
-        bool wasPressed = _keyStates[key];
-        if (isPressed && !wasPressed) {
-            publish(KeyEvent(key, EventType::KEY_PRESSED));
-        } else if (!isPressed && wasPressed) {
-            publish(KeyEvent(key, EventType::KEY_RELEASED));
+    try {
+        for (const auto& [key, isPressed] : state.keyStates) {
+            bool wasPressed = _keyStates[key];
+            if (isPressed && !wasPressed) {
+                publish(KeyEvent(key, EventType::KEY_PRESSED));
+            } else if (!isPressed && wasPressed) {
+                publish(KeyEvent(key, EventType::KEY_RELEASED));
+            }
+            _keyStates[key] = isPressed;
         }
-        _keyStates[key] = isPressed;
+    } catch (const ArcadeException& e) {
+        throw InputException("Error processing key state updates: " +
+            std::string(e.what()));
+    } catch (const std::exception& e) {
+        throw InputException("Unexpected error during key state update: " +
+            std::string(e.what()));
     }
 }
 
 void EventManager::updateMouseButtonState(const RawInputState& state) {
-    for (const auto& [button, isPressed] : state.mouseButtons) {
-        bool wasPressed = _mouseButtonStates[button];
-        if (isPressed && !wasPressed) {
-            publish(MouseEvent(button,
-                EventType::MOUSE_BUTTON_PRESSED, state.mouseX, state.mouseY));
-        } else if (!isPressed && wasPressed) {
-            publish(MouseEvent(button,
-                EventType::MOUSE_BUTTON_RELEASED, state.mouseX, state.mouseY));
+    try {
+        for (const auto& [button, isPressed] : state.mouseButtons) {
+            bool wasPressed = _mouseButtonStates[button];
+            if (isPressed && !wasPressed) {
+                publish(MouseEvent(button,
+                    EventType::MOUSE_BUTTON_PRESSED,
+                    state.mouseX, state.mouseY));
+            } else if (!isPressed && wasPressed) {
+                publish(MouseEvent(button,
+                    EventType::MOUSE_BUTTON_RELEASED,
+                    state.mouseX, state.mouseY));
+            }
+            _mouseButtonStates[button] = isPressed;
         }
-        _mouseButtonStates[button] = isPressed;
+    } catch (const ArcadeException& e) {
+        throw InputException("Error processing mouse button updates: " +
+            std::string(e.what()));
+    } catch (const std::exception& e) {
+        throw InputException("Unexpected error during mouse button update: " +
+            std::string(e.what()));
     }
 }
 
 void EventManager::updateMousePosition(const RawInputState& state) {
-    if (state.mouseX != _mouseX || state.mouseY != _mouseY) {
-        publish(MouseEvent(MouseButton::NONE,
-            EventType::MOUSE_MOVED, state.mouseX, state.mouseY));
-        _mouseX = state.mouseX;
-        _mouseY = state.mouseY;
+    try {
+        if (state.mouseX != _mouseX || state.mouseY != _mouseY) {
+            publish(MouseEvent(MouseButton::NONE,
+                EventType::MOUSE_MOVED, state.mouseX, state.mouseY));
+            _mouseX = state.mouseX;
+            _mouseY = state.mouseY;
+        }
+    } catch (const ArcadeException& e) {
+        throw InputException("Error processing mouse position updates: " +
+            std::string(e.what()));
+    } catch (const std::exception& e) {
+        throw InputException("Unexpected error during mouse position update: " +
+            std::string(e.what()));
     }
 }
 
 void EventManager::updateInputState(const RawInputState& state) {
-    updateKeyState(state);
-    updateMouseButtonState(state);
-    updateMousePosition(state);
+    try {
+        updateKeyState(state);
+        updateMouseButtonState(state);
+        updateMousePosition(state);
+    } catch (const InputException& e) {
+        std::cerr << "Input processing error: " << e.what() << std::endl;
+    } catch (const ArcadeException& e) {
+        std::cerr <<
+        "Arcade error during input processing: " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr <<
+        "Unexpected error during input processing: " << e.what() << std::endl;
+    }
 }
 
 void EventManager::setKeyPressed(Keys key, bool pressed) {
@@ -89,8 +126,42 @@ std::pair<std::size_t, std::size_t> EventManager::getMousePosition() const {
 }
 
 void EventManager::unsubscribeAll() {
-    _subscribers.clear();
-    _mouseSubscribers.clear();
+    try {
+        _subscribers.clear();
+        _mouseSubscribers.clear();
+    } catch (const std::exception& e) {
+        throw InputException("Error unsubscribing events: " +
+            std::string(e.what()));
+    }
+}
+
+// Added to handle publishing errors with proper exceptions
+void EventManager::publish(const IEvent& eventType) {
+    try {
+        if (dynamic_cast<const MouseEvent*>(&eventType) != nullptr) {
+            auto mouseEvent = dynamic_cast<const MouseEvent*>(&eventType);
+            auto mouseFound = std::pair<EventType, MouseButton>
+                (mouseEvent->getType(), mouseEvent->getButton());
+            for (auto& callback : _mouseSubscribers[mouseFound]) {
+                callback();
+            }
+        } else if (dynamic_cast<const KeyEvent*>(&eventType) != nullptr) {
+            auto keyEvent = dynamic_cast<const KeyEvent*>(&eventType);
+            auto keyFound = std::pair<EventType, Keys>
+                (eventType.getType(), eventType.getKey());
+            for (auto& callback : _subscribers[keyFound]) {
+                callback();
+            }
+        } else {
+            throw InputException("Unknown event type for publishing");
+        }
+    } catch (const ArcadeException& e) {
+        throw InputException("Error publishing event: " +
+            std::string(e.what()));
+    } catch (const std::exception& e) {
+        throw InputException("Unexpected error while publishing event: " +
+            std::string(e.what()));
+    }
 }
 
 }  // namespace Arcade

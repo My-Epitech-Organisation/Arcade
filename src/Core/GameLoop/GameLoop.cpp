@@ -29,6 +29,7 @@
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 #include "ECS/Components/Text/TextComponent.hpp"
+#include "Shared/Exceptions/Exceptions.hpp"
 
 namespace Arcade {
 GameLoop::GameLoop(const std::string& initialLib)
@@ -37,6 +38,7 @@ _selectedGraphics(0),
 _selectedGame(0),
 _graphicsLoader(initialLib),
 _gameLoader("."),
+_menuLoader("./lib/arcade_menu.so"),
 _inputPlayerName(""),
 _scoreManager(std::make_shared<ScoreManager>()) {
     _eventManager = std::make_shared<EventManager>();
@@ -53,7 +55,11 @@ _scoreManager(std::make_shared<ScoreManager>()) {
             throw std::runtime_error("Failed to load initial graphics library");
         _window = std::make_shared<Window>(_currentGraphics,
             _eventManager);
-        _menu = std::make_unique<Menu>(_window, _scoreManager);
+        _menu = _menuLoader.getInstanceUPtr("entryPoint");
+        if (!_menu)
+            throw std::runtime_error("Failed to load menu library");
+        _menu->setWindow(_window);
+        _menu->setScoreManager(_scoreManager);
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         throw;
@@ -69,6 +75,7 @@ _scoreManager(std::make_shared<ScoreManager>()) {
 
 GameLoop::~GameLoop() {
     _currentGame.reset();
+    _menu.reset();
 
     if (_window) {
         if (_eventManager)
@@ -85,22 +92,39 @@ GameLoop::~GameLoop() {
 }
 
 void GameLoop::run() {
-    auto running = std::make_shared<bool>(true);
-    auto lastFrameTime = std::chrono::high_resolution_clock::now();
+    try {
+        auto running = std::make_shared<bool>(true);
+        auto lastFrameTime = std::chrono::high_resolution_clock::now();
 
-    while (*running) {
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float deltaTime = std::chrono::duration<float>
-            (currentTime - lastFrameTime).count();
-        lastFrameTime = currentTime;
-        handleEvents(running);
-        if (!*running) break;
-        _window->clearScreen();
-        handleState();
-        _window->refreshScreen();
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        while (*running) {
+            auto currentTime = std::chrono::high_resolution_clock::now();
+            float deltaTime = std::chrono::duration<float>
+                (currentTime - lastFrameTime).count();
+            lastFrameTime = currentTime;
+            handleEvents(running);
+            if (!*running) break;
+            _window->clearScreen();
+            handleState();
+            _window->refreshScreen();
+            std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        }
+        cleanup();
+    } catch (const GraphicsException& e) {
+        std::cerr << "Graphics error during game loop: "
+                  << e.what() << std::endl;
+    } catch (const GameException& e) {
+        std::cerr << "Game error during game loop: " << e.what() << std::endl;
+    } catch (const InputException& e) {
+        std::cerr << "Input error during game loop: " << e.what() << std::endl;
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Library error during game loop: "
+                  << e.what() << std::endl;
+    } catch (const ArcadeException& e) {
+        std::cerr << "Error during game loop: " << e.what() << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Unexpected error during game loop: "
+                  << e.what() << std::endl;
     }
-    cleanup();
 }
 
 void GameLoop::handleEvents(std::shared_ptr<bool> running) {
@@ -245,8 +269,14 @@ void GameLoop::processLibraryEntry(struct dirent* entry) {
         return;
     }
 
-    if (!processLibraryHandle(path, handle)) {
-        dlclose(handle);
+    try {
+        if (!processLibraryHandle(path, handle)) {
+            dlclose(handle);
+        }
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Library error: " << e.what() << std::endl;
+    } catch (const ArcadeException& e) {
+        std::cerr << "Error processing library: " << e.what() << std::endl;
     }
 }
 
@@ -295,7 +325,8 @@ void* handle, IArcadeModule* (*entryPoint)()) {
     } else if (dynamic_cast<IComponent*>(instance)) {
         _componentsLibs.push_back(path);
     } else {
-        std::cerr << "Unknown module type in " << path << std::endl;
+        if (path != "./lib/arcade_menu.so")
+            std::cerr << "Unknown module type in " << path << std::endl;
     }
 
     delete instance;
@@ -372,9 +403,8 @@ void GameLoop::loadGraphicsLibraries() {
         if (_componentManager)
             _componentManager = std::make_shared<ComponentManager>();
 
-        if (_eventManager) {
+        if (_eventManager)
             _eventManager->unsubscribeAll();
-        }
 
         std::string newLibPath = _graphicsLibs[_selectedGraphics];
         _graphicsLoader.setLibPath(newLibPath);
@@ -391,8 +421,14 @@ void GameLoop::loadGraphicsLibraries() {
             subscribeMouseEvents();
             _state = MAIN_MENU;
         }
-    } catch (const std::exception& e) {
-        std::cerr << "Error loading graphics: " << e.what() << std::endl;
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Failed to load graphics library: "
+                  << e.what() << std::endl;
+    } catch (const GraphicsException& e) {
+        std::cerr << "Graphics error: " << e.what() << std::endl;
+    } catch (const ArcadeException& e) {
+        std::cerr << "Error loading graphics libraries: "
+                  << e.what() << std::endl;
     }
 }
 
@@ -402,17 +438,17 @@ void GameLoop::loadCommonComponents() {
             libPath != _componentsLibs.end(); ++libPath) {
             auto handle = dlopen(libPath->c_str(), RTLD_LAZY);
             if (!handle) {
-                std::cerr << "Error loading " << *libPath << ": "
-                    << dlerror() << std::endl;
-                continue;
+                throw LibraryLoadException(
+                    "Error loading " + *libPath + ": " + dlerror());
             }
             auto entryPoint = reinterpret_cast<IArcadeModule* (*)()>
                 (dlsym(handle, "entryPoint"));
             if (!entryPoint) {
-                std::cerr << "Error finding entryPoint in "
-                    << *libPath << ": " << dlerror() << std::endl;
+                std::string error =
+                    "Error finding entryPoint in " +
+                    *libPath + ": " + dlerror();
                 dlclose(handle);
-                continue;
+                throw LibraryLoadException(error);
             }
             IArcadeModule* instance = entryPoint();
             if (instance) {
@@ -421,8 +457,13 @@ void GameLoop::loadCommonComponents() {
                     (std::shared_ptr<IComponent>(componentPtr));
             }
         }
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Library loading error: " << e.what() << std::endl;
+    } catch (const ArcadeException& e) {
+        std::cerr <<
+            "Error loading common components: " << e.what() << std::endl;
     } catch (const std::exception& e) {
-        std::cerr << "Error loading common components: "
+        std::cerr << "Unexpected error loading common components: "
             << e.what() << std::endl;
     }
 }
@@ -445,5 +486,4 @@ void GameLoop::changeState(std::shared_ptr<IGameState> newState) {
     // Implementation of state management
     // This would be used for more complex state transitions
 }
-
 }  // namespace Arcade
