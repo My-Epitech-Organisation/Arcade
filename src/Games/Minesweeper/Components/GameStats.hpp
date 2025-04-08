@@ -21,6 +21,7 @@ class GameStats : public Arcade::IComponent {
 
     int getRemainingMines() const;
     int getScore() const;
+    int getHighestScore() const;
     int getTimeRemaining() const;
 
     void addFlag();
@@ -34,6 +35,7 @@ class GameStats : public Arcade::IComponent {
     void addTimeBonus(int bonus);
 
     void reset();
+    void updateHighestScore();
 
     ComponentType getType() const override {
         return ComponentType::CUSTOM_BASE;
@@ -44,6 +46,7 @@ class GameStats : public Arcade::IComponent {
     int _flagsPlaced;
     int _safeCellsRevealed;
     int _score;
+    int _highestScore;
     int _timeLimit;
     int _timeRemaining;
     std::chrono::time_point<std::chrono::steady_clock> _startTime;

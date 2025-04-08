@@ -7,6 +7,7 @@
 */
 #include "Games/Minesweeper/Components/GameStats.hpp"
 #include <iostream>
+#include <algorithm>
 
 namespace Arcade {
 namespace Minesweeper {
@@ -16,6 +17,7 @@ _totalMines(totalMines),
 _flagsPlaced(0),
 _safeCellsRevealed(0),
 _score(0),
+_highestScore(0),
 _timeLimit(timeLimit),
 _timeRemaining(timeLimit),
 _startTime(std::chrono::steady_clock::now()) {}
@@ -61,7 +63,17 @@ void GameStats::addTimeBonus(int bonus) {
     _score += bonus;
 }
 
+int GameStats::getHighestScore() const {
+    return std::max(_score, _highestScore);
+}
+
+void GameStats::updateHighestScore() {
+    if (_score > _highestScore)
+        _highestScore = _score;
+}
+
 void GameStats::reset() {
+    updateHighestScore();
     _flagsPlaced = 0;
     _safeCellsRevealed = 0;
     _score = 0;

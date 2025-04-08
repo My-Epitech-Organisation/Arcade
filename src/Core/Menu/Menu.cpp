@@ -57,12 +57,20 @@ size_t selectedGame) {
         MENU_START_Y + 2 * MENU_ITEM_HEIGHT, Color::WHITE);
     displayMenuOption("4. Exit", centerX - 40,
         MENU_START_Y + 3 * MENU_ITEM_HEIGHT, Color::WHITE);
+    displayMenuOption("5. Enter Player Name", centerX - 40,
+        MENU_START_Y + 4 * MENU_ITEM_HEIGHT, Color::WHITE);
     displayStatus("Current Graphics",
         graphicsLibs.empty() ? "" : graphicsLibs[selectedGraphics],
         height - 2 * STATUS_OFFSET_Y, Color::GREEN);
     displayStatus("Current Game",
         gameLibs.empty() ? "" : gameLibs[selectedGame],
         height - STATUS_OFFSET_Y, Color::GREEN);
+    if (_scoreManager) {
+        std::string playerName = _scoreManager->getCurrentPlayerName();
+        displayStatus("Player",
+            playerName.empty() ? "Not Set" : playerName,
+            height - 3 * STATUS_OFFSET_Y, Color::GREEN);
+    }
 }
 
 void Menu::displaySelectionMenu(const std::string &title,
@@ -105,6 +113,24 @@ const std::vector<std::string> &graphicsLibs, size_t selectedGraphics) {
 
 void Menu::setWindow(std::shared_ptr<Window> window) {
     _window = window;
+}
+
+void Menu::displayNameInput(const std::string &currentInput) {
+    int centerX = _window->getWidth() / 2;
+    int centerY = _window->getHeight() / 2;
+
+    displayTitle("ENTER YOUR NAME");
+
+    std::string displayName = currentInput + "_";
+    _window->drawText(displayName,
+                     centerX - (displayName.length() * 5),
+                     centerY,
+                     Color::GREEN);
+
+    _window->drawText("Press ENTER to confirm, ESC to cancel",
+                     centerX - 150,
+                     centerY + 60,
+                     Color::WHITE);
 }
 
 }  // namespace Arcade

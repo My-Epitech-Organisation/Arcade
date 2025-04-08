@@ -38,8 +38,7 @@ _selectedGame(0),
 _graphicsLoader(initialLib),
 _gameLoader("."),
 _inputPlayerName(""),
-_scoreManager(std::make_shared<ScoreManager>()),
-_nameInputActive(false) {
+_scoreManager(std::make_shared<ScoreManager>()) {
     _eventManager = std::make_shared<EventManager>();
     _entityManager = std::make_shared<EntityManager>();
     _componentManager = std::make_shared<ComponentManager>();
@@ -124,6 +123,9 @@ void GameLoop::handleState() {
             break;
         case GAME_PLAYING:
             updateGame();
+            break;
+        case NAME_INPUT:
+            displayNameInput();
             break;
     }
 }
@@ -423,6 +425,20 @@ void GameLoop::loadCommonComponents() {
         std::cerr << "Error loading common components: "
             << e.what() << std::endl;
     }
+}
+
+void GameLoop::displayNameInput() {
+    int centerX = _window->getWidth() / 2;
+    int centerY = _window->getHeight() / 2;
+
+    _window->drawText("ENTER YOUR NAME", centerX - 80, TITLE_Y, Color::WHITE);
+
+    std::string displayName = _inputPlayerName + "_";
+    _window->drawText(displayName, centerX - (displayName.length() * 5),
+        centerY, Color::GREEN);
+
+    _window->drawText("Press ENTER to confirm, ESC to cancel",
+                     centerX - 150, centerY + 60, Color::WHITE);
 }
 
 void GameLoop::changeState(std::shared_ptr<IGameState> newState) {

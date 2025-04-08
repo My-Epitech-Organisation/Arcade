@@ -105,6 +105,7 @@ void MinesweeperGame::update() {
             if (_gameWon) {
                 int timeBonus = gameStats->getTimeRemaining() * 10;
                 gameStats->addTimeBonus(timeBonus);
+                gameStats->updateHighestScore();
 
                 board->setGameWon(true);
                 board->setGameOver(true);
@@ -112,8 +113,10 @@ void MinesweeperGame::update() {
             }
         }
 
-        if (board->isGameOver())
+        if (board->isGameOver()) {
+            gameStats->updateHighestScore();
             _gameOver = true;
+        }
     }
 
     for (const auto& system : _systems) {
@@ -147,6 +150,7 @@ extern "C" {
             return nullptr;
         }
     }
+
     void destroy(IGameModule* instance) {
         delete instance;
     }
@@ -248,7 +252,7 @@ int MinesweeperGame::getScore() const {
     auto gameStats = std::dynamic_pointer_cast
         <Arcade::Minesweeper::GameStats>(stat);
     if (gameStats)
-        return gameStats->getScore();
+        return gameStats->getHighestScore();
     return 0;
 }
 
