@@ -20,6 +20,56 @@ void GameLoop::subscribeEvents() {
     subscribeNum3Event();
     subscribeNum4Event();
     subscribeNum5Event();
+    subscribeNameInputEvents();
+}
+
+void GameLoop::subscribeNameInputEvents() {
+    for (int key = Keys::A; key <= Keys::Z; key++) {
+        KeyEvent letterEvent(static_cast<Keys>(key), EventType::KEY_PRESSED);
+        _eventManager->subscribe(letterEvent, [this, key]() {
+            if (_state == NAME_INPUT && _inputPlayerName.length() < 15) {
+                char c = 'A' + (key - Keys::A);
+                _inputPlayerName += c;
+            }
+        });
+    }
+
+    for (int key = Keys::NUM0; key <= Keys::NUM9; key++) {
+        KeyEvent numEvent(static_cast<Keys>(key), EventType::KEY_PRESSED);
+        _eventManager->subscribe(numEvent, [this, key]() {
+            if (_state == NAME_INPUT && _inputPlayerName.length() < 15) {
+                char c = '0' + (key - Keys::NUM0);
+                _inputPlayerName += c;
+            }
+        });
+    }
+
+    KeyEvent backspaceEvent(Keys::BACKSPACE, EventType::KEY_PRESSED);
+    _eventManager->subscribe(backspaceEvent, [this]() {
+        if (_state == NAME_INPUT && !_inputPlayerName.empty()) {
+            _inputPlayerName.pop_back();
+        }
+    });
+
+    KeyEvent enterEvent(Keys::ENTER, EventType::KEY_PRESSED);
+    _eventManager->subscribe(enterEvent, [this]() {
+        if (_state == NAME_INPUT) {
+            if (!_inputPlayerName.empty()) {
+                _scoreManager->setCurrentPlayerName(_inputPlayerName);
+                std::cout << "Player name set to: " <<
+                    _inputPlayerName << std::endl;
+            }
+            _state = MAIN_MENU;
+        }
+    });
+
+    KeyEvent escEvent(Keys::ESC, EventType::KEY_PRESSED);
+    _eventManager->subscribe(escEvent, [this]() {
+        if (_state == NAME_INPUT) {
+            _inputPlayerName = "";
+            _state = MAIN_MENU;
+        }
+    });
 }
 
 void GameLoop::subscribeNum1Event() {
@@ -116,6 +166,10 @@ void GameLoop::subscribeEscEvent() {
         if (_state == GAME_SELECTION || _state == GRAPHICS_SELECTION) {
             _state = MAIN_MENU;
         } else if (_state == GAME_PLAYING) {
+            if (_currentGame) {
+                auto score = _currentGame->getScore();
+                _scoreManager->addScore(_gameLibs[_selectedGame], score);
+            }
             _state = MAIN_MENU;
         }
     });
@@ -203,6 +257,10 @@ void GameLoop::handleLeftClickMainMenu(int x, int y, int centerX) {
         } else if (y >= MENU_START_Y + 3 * MENU_ITEM_HEIGHT &&
                    y <= MENU_START_Y + 4 * MENU_ITEM_HEIGHT) {
             _window->closeWindow();
+        } else if (y >= MENU_START_Y + 4 * MENU_ITEM_HEIGHT &&
+                   y <= MENU_START_Y + 5 * MENU_ITEM_HEIGHT) {
+            _inputPlayerName = "";
+            _state = NAME_INPUT;
         }
     }
 }

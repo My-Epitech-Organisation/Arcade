@@ -134,10 +134,8 @@ class GameLoop : public IStateManager {
     void handleLeftClickGraphicsSelection(int x, int y, int centerX);
     void subscribeLeftClickEvent();
     void loadCommonComponents();
-    void subscribeTextInputEvents();
-    void renderNameInputField();
-    void handleNameInput(char c);
-    void confirmNameInput();
+    void displayNameInput();
+    void subscribeNameInputEvents();
 
     std::shared_ptr<IEventManager> _eventManager;
         /** The event manager for handling input events. */
@@ -174,7 +172,6 @@ class GameLoop : public IStateManager {
         /** The component manager for managing game components. */
 
     std::string _inputPlayerName; /** Current input buffer for player name. */
-    bool _nameInputActive; /** Flag indicating if name input is active. */
 
     static constexpr int TITLE_Y = 50;
         /** Y-coordinate for the title display. */

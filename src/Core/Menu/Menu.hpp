@@ -90,6 +90,12 @@ class Menu {
      */
     void setWindow(std::shared_ptr<Window> window);
 
+    /**
+     * @brief Displays the name input screen.
+     * @param currentInput The current input text.
+     */
+    void displayNameInput(const std::string &currentInput);
+
  private:
     std::shared_ptr<Window> _window;
     std::shared_ptr<ScoreManager> _scoreManager;
