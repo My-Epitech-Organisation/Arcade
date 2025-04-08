@@ -57,7 +57,7 @@ void PacmanGame::init(std::shared_ptr<IEventManager> eventManager,
 void PacmanGame::createGame() {
     // Create factory and initialize game elements
     PacmanFactory factory(_entityManager, _componentManager);
-    factory.initializeGame(30.0f); // 30px cell size
+    factory.initializeGame(32.0f); // 30px cell size
 }
 
 void PacmanGame::update() {
@@ -127,7 +127,6 @@ void PacmanGame::stop() {
 }
 
 std::string PacmanGame::getSpecialCompSprite(size_t id) const {
-    // Return appropriate sprite path based on component ID
     switch (id) {
         case static_cast<size_t>(ComponentType::SPRITE):
             return "assets/pacman/pacman.png";

@@ -33,17 +33,15 @@ private:
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
     std::shared_ptr<Arcade::IEntityManager> _entityManager;
     std::shared_ptr<Arcade::IEventManager> _eventManager;
-    
     void handleKeyUp();
     void handleKeyDown();
     void handleKeyLeft();
     void handleKeyRight();
-    void handleKeyR(); // Reset game
-    
+    void handleKeyR();
     Direction validateDirection(Direction requestedDir, size_t x, size_t y,
                                std::shared_ptr<GridComponent> grid);
     Arcade::Entity findPacmanEntity() const;
-    std::pair<std::shared_ptr<PacmanComponent>, std::shared_ptr<GridComponent>> 
+    std::pair<std::shared_ptr<PacmanComponent>, std::shared_ptr<GridComponent>>
         getPacmanAndGridComponents();
 };
 

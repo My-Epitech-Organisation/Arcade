@@ -22,7 +22,7 @@ Arcade::Entity PacmanFactory::createGrid(size_t width, size_t height) {
     // Center position for the grid
     float screenWidth = 800.0f; // Assuming default screen width
     float screenHeight = 600.0f; // Assuming default screen height
-    float cellSize = 100.0f;
+    float cellSize = 32.0f;
     float boardWidth = width * cellSize;
     float boardHeight = height * cellSize;
     float x = (screenWidth - boardWidth) / 2;
@@ -147,21 +147,22 @@ void PacmanFactory::initializeGame(float cellSize) {
     Arcade::Entity gridEntity = createGrid(20, 16);
     auto gridComp = std::dynamic_pointer_cast<GridComponent>(
         _componentManager->getComponentByType(gridEntity, static_cast<ComponentType>(1000)));
-    
     if (!gridComp)
         return;
-    
-    // Position offset for game elements
     auto posComp = std::dynamic_pointer_cast<PositionComponent>(
         _componentManager->getComponentByType(gridEntity, ComponentType::POSITION));
     float startX = posComp ? posComp->x : 0;
     float startY = posComp ? posComp->y : 0;
-    
-    // Create game elements
     createWallEntities(gridComp, cellSize);
     createFoodEntities(gridComp, cellSize);
     createPacmanEntity(gridComp, cellSize);
     createGhostEntities(gridComp, cellSize);
+    std::cout << "Game initialized with grid size: " << gridComp->getWidth() << "x" << gridComp->getHeight() << std::endl;
+    std::cout << "Pacman and ghosts created at their respective spawn points." << std::endl;
+    std::cout << "Food entities created: " << gridComp->getFoodCount() << " items." << std::endl;
+    std::cout << "Game initialized successfully." << std::endl;
+    std::cout << "Pacman position: (" << startX << ", " << startY << ")" << std::endl;
+    std::cout << "Game initialized successfully." << std::endl;
 }
 
 void PacmanFactory::createFoodEntities(std::shared_ptr<GridComponent> grid, float cellSize) {
@@ -199,8 +200,8 @@ void PacmanFactory::createWallEntities(std::shared_ptr<GridComponent> grid, floa
     for (size_t y = 0; y < grid->getHeight(); ++y) {
         for (size_t x = 0; x < grid->getWidth(); ++x) {
             if (grid->getCellType(x, y) == CellType::WALL) {
-                float wallX = startX + (x * cellSize);
-                float wallY = startY + (y * cellSize);
+                float wallX = startX + (x);
+                float wallY = startY + (y);
                 Arcade::Entity wallEntity = createWall(wallX, wallY, x, y);
                 grid->setEntityAtCell(x, y, wallEntity);
             }

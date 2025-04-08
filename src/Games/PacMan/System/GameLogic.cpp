@@ -12,7 +12,6 @@
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 #include "Games/PacMan/Components/PacmanComponent.hpp"
-#include "Games/PacMan/Components/GhostComponent.hpp"
 #include "Games/PacMan/Components/FoodComponent.hpp"
 
 namespace Arcade {
