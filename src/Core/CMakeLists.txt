@@ -9,6 +9,7 @@ set(SRC
     ${SRCCORE}/GameLoop/GameLoopUtils.cpp
     ${SRCCORE}/Window/Window.cpp
     ${SRCCORE}/Exceptions/Exception.cpp
+    ${SRCCORE}/Score/ScoreManager.cpp
 )
 
 set(INC
@@ -17,6 +18,7 @@ set(INC
     ${INCCORE}/GameLoop/GameLoop.hpp
     ${INCCORE}/Window/Window.hpp
     ${INCCORE}/Exceptions/Exception.hpp
+    ${INCCORE}/Score/ScoreManager.hpp
 )
 
 add_subdirectory(Menu)

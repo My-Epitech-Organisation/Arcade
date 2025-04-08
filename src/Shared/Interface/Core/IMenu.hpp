@@ -12,6 +12,7 @@
     #include <string>
     #include <memory>
     #include "Interface/Core/IWindowModule.hpp"
+    #include "Core/Score/ScoreManager.hpp"
 
 namespace Arcade {
 
@@ -30,6 +31,9 @@ class IMenu {
         &graphicsLibs, size_t selectedGraphics) = 0;
 
     virtual void setWindow(std::shared_ptr<IWindowModule> window) = 0;
+
+    virtual void setScoreManager(std::shared_ptr<ScoreManager>
+        scoreManager) = 0;
 };
 
 }  // namespace Arcade

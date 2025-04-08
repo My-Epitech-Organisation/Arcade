@@ -22,6 +22,7 @@
 #include "Window/Window.hpp"
 #include "Menu/Menu.hpp"
 #include "DLLoader/DLLoader.hpp"
+#include "Core/Score/ScoreManager.hpp"
 
 /**
  * @file GameLoop.hpp
@@ -65,6 +66,7 @@ class GameLoop : public IStateManager {
      */
     enum State {
         MAIN_MENU,           /** The main menu state. */
+        NAME_INPUT,          /** New state for name input. */
         GAME_PLAYING,        /** The game-playing state. */
         GRAPHICS_SELECTION,  /** The graphics library selection state. */
         GAME_SELECTION       /** The game library selection state. */
@@ -118,6 +120,7 @@ class GameLoop : public IStateManager {
     void subscribeNum2Event();
     void subscribeNum3Event();
     void subscribeNum4Event();
+    void subscribeNum5Event();
     void subscribeUpEvent();
     void subscribeDownEvent();
     void subscribeEnterEvent();
@@ -131,10 +134,14 @@ class GameLoop : public IStateManager {
     void handleLeftClickGraphicsSelection(int x, int y, int centerX);
     void subscribeLeftClickEvent();
     void loadCommonComponents();
+    void displayNameInput();
+    void subscribeNameInputEvents();
+
     std::shared_ptr<IEventManager> _eventManager;
         /** The event manager for handling input events. */
     std::shared_ptr<Window> _window; /** The window instance for rendering. */
-    std::unique_ptr<IMenu> _menu; /** The menu instance for user interaction. */
+    std::shared_ptr<ScoreManager> _scoreManager;
+    std::shared_ptr<IMenu> _menu; /** The menu instance for user interaction. */
     DLLoader<IDisplayModule> _graphicsLoader;
         /** The dynamic loader for graphics libraries. */
     DLLoader<IGameModule> _gameLoader;
@@ -164,6 +171,9 @@ class GameLoop : public IStateManager {
     std::shared_ptr<IComponentManager> _componentManager;
         /** The component manager for managing game components. */
     DLLoader<IMenu> _menuLoader;
+
+    std::string _inputPlayerName; /** Current input buffer for player name. */
+
 
     static constexpr int TITLE_Y = 50;
         /** Y-coordinate for the title display. */

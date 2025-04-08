@@ -6,7 +6,6 @@
 ** GameLoop
 */
 
-#include "GameLoop/GameLoop.hpp"
 #include <dirent.h>
 #include <sys/stat.h>
 #include <cstring>
@@ -18,6 +17,8 @@
 #include <thread>
 #include <memory>
 #include <string>
+#include "GameLoop/GameLoop.hpp"
+#include "Core/Score/ScoreManager.hpp"
 #include "Core/EventManager/EventManager.hpp"
 #include "Shared/Interface/IArcadeModule.hpp"
 #include "Shared/Interface/Display/IDisplayModule.hpp"
@@ -37,7 +38,9 @@ _selectedGraphics(0),
 _selectedGame(0),
 _graphicsLoader(initialLib),
 _gameLoader("."),
-_menuLoader("./lib/arcade_menu.so") {
+_menuLoader("./lib/arcade_menu.so"),
+_inputPlayerName(""),
+_scoreManager(std::make_shared<ScoreManager>()) {
     _eventManager = std::make_shared<EventManager>();
     _entityManager = std::make_shared<EntityManager>();
     _componentManager = std::make_shared<ComponentManager>();
@@ -56,6 +59,7 @@ _menuLoader("./lib/arcade_menu.so") {
         if (!_menu)
             throw std::runtime_error("Failed to load menu library");
         _menu->setWindow(_window);
+        _menu->setScoreManager(_scoreManager);
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         throw;
@@ -143,6 +147,9 @@ void GameLoop::handleState() {
             break;
         case GAME_PLAYING:
             updateGame();
+            break;
+        case NAME_INPUT:
+            displayNameInput();
             break;
     }
 }
@@ -330,6 +337,8 @@ void* handle, IArcadeModule* (*entryPoint)()) {
 void GameLoop::loadAndStartGame() {
     try {
         if (_currentGame) {
+            auto score = _currentGame->getScore();
+            _scoreManager->addScore(_gameLibs[_selectedGame], score);
             _currentGame->stop();
             _currentGame.reset();
         }
@@ -378,6 +387,8 @@ void GameLoop::loadAndStartGame() {
 void GameLoop::loadGraphicsLibraries() {
     try {
         if (_currentGame) {
+            auto score = _currentGame->getScore();
+            _scoreManager->addScore(_gameLibs[_selectedGame], score);
             _currentGame->stop();
             _currentGame.reset();
         }
@@ -457,9 +468,22 @@ void GameLoop::loadCommonComponents() {
     }
 }
 
+void GameLoop::displayNameInput() {
+    int centerX = _window->getWidth() / 2;
+    int centerY = _window->getHeight() / 2;
+
+    _window->drawText("ENTER YOUR NAME", centerX - 80, TITLE_Y, Color::WHITE);
+
+    std::string displayName = _inputPlayerName + "_";
+    _window->drawText(displayName, centerX - (displayName.length() * 5),
+        centerY, Color::GREEN);
+
+    _window->drawText("Press ENTER to confirm, ESC to cancel",
+                     centerX - 150, centerY + 60, Color::WHITE);
+}
+
 void GameLoop::changeState(std::shared_ptr<IGameState> newState) {
     // Implementation of state management
     // This would be used for more complex state transitions
 }
-
 }  // namespace Arcade

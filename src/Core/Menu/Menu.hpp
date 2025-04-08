@@ -12,6 +12,7 @@
     #include <string>
     #include <memory>
     #include "Shared/Interface/Core/IMenu.hpp"
+    #include "Core/Score/ScoreManager.hpp"
     #include "Shared/Interface/Core/IGameState.hpp"
     #include "Shared/Interface/Core/IWindowModule.hpp"
     #include "Shared/Models/ColorType.hpp"
@@ -26,9 +27,25 @@ class Menu : public IMenu {
         GRAPHICS_SELECTION
     };
 
-    explicit Menu(std::shared_ptr<IWindowModule> window);
+    /**
+     * @brief Constructs a Menu object.
+     * @param window A shared pointer to the Window object used for rendering.
+     */
+    Menu(std::shared_ptr<IWindowModule> window,
+        std::shared_ptr<ScoreManager> scoreManager = nullptr);
+
+    /**
+     * @brief Destroys the Menu object.
+     */
     ~Menu() override;
 
+    /**
+     * @brief Displays the main menu.
+     * @param graphicsLibs A vector of available graphics libraries.
+     * @param gameLibs A vector of available game libraries.
+     * @param selectedGraphics The index of the currently selected graphics library.
+     * @param selectedGame The index of the currently selected game library.
+     */
     void displayMainMenu(const std::vector<std::string> &graphicsLibs,
                       const std::vector<std::string> &gameLibs,
                       size_t selectedGraphics,
@@ -38,12 +55,20 @@ class Menu : public IMenu {
                            size_t selectedGame) override;
 
     void displayGraphicsSelection(const std::vector<std::string> &graphicsLibs,
-                               size_t selectedGraphics) override;
+                           size_t selectedGraphics) override;
 
     void setWindow(std::shared_ptr<IWindowModule> window) override;
+    void setScoreManager(std::shared_ptr<ScoreManager> scoreManager) override;
+
+    /**
+     * @brief Displays the name input screen.
+     * @param currentInput The current input text.
+     */
+    void displayNameInput(const std::string &currentInput);
 
  private:
     std::shared_ptr<IWindowModule> _window;
+    std::shared_ptr<ScoreManager> _scoreManager;
 
     void displayTitle(const std::string &title);
     void displayMenuOption(const std::string &option,
@@ -52,7 +77,7 @@ class Menu : public IMenu {
         const std::string &value, int y, Color color);
     void displaySelectionMenu(const std::string &title,
         const std::vector<std::string> &options,
-        size_t selectedOption);
+        size_t selectedOption, bool showScores);
 
     static constexpr int TITLE_Y = 50;
     static constexpr int MENU_START_Y = 100;
