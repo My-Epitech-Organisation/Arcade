@@ -18,6 +18,7 @@ enum Keys {
     ENTER,
     SPACE,
     ESC,
+    BACKSPACE,
     NUM0,
     NUM1,
     NUM2,

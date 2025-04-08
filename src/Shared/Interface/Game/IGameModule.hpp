@@ -43,6 +43,7 @@ class IGameModule : public IArcadeModule {
     virtual void stop() = 0;
     virtual bool isGameOver() const = 0;
     virtual bool hasWon() const = 0;
+    virtual int getScore() const = 0;
     virtual std::string getSpecialCompSprite(size_t id) const = 0;
 };
 }  // namespace Arcade
