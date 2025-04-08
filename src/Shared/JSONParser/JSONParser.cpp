@@ -1,3 +1,11 @@
+// Copyright <2025> Epitech
+/*
+** EPITECH PROJECT, 2025
+** B-OOP-400
+** File description:
+** JSONParser
+*/
+
 #include "JSONParser/JSONParser.hpp"
 #include <fstream>
 #include <sstream>
@@ -21,7 +29,8 @@ std::shared_ptr<JSONValueImpl> JSONValueImpl::createArray(
     return arr;
 }
 
-std::shared_ptr<JSONValueImpl> JSONValueImpl::createString(const std::string& value) {
+std::shared_ptr<JSONValueImpl> JSONValueImpl::createString
+(const std::string& value) {
     auto str = std::make_shared<JSONValueImpl>(JSONValueType::STRING);
     str->_stringValue = value;
     return str;
@@ -44,7 +53,8 @@ std::shared_ptr<JSONValueImpl> JSONValueImpl::createNull() {
 }
 
 // JSONValueImpl interface implementation
-std::map<std::string, std::shared_ptr<JSONValue>> JSONValueImpl::asObject() const {
+std::map<std::string, std::shared_ptr<JSONValue>>
+JSONValueImpl::asObject() const {
     if (!isObject()) {
         throw std::runtime_error("JSON value is not an object");
     }
@@ -114,13 +124,13 @@ std::shared_ptr<JSONValue> JSONParser::parseFile(const std::string& filePath) {
     if (!file.is_open()) {
         throw std::runtime_error("Failed to open file: " + filePath);
     }
-    
     std::stringstream buffer;
     buffer << file.rdbuf();
     return parseString(buffer.str());
 }
 
-std::shared_ptr<JSONValue> JSONParser::parseString(const std::string& jsonString) {
+std::shared_ptr<JSONValue> JSONParser::parseString
+(const std::string& jsonString) {
     Tokenizer tokenizer(jsonString);
     return parse(tokenizer);
 }
@@ -131,7 +141,6 @@ std::shared_ptr<JSONValue> JSONParser::parse(Tokenizer& tokenizer) {
 
 std::shared_ptr<JSONValue> JSONParser::parseValue(Tokenizer& tokenizer) {
     Token token = tokenizer.nextToken();
-    
     switch (token.type) {
         case TokenType::BEGIN_OBJECT:
             return parseObject(tokenizer);
@@ -149,8 +158,8 @@ std::shared_ptr<JSONValue> JSONParser::parseValue(Tokenizer& tokenizer) {
             return JSONValueImpl::createNull();
         default:
             throw std::runtime_error(
-                "Unexpected token: " + token.value + 
-                " at line " + std::to_string(token.line) + 
+                "Unexpected token: " + token.value +
+                " at line " + std::to_string(token.line) +
                 ", column " + std::to_string(token.column));
     }
 }
@@ -160,21 +169,18 @@ void JSONParser::validateTokenType(
     const Token& token, TokenType expected, const std::string& errorMsg) {
     if (token.type != expected) {
         throw std::runtime_error(
-            errorMsg + " at line " + std::to_string(token.line) + 
+            errorMsg + " at line " + std::to_string(token.line) +
             ", column " + std::to_string(token.column));
     }
 }
 
 std::shared_ptr<JSONValue> JSONParser::parseObject(Tokenizer& tokenizer) {
     std::map<std::string, std::shared_ptr<JSONValue>> object;
-    
-    // Check if the object is empty
     Token token = tokenizer.peekToken();
     if (token.type == TokenType::END_OBJECT) {
-        tokenizer.nextToken(); // Consume end object token
+        tokenizer.nextToken();
         return JSONValueImpl::createObject(object);
     }
-    
     while (true) {
         // Parse key
         Token keyToken = tokenizer.nextToken();
@@ -185,53 +191,47 @@ std::shared_ptr<JSONValue> JSONParser::parseObject(Tokenizer& tokenizer) {
         // Parse colon
         Token colonToken = tokenizer.nextToken();
         validateTokenType(
-            colonToken, TokenType::NAME_SEPARATOR, "Expected ':' after key in object");
-        
+            colonToken, TokenType::NAME_SEPARATOR,
+            "Expected ':' after key in object");
         // Parse value
         object[key] = parseValue(tokenizer);
-        
         // Check for comma or end of object
         Token separatorToken = tokenizer.nextToken();
         if (separatorToken.type == TokenType::END_OBJECT) {
             break;
         }
-        
         validateTokenType(
-            separatorToken, TokenType::VALUE_SEPARATOR, "Expected ',' or '}' in object");
+            separatorToken, TokenType::VALUE_SEPARATOR,
+            "Expected ',' or '}' in object");
     }
-    
     return JSONValueImpl::createObject(object);
 }
 
 std::shared_ptr<JSONValue> JSONParser::parseArray(Tokenizer& tokenizer) {
     std::vector<std::shared_ptr<JSONValue>> array;
-    
-    // Check if the array is empty
     Token token = tokenizer.peekToken();
     if (token.type == TokenType::END_ARRAY) {
-        tokenizer.nextToken(); // Consume end array token
+        tokenizer.nextToken();
         return JSONValueImpl::createArray(array);
     }
-    
     while (true) {
         // Parse value
         array.push_back(parseValue(tokenizer));
-        
         // Check for comma or end of array
         Token separatorToken = tokenizer.nextToken();
         if (separatorToken.type == TokenType::END_ARRAY) {
             break;
         }
-        
         validateTokenType(
-            separatorToken, TokenType::VALUE_SEPARATOR, "Expected ',' or ']' in array");
+            separatorToken, TokenType::VALUE_SEPARATOR,
+            "Expected ',' or ']' in array");
     }
-    
     return JSONValueImpl::createArray(array);
 }
 
 // Helper to extract font path from assets
-std::string JSONParser::extractFontPath(const std::shared_ptr<JSONValue>& assets) {
+std::string JSONParser::extractFontPath
+(const std::shared_ptr<JSONValue>& assets) {
     if (assets->hasKey("fonts") && assets->get("fonts")->hasKey("default")) {
         return assets->get("fonts")->get("default")->asString();
     }
@@ -239,37 +239,34 @@ std::string JSONParser::extractFontPath(const std::shared_ptr<JSONValue>& assets
 }
 
 // Helper to validate assets structure
-void JSONParser::validateAssetsStructure(const std::shared_ptr<JSONValue>& jsonRoot) {
+void JSONParser::validateAssetsStructure
+(const std::shared_ptr<JSONValue>& jsonRoot) {
     if (!jsonRoot->isObject() || !jsonRoot->hasKey("assets")) {
-        throw std::runtime_error("Invalid JSON structure: missing 'assets' object");
+        throw std::runtime_error
+        ("Invalid JSON structure: missing 'assets' object");
     }
-    
     auto assets = jsonRoot->get("assets");
     if (!assets->isObject()) {
         throw std::runtime_error("'assets' is not an object");
     }
-    
     return;
 }
 
-std::map<std::string, graphical_element_t> 
-    JSONParser::convertAssetsToGraphicalElements(const std::string& jsonFilePath) {
+std::map<std::string, graphical_element_t>
+JSONParser::convertAssetsToGraphicalElements
+(const std::string& jsonFilePath) {
     std::map<std::string, graphical_element_t> elements;
-    
     try {
         auto jsonRoot = parseFile(jsonFilePath);
         validateAssetsStructure(jsonRoot);
-        
         auto assets = jsonRoot->get("assets");
         std::string fontPath = extractFontPath(assets);
-        
         if (assets->hasKey("textures")) {
             processTextures(assets->get("textures"), elements, fontPath);
         }
-        
         return elements;
     } catch (const std::exception& e) {
-        std::cerr << "Error converting assets to graphical elements: " 
+        std::cerr << "Error converting assets to graphical elements: "
                   << e.what() << std::endl;
         return elements;
     }
@@ -282,7 +279,6 @@ void JSONParser::processTextures(
     if (!textures->isObject()) {
         throw std::runtime_error("'textures' is not an object");
     }
-    
     auto textureMap = textures->asObject();
     for (const auto& [groupName, groupValue] : textureMap) {
         processTextureGroup(groupValue, elements, fontPath, groupName);
@@ -300,9 +296,8 @@ graphical_element_t JSONParser::createGraphicalElement(
     element.isVisible = true;
     element.scale = 1.0f;
     element.rotation = 0.0f;
-    element.width = 0.0f;  // Default, should be set by the renderer
-    element.height = 0.0f; // Default, should be set by the renderer
-    
+    element.width = 0.0f;
+    element.height = 0.0f;
     return element;
 }
 
@@ -313,7 +308,6 @@ void JSONParser::processObjectTextureGroup(
     const std::string& fontPath,
     const std::string& groupName) {
     auto groupObj = group->asObject();
-    
     // Check if this is a leaf texture node (has path and char)
     if (group->hasKey("path") && group->hasKey("char")) {
         elements[groupName] = createGraphicalElement(group, fontPath);

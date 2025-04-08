@@ -1,0 +1,3 @@
+./lib/arcade_minesweeper.so:Default:320
+./lib/arcade_minesweeper.so:Default:320
+./lib/arcade_minesweeper.so:Default:400
