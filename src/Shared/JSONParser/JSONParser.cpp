@@ -11,19 +11,23 @@
 #include <sstream>
 #include <stdexcept>
 #include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <memory>
 
 namespace Arcade {
 
 // JSONValueImpl static factory methods
 std::shared_ptr<JSONValueImpl> JSONValueImpl::createObject(
-    const std::map<std::string, std::shared_ptr<JSONValue>>& value) {
+const std::map<std::string, std::shared_ptr<JSONValue>>& value) {
     auto obj = std::make_shared<JSONValueImpl>(JSONValueType::OBJECT);
     obj->_objectValue = value;
     return obj;
 }
 
 std::shared_ptr<JSONValueImpl> JSONValueImpl::createArray(
-    const std::vector<std::shared_ptr<JSONValue>>& value) {
+const std::vector<std::shared_ptr<JSONValue>>& value) {
     auto arr = std::make_shared<JSONValueImpl>(JSONValueType::ARRAY);
     arr->_arrayValue = value;
     return arr;
@@ -166,7 +170,7 @@ std::shared_ptr<JSONValue> JSONParser::parseValue(Tokenizer& tokenizer) {
 
 // Helper to validate expected token type
 void JSONParser::validateTokenType(
-    const Token& token, TokenType expected, const std::string& errorMsg) {
+const Token& token, TokenType expected, const std::string& errorMsg) {
     if (token.type != expected) {
         throw std::runtime_error(
             errorMsg + " at line " + std::to_string(token.line) +
@@ -273,9 +277,9 @@ JSONParser::convertAssetsToGraphicalElements
 }
 
 void JSONParser::processTextures(
-    const std::shared_ptr<JSONValue>& textures,
-    std::map<std::string, graphical_element_t>& elements,
-    const std::string& fontPath) {
+const std::shared_ptr<JSONValue>& textures,
+std::map<std::string, graphical_element_t>& elements,
+const std::string& fontPath) {
     if (!textures->isObject()) {
         throw std::runtime_error("'textures' is not an object");
     }
@@ -287,7 +291,7 @@ void JSONParser::processTextures(
 
 // Create a graphical element from a texture node
 graphical_element_t JSONParser::createGraphicalElement(
-    const std::shared_ptr<JSONValue>& node, const std::string& fontPath) {
+const std::shared_ptr<JSONValue>& node, const std::string& fontPath) {
     graphical_element_t element;
     element.path = node->get("path")->asString();
     element.font = fontPath;
@@ -303,10 +307,10 @@ graphical_element_t JSONParser::createGraphicalElement(
 
 // Process object texture nodes
 void JSONParser::processObjectTextureGroup(
-    const std::shared_ptr<JSONValue>& group,
-    std::map<std::string, graphical_element_t>& elements,
-    const std::string& fontPath,
-    const std::string& groupName) {
+const std::shared_ptr<JSONValue>& group,
+std::map<std::string, graphical_element_t>& elements,
+const std::string& fontPath,
+const std::string& groupName) {
     auto groupObj = group->asObject();
     // Check if this is a leaf texture node (has path and char)
     if (group->hasKey("path") && group->hasKey("char")) {
@@ -322,10 +326,10 @@ void JSONParser::processObjectTextureGroup(
 
 // Process array texture nodes
 void JSONParser::processArrayTextureGroup(
-    const std::shared_ptr<JSONValue>& group,
-    std::map<std::string, graphical_element_t>& elements,
-    const std::string& fontPath,
-    const std::string& groupName) {
+const std::shared_ptr<JSONValue>& group,
+std::map<std::string, graphical_element_t>& elements,
+const std::string& fontPath,
+const std::string& groupName) {
     auto arr = group->asArray();
     for (size_t i = 0; i < arr.size(); ++i) {
         std::string indexName = groupName + "[" + std::to_string(i) + "]";
@@ -334,10 +338,10 @@ void JSONParser::processArrayTextureGroup(
 }
 
 void JSONParser::processTextureGroup(
-    const std::shared_ptr<JSONValue>& group,
-    std::map<std::string, graphical_element_t>& elements,
-    const std::string& fontPath,
-    const std::string& groupName) {
+const std::shared_ptr<JSONValue>& group,
+std::map<std::string, graphical_element_t>& elements,
+const std::string& fontPath,
+const std::string& groupName) {
     if (group->isObject()) {
         processObjectTextureGroup(group, elements, fontPath, groupName);
     } else if (group->isArray()) {

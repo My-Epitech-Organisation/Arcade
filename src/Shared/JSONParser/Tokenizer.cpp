@@ -9,11 +9,12 @@
 #include "JSONParser/Tokenizer.hpp"
 #include <stdexcept>
 #include <cctype>
+#include <string>
 
 namespace Arcade {
 
 Tokenizer::Tokenizer(const std::string& input)
-    : _input(input), _position(0), _line(1), _column(1) {}
+: _input(input), _position(0), _line(1), _column(1) {}
 
 Token Tokenizer::nextToken() {
     skipWhitespace();
