@@ -11,6 +11,7 @@
 #include <exception>
 #include "GameLoop/GameLoop.hpp"
 #include "Shared/Exceptions/Exceptions.hpp"
+#include "Shared/JSONParser/JSONParser.hpp"
 
 void printUsage(const std::string& programName) {
     std::cerr << "Usage: " << programName
