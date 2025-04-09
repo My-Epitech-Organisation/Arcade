@@ -11,9 +11,10 @@ NCurses::NCursesEntity::NCursesEntity() {
 }
 
 void NCurses::NCursesEntity::drawEntity(WINDOW* window, int x, int y,
-                                       char symbol, int colorPair) {
-    if (!window)
+                                        char symbol, int colorPair) {
+    if (!window) {
         return;
+    }
 
     wattron(window, COLOR_PAIR(colorPair));
     mvwaddch(window, y, x, symbol);
