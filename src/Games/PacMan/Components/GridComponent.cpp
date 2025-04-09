@@ -7,13 +7,17 @@
 */
 
 #include <stdexcept>
+#include <vector>
+#include <string>
+#include <iostream>
 #include "Games/PacMan/Components/GridComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
 
 GridComponent::GridComponent(size_t width, size_t height)
-    : _width(width), _height(height), _foodCount(0), _gameOver(false), _gameWon(false) {
+: _width(width), _height(height), _foodCount(0), _gameOver(false),
+_gameWon(false), _cellSize(0.0f) {
     _grid.resize(height, std::vector<CellType>(width, CellType::EMPTY));
     _entityGrid.resize(height, std::vector<Arcade::Entity>(width, 0));
 }
@@ -50,38 +54,93 @@ Arcade::Entity GridComponent::getEntityAtCell(size_t x, size_t y) const {
 }
 
 void GridComponent::loadDefaultMap() {
-    // Default PacMan map (small for simplicity)
-    // W = Wall, F = Food, P = Power Pill, S = PacMan Spawn, G = Ghost Spawn, . = Empty
+    // W = Wall, F = Food, P = Power Pill,
+    // S = PacMan Spawn, G = Ghost Spawn, . = Empty
+    // const std::vector<std::string> map = {
+    //     "WWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+    //     "WFFFFFFFFFFFFWWFFFFFFFFFFFFW",
+    //     "WFWWWWFWWWWWFWWFWWWWWFWWWWFW",
+    //     "WPWWWWFWWWWWFWWFWWWWWFWWWWPW",
+    //     "WFWWWWFWWWWWFWWFWWWWWFWWWWFW",
+    //     "WFFFFFFFFFFFFFFFFFFFFFFFFFFW",
+    //     "WFWWWWFWWFWWWWWWWWFWWFWWWWFW",
+    //     "WFWWWWFWWFWWWWWWWWFWWFWWWWFW",
+    //     "WFFFFFFWWFFFFWWFFFFWWFFFFFFW",
+    //     "WWWWWWFWWWWW.WW.WWWWWFWWWWWW",
+    //     "WWWWWWFWWWWW.WW.WWWWWFWWWWWW",
+    //     "WWWWWWFWW..........WWFWWWWWW",
+    //     "WWWWWWFWW..WW..WW..WWFWWWWWW",
+    //     "WWWWWWFWW..W.GG.W..WWFWWWWWW",
+    //     "FFFFFFF....W.GG.W....FFFFFFF",
+    //     "WWWWWWFWW..W.GG.W..WWFWWWWWW",
+    //     "WWWWWWFWW..WWWWWW..WWFWWWWWW",
+    //     "WWWWWWFWW..........WWFWWWWWW",
+    //     "WWWWWWFWW.WWWWWWWW.WWFWWWWWW",
+    //     "WWWWWWFWW.WWWWWWWW.WWFWWWWWW",
+    //     "WFFFFFFFFFFFFWWFFFFFFFFFFFFW",
+    //     "WFWWWWFWWWWWFWWFWWWWWFWWWWFW",
+    //     "WFWWWWFWWWWWFWWFWWWWWFWWWWFW",
+    //     "WPFFWWFFFFFFFFFFFFFFFFWWFFPW",
+    //     "WWWFWWFWWFWWWWWWWWFWWFWWFWWW",
+    //     "WWWFWWFWWFWWWWWWWWFWWFWWFWWW",
+    //     "WFFFFFFWWFFFFWWFFFFWWFFFFFFW",
+    //     "WFWWWWWWWWWWFWWFWWWWWWWWWWFW",
+    //     "WFWWWWWWWWWWFWWFWWWWWWWWWWFW",
+    //     "WFFFFFFFFFFFFFFFFFFFFFFFFFFW",
+    //     "WWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+    // };
+
     const std::vector<std::string> map = {
-        "WWWWWWWWWWWWWWWWWWWW",
-        "WFFFFFFFFFFFFFFFFFFW",
-        "WFWWWWFWWWWWWFWWWWFW",
-        "WPWWWWFWWWWWWFWWWWPW",
-        "WFFFFFFFFFFFFFFFFFFW",
-        "WFWWWWFWWWWWWFWWWWFW",
-        "FFFFFFFFFFFFFFFFFFPF",
-        "WWWWWFWWWFWWWFWWWWWW",
-        "WWWWWFWFFFFFWFWWWWWW",
-        "WWWWWFWGGFGGWFWWWWWW",
-        "WWWWWFWWWWWWWFWWWWWW",
-        "FFFFFFFFFSFFFFFFFFFF",
-        "WFWWWFWWWWWWWFWWWWFW",
-        "WFWWWFWWWWWWWFWWWWFW",
-        "WPFFFFFFFFFFFFFFFFPW",
-        "WWWWWWWWWWWWWWWWWWWW"
+        "WWWWWWWWWWWWWWWWWWWWWWWWWWW",
+        "WFFFFFFFFFFFFWFFFFFFFFFFFFW",
+        "WFWWWWFWWWWWFWFWWWWWFWWWWFW",
+        "WPWWWWFWWWWWFWFWWWWWFWWWWPW",
+        "WFWWWWFWWWWWFWFWWWWWFWWWWFW",
+        "WFFFFFFFFFFFFFFFFFFFFFFFFFW",
+        "WFWWWWFWWFWWWWWWWFWWFWWWWFW",
+        "WFWWWWFWWFWWWWWWWFWWFWWWWFW",
+        "WFFFFFFWWFFFFWFFFFWWFFFFFFW",
+        "WWWWWWFWWWWW.W.WWWWWFWWWWWW",
+        "WWWWWWFWWWWW.W.WWWWWFWWWWWW",
+        "WWWWWWFWW.........WWFWWWWWW",
+        "WWWWWWFWW.WWW.WWW.WWFWWWWWW",
+        "WWWWWWFWW.WGGGGGW.WWFWWWWWW",
+        "FFFFFFF....GGGGG....FFFFFFF",
+        "WWWWWWFWW.WGGGGGW.WWFWWWWWW",
+        "WWWWWWFWW.WWW.WWW.WWFWWWWWW",
+        "WWWWWWFWW....S....WWFWWWWWW",
+        "WWWWWWFWW.........WWFWWWWWW",
+        "WWWWWWFWW.WWWWWWW.WWFWWWWWW",
+        "WFFFFFFFFFFFFWFFFFFFFFFFFFW",
+        "WFWWWWFWWWWWFWFWWWWWFWWWWFW",
+        "WFWWWWFWWWWWFWFWWWWWFWWWWFW",
+        "WPFFWWFFFFFFFFFFFFFFFWWFFPW",
+        "WWWFWWFWWFWWWWWWWFWWFWWFWWW",
+        "WWWFWWFWWFWWWWWWWFWWFWWFWWW",
+        "WFFFFFFWWFFFFWFFFFWWFFFFFFW",
+        "WFWWWWWWWWWWFWFWWWWWWWWWWFW",
+        "WFWWWWWWWWWWFWFWWWWWWWWWWFW",
+        "WFFFFFFFFFFFFFFFFFFFFFFFFFW",
+        "WWWWWWWWWWWWWWWWWWWWWWWWWWW"
     };
 
+    size_t expected_width = map[0].size();
+    for (const auto& row : map) {
+        if (row.size() != expected_width) {
+            throw std::runtime_error("Map has inconsistent row lengths");
+        }
+    }
+
+    _grid.clear();
+    _entityGrid.clear();
+    _foodCount = 0;
     _height = map.size();
-    _width = map[0].size();
+    _width = expected_width;
     _grid.resize(_height, std::vector<CellType>(_width, CellType::EMPTY));
     _entityGrid.resize(_height, std::vector<Arcade::Entity>(_width, 0));
-    _foodCount = 0;
 
     for (size_t y = 0; y < _height; y++) {
         for (size_t x = 0; x < _width; x++) {
-            if (x >= map[y].size()) {
-                continue;
-            }
             char cell = map[y][x];
             switch (cell) {
                 case 'W':
@@ -107,7 +166,8 @@ void GridComponent::loadDefaultMap() {
             }
         }
     }
+    _totalFoodCount = _foodCount;
 }
 
-} // namespace PacMan
-} // namespace Arcade
+}  // namespace PacMan
+}  // namespace Arcade

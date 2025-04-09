@@ -27,7 +27,7 @@ namespace Arcade {
 namespace PacMan {
 
 class PacmanGame : public IGameModule {
-public:
+ public:
     PacmanGame() : _gameOver(false), _gameWon(false) {}
     ~PacmanGame() override;
 
@@ -38,9 +38,10 @@ public:
     bool isGameOver() const override;
     bool hasWon() const override;
     void stop() override;
+    int getScore() const override { return 1;};
     std::string getSpecialCompSprite(size_t id) const override;
 
-private:
+ private:
     void createGame();
     void checkGameStatus();
 
@@ -53,7 +54,7 @@ private:
     bool _gameWon;
 };
 
-} // namespace PacMan
-} // namespace Arcade
+}  // namespace PacMan
+}  // namespace Arcade
 
-#endif // SRC_GAMES_PACMAN_PACMAN_HPP_
+#endif  // SRC_GAMES_PACMAN_PACMAN_HPP_

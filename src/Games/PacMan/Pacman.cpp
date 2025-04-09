@@ -9,6 +9,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <string>
 #include "Games/PacMan/Pacman.hpp"
 #include "Games/PacMan/Components/PacmanComponent.hpp"
 #include "Games/PacMan/Components/GhostComponent.hpp"
@@ -36,42 +37,37 @@ PacmanGame::~PacmanGame() {
 }
 
 void PacmanGame::init(std::shared_ptr<IEventManager> eventManager,
-                    std::shared_ptr<IComponentManager> componentManager,
-                    std::shared_ptr<IEntityManager> entityManager) {
+std::shared_ptr<IComponentManager> componentManager,
+std::shared_ptr<IEntityManager> entityManager) {
     _gameOver = false;
     _gameWon = false;
     _eventManager = eventManager;
     _componentManager = componentManager;
     _entityManager = entityManager;
 
-    // Create game components and entities
     createGame();
 
-    // Initialize systems
     _eventSystem = std::make_shared<EventSubSystem>(
         _componentManager, _entityManager, _eventManager);
-    _systems.push_back(std::make_shared<GameLogic>(_componentManager, _entityManager));
+    _systems.push_back(std::make_shared<GameLogic>(_componentManager,
+        _entityManager));
     _systems.push_back(_eventSystem);
 }
 
 void PacmanGame::createGame() {
-    // Create factory and initialize game elements
     PacmanFactory factory(_entityManager, _componentManager);
-    factory.initializeGame(32.0f); // 30px cell size
+    factory.initializeGame(16.0f);
 }
 
 void PacmanGame::update() {
-    // Check game status before updating systems
     checkGameStatus();
 
-    // Update all registered systems
     for (const auto& system : _systems) {
         system->update();
     }
 }
 
 void PacmanGame::checkGameStatus() {
-    // Find grid entity to check game status
     Arcade::Entity gridEntity = 0;
     for (const auto& [entity, name] : _entityManager->getEntities()) {
         if (name == "Grid") {
@@ -80,24 +76,21 @@ void PacmanGame::checkGameStatus() {
         }
     }
 
-    if (!gridEntity)
-        return;
-
     auto gridComp = std::dynamic_pointer_cast<GridComponent>(
-        _componentManager->getComponentByType(gridEntity, static_cast<ComponentType>(1000)));
+        _componentManager->getComponentByType(gridEntity,
+            static_cast<ComponentType>(1000)));
 
     if (!gridComp)
         return;
 
-    // Update game status
     _gameOver = gridComp->isGameOver();
     _gameWon = gridComp->isGameWon();
 
-    // Find pacman entity to check lives
     for (const auto& [entity, name] : _entityManager->getEntities()) {
         if (name == "Pacman") {
             auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
-                _componentManager->getComponentByType(entity, static_cast<ComponentType>(1001)));
+                _componentManager->getComponentByType(entity,
+                    static_cast<ComponentType>(1001)));
             if (pacmanComp && pacmanComp->isDead()) {
                 _gameOver = true;
             }
@@ -118,7 +111,7 @@ void PacmanGame::stop() {
     _gameOver = true;
     _systems.clear();
     _eventSystem.reset();
-    
+
     if (_entityManager && _componentManager) {
         for (const auto& [entity, name] : _entityManager->getEntities()) {
             _entityManager->destroyEntity(entity);
@@ -130,11 +123,11 @@ std::string PacmanGame::getSpecialCompSprite(size_t id) const {
     switch (id) {
         case static_cast<size_t>(ComponentType::SPRITE):
             return "assets/pacman/pacman.png";
-        case 1001: // PacmanComponent
+        case 1001:
             return "assets/pacman/pacman.png";
-        case 1002: // GhostComponent
+        case 1002:
             return "assets/pacman/ghost_red.png";
-        case 1003: // FoodComponent
+        case 1003:
             return "assets/pacman/dot.png";
         default:
             return "";
@@ -147,7 +140,8 @@ extern "C" {
         try {
             return new PacMan::PacmanGame();
         } catch (const std::exception& e) {
-            std::cerr << "Error creating PacmanGame module: " << e.what() << std::endl;
+            std::cerr << "Error creating PacmanGame module: "
+                << e.what() << std::endl;
             return nullptr;
         }
     }
@@ -157,5 +151,5 @@ extern "C" {
     }
 }
 
-} // namespace PacMan
-} // namespace Arcade
+}  // namespace PacMan
+}  // namespace Arcade

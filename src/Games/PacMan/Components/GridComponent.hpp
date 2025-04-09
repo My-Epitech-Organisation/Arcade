@@ -29,12 +29,12 @@ enum class CellType {
 };
 
 class GridComponent : public Arcade::IComponent {
-public:
+ public:
     GridComponent(size_t width, size_t height);
     ~GridComponent() = default;
 
     ComponentType getType() const override {
-        return static_cast<ComponentType>(1000); // Custom component type
+        return static_cast<ComponentType>(1000);
     }
 
     void setCellType(size_t x, size_t y, CellType type);
@@ -46,6 +46,7 @@ public:
     void setName(const std::string& name) { _name = name; }
     const std::string& getName() const { return _name; }
     size_t getFoodCount() const { return _foodCount; }
+    size_t getTotalFoodCount() const { return _totalFoodCount; }
     void setFoodCount(size_t count) { _foodCount = count; }
     void decrementFoodCount() { if (_foodCount > 0) _foodCount--; }
     void setGameOver(bool state) { _gameOver = state; }
@@ -53,19 +54,23 @@ public:
     void setGameWon(bool state) { _gameWon = state; }
     bool isGameWon() const { return _gameWon; }
     void loadDefaultMap();
+    void setCellSize(float cellSize) { _cellSize = cellSize; }
+    float getCellSize() const { return _cellSize; }
 
-private:
+ private:
     std::string _name;
     size_t _width;
     size_t _height;
     size_t _foodCount;
+    size_t _totalFoodCount = 0;
     bool _gameOver;
     bool _gameWon;
     std::vector<std::vector<CellType>> _grid;
     std::vector<std::vector<Arcade::Entity>> _entityGrid;
+    float _cellSize;
 };
 
-} // namespace PacMan
-} // namespace Arcade
+}  // namespace PacMan
+}  // namespace Arcade
 
-#endif // SRC_GAMES_PACMAN_COMPONENTS_GRIDCOMPONENT_HPP_
+#endif  // SRC_GAMES_PACMAN_COMPONENTS_GRIDCOMPONENT_HPP_

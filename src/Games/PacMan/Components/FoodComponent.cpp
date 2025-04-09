@@ -12,7 +12,7 @@ namespace Arcade {
 namespace PacMan {
 
 FoodComponent::FoodComponent(FoodType type)
-    : _foodType(type), _eaten(false), _gridX(0), _gridY(0) {
+: _foodType(type), _eaten(false), _gridX(0), _gridY(0) {
 }
 
 int FoodComponent::getPoints() const {
@@ -26,5 +26,5 @@ int FoodComponent::getPoints() const {
     }
 }
 
-} // namespace PacMan
-} // namespace Arcade
+}  // namespace PacMan
+}  // namespace Arcade

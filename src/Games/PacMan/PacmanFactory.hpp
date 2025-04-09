@@ -24,7 +24,7 @@ namespace Arcade {
 namespace PacMan {
 
 class PacmanFactory {
-public:
+ public:
     PacmanFactory(
         std::shared_ptr<Arcade::IEntityManager> entityManager,
         std::shared_ptr<Arcade::IComponentManager> componentManager)
@@ -32,22 +32,28 @@ public:
 
     Arcade::Entity createGrid(size_t width, size_t height);
     Arcade::Entity createPacman(float x, float y, size_t gridX, size_t gridY);
-    Arcade::Entity createGhost(float x, float y, size_t gridX, size_t gridY, GhostType type);
-    Arcade::Entity createFood(float x, float y, size_t gridX, size_t gridY, FoodType type);
+    Arcade::Entity createGhost(float x, float y, size_t gridX, size_t gridY,
+        GhostType type);
+    Arcade::Entity createFood(float x, float y, size_t gridX, size_t gridY,
+        FoodType type);
     Arcade::Entity createWall(float x, float y, size_t gridX, size_t gridY);
     void initializeGame(float cellSize);
 
-private:
+ private:
     std::shared_ptr<Arcade::IEntityManager> _entityManager;
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
     std::string getGhostSpritePath(GhostType type);
-    void createFoodEntities(std::shared_ptr<GridComponent> grid, float cellSize);
-    void createWallEntities(std::shared_ptr<GridComponent> grid, float cellSize);
-    void createGhostEntities(std::shared_ptr<GridComponent> grid, float cellSize);
-    void createPacmanEntity(std::shared_ptr<GridComponent> grid, float cellSize);
+    void createFoodEntities(std::shared_ptr<GridComponent> grid,
+        float cellSize, Arcade::Entity gridEntity);
+    void createWallEntities(std::shared_ptr<GridComponent> grid,
+        float cellSize, Arcade::Entity gridEntity);
+    void createGhostEntities(std::shared_ptr<GridComponent> grid,
+        float cellSize, Arcade::Entity gridEntity);
+    void createPacmanEntity(std::shared_ptr<GridComponent> grid,
+        float cellSize, Arcade::Entity gridEntity);
 };
 
-} // namespace PacMan
-} // namespace Arcade
+}  // namespace PacMan
+}  // namespace Arcade
 
-#endif // SRC_GAMES_PACMAN_PACMANFACTORY_HPP_
+#endif  // SRC_GAMES_PACMAN_PACMANFACTORY_HPP_

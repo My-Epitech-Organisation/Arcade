@@ -25,12 +25,12 @@ enum class Direction {
 };
 
 class PacmanComponent : public Arcade::IComponent {
-public:
-    PacmanComponent(int lives = 3, int score = 0);
+ public:
+    explicit PacmanComponent(int lives = 3, int score = 0);
     ~PacmanComponent() = default;
 
     ComponentType getType() const override {
-        return static_cast<ComponentType>(1001); // Custom component type
+        return static_cast<ComponentType>(1001);
     }
 
     Direction getCurrentDirection() const { return _currentDirection; }
@@ -48,13 +48,19 @@ public:
     const std::string& getName() const { return _name; }
     size_t getGridX() const { return _gridX; }
     size_t getGridY() const { return _gridY; }
-    void setGridPosition(size_t x, size_t y) { _gridX = x; _gridY = y; }
+    void setGridPosition(size_t x, size_t y) { _gridX = x;
+        _gridY = y; }
     bool canMove() const { return _canMove; }
     void setCanMove(bool canMove) { _canMove = canMove; }
-    void resetMovementTimer() { _movementTimer = 0; }
     void updateMovementTimer(float deltaTime);
+    float getMovementTimer() const { return _movementTimer; }
+    float getMovementThreshold() const { return _movementThreshold; }
+    void resetMovementTimer() { _movementTimer = 0.0f; }
+    void addGameTime(float deltaTime) { _totalGameTime += deltaTime; }
+    void setMovementThreshold(float threshold) {
+        _movementThreshold = threshold; }
 
-private:
+ private:
     std::string _name;
     Direction _currentDirection;
     Direction _nextDirection;
@@ -63,11 +69,13 @@ private:
     size_t _gridX;
     size_t _gridY;
     bool _canMove;
-    float _movementTimer;
     float _movementCooldown;
+    float _movementTimer = 0.0f;
+    float _movementThreshold = 0.20f;
+    float _totalGameTime = 0.0f;
 };
 
-} // namespace PacMan
-} // namespace Arcade
+}  // namespace PacMan
+}  // namespace Arcade
 
-#endif // SRC_GAMES_PACMAN_COMPONENTS_PACMANCOMPONENT_HPP_
+#endif  // SRC_GAMES_PACMAN_COMPONENTS_PACMANCOMPONENT_HPP_

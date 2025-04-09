@@ -22,12 +22,12 @@ enum class FoodType {
 };
 
 class FoodComponent : public Arcade::IComponent {
-public:
+ public:
     explicit FoodComponent(FoodType type = FoodType::NORMAL_DOT);
     ~FoodComponent() = default;
 
     ComponentType getType() const override {
-        return static_cast<ComponentType>(1003); // Custom component type
+        return static_cast<ComponentType>(1003);
     }
 
     FoodType getFoodType() const { return _foodType; }
@@ -38,9 +38,10 @@ public:
     const std::string& getName() const { return _name; }
     size_t getGridX() const { return _gridX; }
     size_t getGridY() const { return _gridY; }
-    void setGridPosition(size_t x, size_t y) { _gridX = x; _gridY = y; }
+    void setGridPosition(size_t x, size_t y) { _gridX = x;
+        _gridY = y; }
 
-private:
+ private:
     std::string _name;
     FoodType _foodType;
     bool _eaten;
@@ -48,7 +49,7 @@ private:
     size_t _gridY;
 };
 
-} // namespace PacMan
-} // namespace Arcade
+}  // namespace PacMan
+}  // namespace Arcade
 
-#endif // SRC_GAMES_PACMAN_COMPONENTS_FOODCOMPONENT_HPP_
+#endif  // SRC_GAMES_PACMAN_COMPONENTS_FOODCOMPONENT_HPP_
