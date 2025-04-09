@@ -16,6 +16,7 @@
 bool NCurses::NCursesEvent::isKeyPressed(int keyCode) const {
     static int lastKey = ERR;
     int key = lastKey;
+    nodelay(stdscr, TRUE);
 
     if (key == ERR) {
         key = getch();

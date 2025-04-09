@@ -39,6 +39,7 @@ void NCurses::NCursesWindow::createWindow(int width, int height) {
         endwin();
         throw std::runtime_error("Failed to create NCurses window");
     }
+    nodelay(_window, TRUE);
     _windowHeight = height;
     _windowWidth = width;
     _isOpen = true;
