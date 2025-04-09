@@ -122,8 +122,6 @@ void NCursesModule::drawEntity(int x, int y, char symbol) {
 void NCursesModule::drawTexture(int x, int y, const std::string &textureId) {
     int charX = pixelToCharX(x);
     int charY = pixelToCharY(y);
-
-    // Implementation (if any) would go here
 }
 
 void NCursesModule::drawText(const std::string &text,
@@ -163,7 +161,7 @@ void NCursesModule::pollEvents() {
         mousemask(currentMouseMask, NULL);
 
         calculateRatio();
-        _yPositionMap.clear(); // Reset the mapping on resize
+        _yPositionMap.clear();
 
         clearScreen();
         refreshScreen();
