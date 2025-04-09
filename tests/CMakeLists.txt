@@ -11,9 +11,6 @@ if(NOT TARGET arcade_core)
 endif()
 
 set(LIB
-    ${CMAKE_SOURCE_DIR}/lib/arcade_game1.so
-    ${CMAKE_SOURCE_DIR}/lib/arcade_game2.so
-    ${CMAKE_SOURCE_DIR}/lib/arcade_game3.so
     ${CMAKE_SOURCE_DIR}/lib/arcade_sfml.so
     ${CMAKE_SOURCE_DIR}/lib/arcade_sdl2.so
     ${CMAKE_SOURCE_DIR}/lib/arcade_ncurses.so
