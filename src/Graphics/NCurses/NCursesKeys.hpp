@@ -8,8 +8,8 @@
 
 #ifndef SRC_GRAPHICS_NCURSES_NCURSESKEYS_HPP_
     #define SRC_GRAPHICS_NCURSES_NCURSESKEYS_HPP_
-    #include <unordered_map>
     #include <ncurses.h>
+    #include <unordered_map>
     #include "Models/KeysType.hpp"
     #include "Models/MouseButtonType.hpp"
 
@@ -18,7 +18,8 @@ namespace Arcade {
 class NCursesKeyMap {
  private:
     static const std::unordered_map<Keys, int> _keyMap;
-    static const std::unordered_map<MouseButton, unsigned long> _mouseButtonMap;
+    static const std::unordered_map<MouseButton,
+        uint64_t> _mouseButtonMap;
 
  public:
     static int getNCursesKey(Keys key) {
@@ -26,7 +27,7 @@ class NCursesKeyMap {
         return (it != _keyMap.end()) ? it->second : ERR;
     }
 
-    static unsigned long getNCursesButton(MouseButton button) {
+    static uint64_t getNCursesButton(MouseButton button) {
         auto it = _mouseButtonMap.find(button);
         return (it != _mouseButtonMap.end()) ? it->second : 0;
     }
@@ -72,7 +73,8 @@ const std::unordered_map<Keys, int> NCursesKeyMap::_keyMap = {
     {Keys::Z, 'z'}
 };
 
-const std::unordered_map<MouseButton, unsigned long> NCursesKeyMap::_mouseButtonMap = {
+const std::unordered_map<MouseButton, uint64_t>
+NCursesKeyMap::_mouseButtonMap = {
     {MouseButton::LEFT, BUTTON1_PRESSED},
     {MouseButton::MIDDLE, BUTTON2_PRESSED},
     {MouseButton::RIGHT, BUTTON3_PRESSED},

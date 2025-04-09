@@ -145,7 +145,7 @@ void NCursesModule::pollEvents() {
     int ch = _window.getChar();
     if (ch == 27) {
         ungetch(ch);
-        _event.storeKeyEvent(ch); // Store escape key press
+        _event.storeKeyEvent(ch);  // Store escape key press
     } else if (ch == KEY_RESIZE) {
         int newMaxY, newMaxX;
         endwin();

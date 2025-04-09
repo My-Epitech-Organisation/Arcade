@@ -41,7 +41,8 @@ bool NCurses::NCursesEvent::isMouseButtonPressed(int button) const {
     }
 
     auto arcadeButton = static_cast<Arcade::MouseButton>(button);
-    unsigned long ncursesButton = Arcade::NCursesKeyMap::getNCursesButton(arcadeButton);
+    uint64_t ncursesButton =
+        Arcade::NCursesKeyMap::getNCursesButton(arcadeButton);
 
     return (_lastMouseEvent.bstate & ncursesButton) != 0;
 }

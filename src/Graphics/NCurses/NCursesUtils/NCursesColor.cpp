@@ -31,11 +31,13 @@ void NCurses::NCursesColor::initColors() {
             addColorPair("white", COLOR_WHITE, COLOR_BLACK);
             addColorPair("black", COLOR_BLACK, COLOR_BLACK);
 
-            for (int i = 0; i <= static_cast<int>(Arcade::Color::NOCOLOR); i++) {
+            for (int i = 0;
+                 i <= static_cast<int>(Arcade::Color::NOCOLOR); i++) {
                 addColorPairByEnum(static_cast<Arcade::Color>(i));
             }
         } catch (const std::exception &e) {
-            std::cerr << "Failed to initialize color pairs: " << e.what() << std::endl;
+            std::cerr << "Failed to initialize color pairs: "
+                      << e.what() << std::endl;
         }
     } else {
         std::cerr << "Terminal does not support colors" << std::endl;
