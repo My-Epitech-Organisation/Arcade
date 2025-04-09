@@ -36,25 +36,25 @@ void NCursesColor::initColorPairs() {
                       COLOR_MAGENTA, COLOR_BLACK);
             init_pair(COLOR_PAIR_OFFSET + static_cast<int>(Arcade::Color::CYAN),
                       COLOR_CYAN, COLOR_BLACK);
-            
+
             // Colors that need approximation in NCurses
             init_pair(COLOR_PAIR_OFFSET + static_cast<int>(Arcade::Color::ORANGE),
-                      COLOR_YELLOW, COLOR_BLACK);  // Better orange approximation
+                      COLOR_YELLOW, COLOR_BLACK);
             init_pair(COLOR_PAIR_OFFSET + static_cast<int>(Arcade::Color::BROWN),
-                      COLOR_RED, COLOR_BLACK);  // Approximation for brown
+                      COLOR_RED, COLOR_BLACK);
             init_pair(COLOR_PAIR_OFFSET + static_cast<int>(Arcade::Color::GREY),
-                      COLOR_WHITE, COLOR_BLACK);  // Approximation for grey
-            
+                      COLOR_WHITE, COLOR_BLACK);
+
             // Basic colors
             init_pair(COLOR_PAIR_OFFSET + static_cast<int>(Arcade::Color::WHITE),
                       COLOR_WHITE, COLOR_BLACK);
             init_pair(COLOR_PAIR_OFFSET + static_cast<int>(Arcade::Color::BLACK),
                       COLOR_BLACK, COLOR_BLACK);
-            
+
             // Special case for no color
             init_pair(COLOR_PAIR_OFFSET + static_cast<int>(Arcade::Color::NOCOLOR),
-                      COLOR_WHITE, COLOR_BLACK);  // Default to white for NOCOLOR
-                      
+                      COLOR_WHITE, COLOR_BLACK);
+
             _initialized = true;
         } catch (const std::exception &e) {
             std::cerr << "Failed to initialize color pairs: " << e.what() << std::endl;
