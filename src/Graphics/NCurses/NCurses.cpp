@@ -120,8 +120,7 @@ void NCursesModule::drawEntity(int x, int y, char symbol) {
 }
 
 void NCursesModule::drawTexture(int x, int y, const std::string &textureId) {
-    int charX = pixelToCharX(x);
-    int charY = pixelToCharY(y);
+    // Textures are not supported in NCurses
 }
 
 void NCursesModule::drawText(const std::string &text,
