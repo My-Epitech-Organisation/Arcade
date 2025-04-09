@@ -11,6 +11,9 @@ if(NOT TARGET arcade_core)
 endif()
 
 set(LIB
+    ${CMAKE_SOURCE_DIR}/lib/arcade_game1.so
+    ${CMAKE_SOURCE_DIR}/lib/arcade_game2.so
+    ${CMAKE_SOURCE_DIR}/lib/arcade_game3.so
     ${CMAKE_SOURCE_DIR}/lib/arcade_sfml.so
     ${CMAKE_SOURCE_DIR}/lib/arcade_sdl2.so
     ${CMAKE_SOURCE_DIR}/lib/arcade_ncurses.so
@@ -22,7 +25,7 @@ add_executable(my_tests
 )
 add_dependencies(my_tests arcade_core)
 
-add_dependencies(my_tests arcade_sfml arcade_sdl2 arcade_ncurses)
+add_dependencies(my_tests arcade_game1 arcade_game2 arcade_game3 arcade_sfml arcade_sdl2 arcade_ncurses)
 
 target_link_libraries(my_tests PRIVATE ${LIB} gtest gtest_main)
 include(GoogleTest)
