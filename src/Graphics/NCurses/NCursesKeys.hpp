@@ -38,8 +38,8 @@ const std::unordered_map<Keys, int> NCursesKeyMap::_keyMap = {
     {Keys::DOWN, KEY_DOWN},
     {Keys::LEFT, KEY_LEFT},
     {Keys::RIGHT, KEY_RIGHT},
-    {Keys::ENTER, 10},  // Enter key in ncurses
-    {Keys::ESC, 27},    // Escape key
+    {Keys::ENTER, '\n'},
+    {Keys::ESC, 27},
     {Keys::NUM1, '1'},
     {Keys::NUM2, '2'},
     {Keys::NUM3, '3'},
@@ -72,14 +72,12 @@ const std::unordered_map<Keys, int> NCursesKeyMap::_keyMap = {
     {Keys::Z, 'z'}
 };
 
-// NCurses uses BUTTON1_PRESSED, BUTTON2_PRESSED, etc. with the mmask_t type
-// when mouse events are enabled with mousemask()
 const std::unordered_map<MouseButton, int> NCursesKeyMap::_mouseButtonMap = {
-    {MouseButton::LEFT, BUTTON1_PRESSED},
-    {MouseButton::MIDDLE, BUTTON3_PRESSED},
-    {MouseButton::RIGHT, BUTTON2_PRESSED},
-    {MouseButton::X1, BUTTON4_PRESSED},
-    {MouseButton::X2, BUTTON5_PRESSED}
+    {MouseButton::LEFT, 0},
+    {MouseButton::MIDDLE, 1},
+    {MouseButton::RIGHT, 2},
+    {MouseButton::X1, 3},
+    {MouseButton::X2, 4}
 };
 
 }  // namespace Arcade
