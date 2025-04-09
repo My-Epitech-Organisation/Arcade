@@ -22,13 +22,10 @@ NCursesModule::~NCursesModule() {
 void NCursesModule::calculateRatio() {
     int maxY, maxX;
     getmaxyx(stdscr, maxY, maxX);
-    
+
     if (maxX > 0 && maxY > 0) {
         _pixelToCharX = static_cast<float>(maxX) / _referencePixelWidth;
-        // For Y coordinates, we'll use the map instead of a direct ratio
-        _pixelToCharY = 1.0f; // Keep it at 1.0 for reference
-        
-        // Clear the position map when recalculating
+        _pixelToCharY = 1.0f;
         _yPositionMap.clear();
     }
 }
@@ -38,36 +35,24 @@ int NCursesModule::pixelToCharX(int x) const {
 }
 
 int NCursesModule::pixelToCharY(int y) {
-    // If we have this Y position mapped already, return the mapped position
     if (_yPositionMap.find(y) != _yPositionMap.end()) {
         return _yPositionMap[y];
     }
-    
-    // Otherwise, calculate a new position
+
     int nextY;
-    
     if (_yPositionMap.empty()) {
-        // First element goes at line 1
         nextY = 1;
     } else {
-        // Find the last used Y position
         auto lastItem = _yPositionMap.rbegin();
-        // Calculate next position based on the key difference
         int keyDiff = y - lastItem->first;
-        
         if (keyDiff < 10) {
-            // If positions are very close, use same line
             nextY = lastItem->second;
         } else if (keyDiff < 30) {
-            // Medium distance, use next line
             nextY = lastItem->second + 1;
         } else {
-            // Large distance, add more spacing
             nextY = lastItem->second + 2;
         }
     }
-    
-    // Store in map and return
     _yPositionMap[y] = nextY;
     return nextY;
 }
@@ -88,9 +73,8 @@ void NCursesModule::init(float width, float height) {
             std::cerr << "Terminal does not support colors" << std::endl;
         }
 
-        // Calculate the pixel-to-character ratio after window creation
         calculateRatio();
-        _yPositionMap.clear(); // Ensure map is cleared on initialization
+        _yPositionMap.clear();
 
         clearScreen();
         refreshScreen();
@@ -123,7 +107,7 @@ void NCursesModule::refreshScreen() {
 void NCursesModule::drawEntity(int x, int y, char symbol) {
     int charX = pixelToCharX(x);
     int charY = pixelToCharY(y);
-    
+
     if (!_window.isOpen() || charX < 0 || charY < 0 ||
         charX >= _window.getWidth() || charY >= _window.getHeight()) {
         return;
@@ -138,7 +122,7 @@ void NCursesModule::drawEntity(int x, int y, char symbol) {
 void NCursesModule::drawTexture(int x, int y, const std::string &textureId) {
     int charX = pixelToCharX(x);
     int charY = pixelToCharY(y);
-    
+
     // Implementation (if any) would go here
 }
 
@@ -146,7 +130,7 @@ void NCursesModule::drawText(const std::string &text,
     int x, int y, Arcade::Color color) {
     int charX = pixelToCharX(x);
     int charY = pixelToCharY(y);
-    
+
     if (!_window.isOpen() || charX < 0 || charY < 0 ||
         charX >= _window.getWidth() || charY >= _window.getHeight()) {
         return;
@@ -177,10 +161,10 @@ void NCursesModule::pollEvents() {
         _window.createWindow(_windowWidth, _windowHeight);
         _window.enableKeypad(true);
         mousemask(currentMouseMask, NULL);
-        
+
         calculateRatio();
         _yPositionMap.clear(); // Reset the mapping on resize
-        
+
         clearScreen();
         refreshScreen();
     } else if (ch == KEY_MOUSE) {
