@@ -52,6 +52,46 @@ std::shared_ptr<PacmanComponent> pacman) {
         Direction dirs[] = {Direction::UP, Direction::DOWN,
             Direction::LEFT, Direction::RIGHT};
         ghostComp->setCurrentDirection(dirs[rand_r(&seed) % 4]);
+    } else if (ghostComp->getState() == GhostState::RETURNING) {
+        for (size_t y = 0; y < grid->getHeight(); y++) {
+            for (size_t x = 0; x < grid->getWidth(); x++) {
+                if (grid->getCellType(x, y) == CellType::GHOST_SPAWN) {
+                    targetX = x;
+                    targetY = y;
+                    break;
+                }
+            }
+        }
+
+        if (ghostComp->getGridX() == targetX &&
+            ghostComp->getGridY() == targetY) {
+            ghostComp->setState(GhostState::NORMAL);
+            ghostComp->setCurrentDirection(Direction::NONE);
+
+            auto ghostSprite = std::dynamic_pointer_cast<SpriteComponent>(
+                _componentManager->getComponentByType(entity,
+                    ComponentType::SPRITE));
+            if (ghostSprite) {
+                switch (ghostComp->getGhostType()) {
+                    case GhostType::RED:
+                        ghostSprite->spritePath = "assets/pacman/ghost_red.png";
+                        break;
+                    case GhostType::PINK:
+                        ghostSprite->spritePath =
+                            "assets/pacman/ghost_pink.png";
+                        break;
+                    case GhostType::BLUE:
+                        ghostSprite->spritePath =
+                            "assets/pacman/ghost_cyan.png";
+                        break;
+                    case GhostType::ORANGE:
+                        ghostSprite->spritePath =
+                            "assets/pacman/ghost_orange.png";
+                        break;
+                }
+            }
+        }
+        ghostComp->setTarget(targetX, targetY);
     } else {
         if (ghostComp->getMode() == GhostMode::SCATTER) {
             targetX = ghostComp->getHomeCornerX();
@@ -160,6 +200,7 @@ std::shared_ptr<PacmanComponent> pacman) {
         }
         ghostComp->setTarget(targetX, targetY);
     }
+
 
     Direction bestDirection = ghostComp->getCurrentDirection();
     if (ghostComp->getState() != GhostState::SCARED) {
@@ -610,7 +651,7 @@ pacman, std::shared_ptr<GridComponent> grid) {
                 if (ghostComp->getState() == GhostState::SCARED) {
                     ghostComp->setState(GhostState::RETURNING);
                     pacman->addScore(200);
-                } else {
+                } else if (ghostComp->getState() != GhostState::RETURNING) {
                     pacman->decrementLives();
                     if (pacman->getLives() <= 0) {
                         grid->setGameOver(true);
