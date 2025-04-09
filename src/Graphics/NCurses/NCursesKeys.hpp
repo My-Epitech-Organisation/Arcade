@@ -18,7 +18,7 @@ namespace Arcade {
 class NCursesKeyMap {
  private:
     static const std::unordered_map<Keys, int> _keyMap;
-    static const std::unordered_map<MouseButton, int> _mouseButtonMap;
+    static const std::unordered_map<MouseButton, unsigned long> _mouseButtonMap;
 
  public:
     static int getNCursesKey(Keys key) {
@@ -26,7 +26,7 @@ class NCursesKeyMap {
         return (it != _keyMap.end()) ? it->second : ERR;
     }
 
-    static int getNCursesButton(MouseButton button) {
+    static unsigned long getNCursesButton(MouseButton button) {
         auto it = _mouseButtonMap.find(button);
         return (it != _mouseButtonMap.end()) ? it->second : 0;
     }
@@ -72,12 +72,12 @@ const std::unordered_map<Keys, int> NCursesKeyMap::_keyMap = {
     {Keys::Z, 'z'}
 };
 
-const std::unordered_map<MouseButton, int> NCursesKeyMap::_mouseButtonMap = {
-    {MouseButton::LEFT, 0},
-    {MouseButton::MIDDLE, 1},
-    {MouseButton::RIGHT, 2},
-    {MouseButton::X1, 3},
-    {MouseButton::X2, 4}
+const std::unordered_map<MouseButton, unsigned long> NCursesKeyMap::_mouseButtonMap = {
+    {MouseButton::LEFT, BUTTON1_PRESSED},
+    {MouseButton::MIDDLE, BUTTON2_PRESSED},
+    {MouseButton::RIGHT, BUTTON3_PRESSED},
+    {MouseButton::X1, BUTTON4_PRESSED},
+    {MouseButton::X2, 0}  // NCurses doesn't have a standard X2 button mapping
 };
 
 }  // namespace Arcade
