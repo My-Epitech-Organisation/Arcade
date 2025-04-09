@@ -138,7 +138,8 @@ void GameLoop::handleState() {
     static auto previousState = MAIN_MENU;
 
     if (_state != previousState) {
-        _eventManager->unsubscribeAll();
+        if (!(_state == GAME_PLAYING && previousState != GAME_PLAYING))
+            _eventManager->unsubscribeAll();
 
         switch (_state) {
             case NAME_INPUT:
@@ -150,7 +151,8 @@ void GameLoop::handleState() {
                 subscribeMouseEvents();
                 break;
             case GAME_PLAYING:
-                subscribeEscEvent();
+                if (previousState != GAME_PLAYING)
+                    subscribeEscEvent();
                 break;
             default:
                 subscribeNavEvents();

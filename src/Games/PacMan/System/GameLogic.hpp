@@ -27,6 +27,7 @@ class GameLogic : public Arcade::ISystem {
       GameLogic(std::shared_ptr<Arcade::IComponentManager> componentManager,
                std::shared_ptr<Arcade::IEntityManager> entityManager);
       void update() override;
+      void reloadCurrentMap();
 
  private:
       Arcade::Entity findPacmanEntity();
@@ -42,7 +43,6 @@ class GameLogic : public Arcade::ISystem {
 
       void movePacman();
       void checkCollisions();
-      void reloadCurrentMap();
       void increaseGameSpeed();
       void checkCollisionsWithGhosts(std::shared_ptr<PacmanComponent> pacman,
                                     std::shared_ptr<GridComponent> grid);

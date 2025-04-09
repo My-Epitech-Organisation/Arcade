@@ -15,6 +15,7 @@
 #include "Games/PacMan/Components/GhostComponent.hpp"
 #include "Games/PacMan/Components/GridComponent.hpp"
 #include "Games/PacMan/Components/FoodComponent.hpp"
+#include "Games/PacMan/System/UISystem.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 
@@ -59,6 +60,8 @@ std::shared_ptr<IEntityManager> entityManager) {
         _componentManager, _entityManager, _eventManager);
     _systems.push_back(std::make_shared<GameLogic>(_componentManager,
         _entityManager));
+    _systems.push_back(std::make_shared<UISystem>(_componentManager,
+        _entityManager));
     _systems.push_back(_eventSystem);
 }
 
@@ -99,12 +102,32 @@ void PacmanGame::checkGameStatus() {
             auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
                 _componentManager->getComponentByType(entity,
                     static_cast<ComponentType>(1001)));
-            if (pacmanComp && pacmanComp->isDead()) {
+            if (pacmanComp && pacmanComp->isDead())
                 _gameOver = true;
-            }
             break;
         }
     }
+}
+
+int PacmanGame::getScore() const {
+    Arcade::Entity pacmanEntity = 0;
+    for (const auto& [entity, name] : _entityManager->getEntities()) {
+        if (name == "Pacman") {
+            pacmanEntity = entity;
+            break;
+        }
+    }
+
+    if (pacmanEntity) {
+        auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
+            _componentManager->getComponentByType(pacmanEntity,
+                static_cast<ComponentType>(1001)));
+
+        if (pacmanComp)
+            return pacmanComp->getScore();
+    }
+
+    return 0;
 }
 
 bool PacmanGame::isGameOver() const {

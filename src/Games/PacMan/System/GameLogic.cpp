@@ -12,6 +12,7 @@
 #include <utility>
 #include <algorithm>
 #include <array>
+#include <string>
 #include <ctime>
 #include "Games/PacMan/System/GameLogic.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
@@ -308,6 +309,10 @@ void GameLogic::update() {
     if (!pacman || !grid)
         return;
 
+    if (grid->isGameOver() || pacman->isDead()) {
+        grid->setGameOver(true);
+        return;
+    }
     pacman->updateMovementTimer(deltaTime);
     pacman->addGameTime(deltaTime);
 
@@ -582,153 +587,49 @@ void GameLogic::checkCollisions() {
 
 void GameLogic::checkCollisionsWithGhosts(std::shared_ptr<PacmanComponent>
 pacman, std::shared_ptr<GridComponent> grid) {
+    if (!pacman || !grid) return;
+
     size_t pacmanX = pacman->getGridX();
     size_t pacmanY = pacman->getGridY();
 
-    auto gridEntity = findGridEntity();
-    auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
-        _componentManager->getComponentByType(gridEntity,
-            ComponentType::POSITION));
-
-    float startX = gridPosComp ? gridPosComp->x : 0;
-    float startY = gridPosComp ? gridPosComp->y : 0;
-    float cellSize = grid->getCellSize();
-
     for (const auto& [entity, name] : _entityManager->getEntities()) {
-        auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
-            _componentManager->getComponentByType(entity,
-                static_cast<ComponentType>(1002)));
+        if (name.find("Blinky") != std::string::npos ||
+            name.find("Pinky") != std::string::npos ||
+            name.find("Inky") != std::string::npos ||
+            name.find("Clyde") != std::string::npos) {
+            auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
+                _componentManager->getComponentByType(entity,
+                    static_cast<ComponentType>(1002)));
 
-        if (ghostComp) {
+            if (!ghostComp) continue;
+
             size_t ghostX = ghostComp->getGridX();
             size_t ghostY = ghostComp->getGridY();
 
             if (pacmanX == ghostX && pacmanY == ghostY) {
                 if (ghostComp->getState() == GhostState::SCARED) {
+                    ghostComp->setState(GhostState::RETURNING);
                     pacman->addScore(200);
+                } else {
+                    pacman->decrementLives();
+                    if (pacman->getLives() <= 0) {
+                        grid->setGameOver(true);
+                        return;
+                    }
 
                     for (size_t y = 0; y < grid->getHeight(); y++) {
                         for (size_t x = 0; x < grid->getWidth(); x++) {
                             if (grid->getCellType(x, y) ==
-                                CellType::GHOST_SPAWN) {
-                                ghostComp->setGridPosition(x, y);
-
-                                auto posComp = std::dynamic_pointer_cast
-                                    <PositionComponent>(
-                                    _componentManager->getComponentByType(
-                                        entity, ComponentType::POSITION));
-
-                                if (posComp) {
-                                    posComp->x = startX + (x * cellSize);
-                                    posComp->y = startY + (y * cellSize);
-                                }
-
-                                ghostComp->setState(GhostState::NORMAL);
-
-                                auto ghostSprite = std::dynamic_pointer_cast
-                                    <SpriteComponent>(
-                                    _componentManager->getComponentByType(
-                                        entity, ComponentType::SPRITE));
-                                if (ghostSprite) {
-                                    switch (ghostComp->getGhostType()) {
-                                        case GhostType::RED:
-                                            ghostSprite->spritePath =
-                                                "assets/pacman/ghost_red.png";
-                                            break;
-                                        case GhostType::PINK:
-                                            ghostSprite->spritePath =
-                                                "assets/pacman/ghost_pink.png";
-                                            break;
-                                        case GhostType::BLUE:
-                                            ghostSprite->spritePath =
-                                                "assets/pacman/ghost_cyan.png";
-                                            break;
-                                        case GhostType::ORANGE:
-                                            ghostSprite->spritePath =
-                                            "assets/pacman/ghost_orange.png";
-                                            break;
-                                    }
-                                }
+                                CellType::PACMAN_SPAWN) {
+                                pacman->setGridPosition(x, y);
                                 break;
                             }
                         }
                     }
-                } else {
-                    pacman->decrementLives();
 
-                    if (pacman->isDead()) {
-                        grid->setGameOver(true);
-                    } else {
-                        for (size_t y = 0; y < grid->getHeight(); y++) {
-                            for (size_t x = 0; x < grid->getWidth(); x++) {
-                                if (grid->getCellType(x, y) ==
-                                    CellType::PACMAN_SPAWN) {
-                                    pacman->setGridPosition(x, y);
-
-                                    Arcade::Entity pacmanEntity =
-                                        findPacmanEntity();
-                                    if (pacmanEntity) {
-                                        auto posComp = std::dynamic_pointer_cast
-                                            <PositionComponent>(
-                                            _componentManager->
-                                                getComponentByType(pacmanEntity,
-                                                    ComponentType::POSITION));
-
-                                        if (posComp) {
-                                            posComp->x = startX + (x
-                                                * cellSize);
-                                            posComp->y = startY + (y
-                                                * cellSize);
-                                        }
-                                    }
-
-                                    pacman->setCurrentDirection(
-                                        Direction::NONE);
-                                    pacman->setNextDirection(Direction::NONE);
-                                    break;
-                                }
-                            }
-                        }
-
-                        for (const auto& [e, n] :
-                            _entityManager->getEntities()) {
-                            auto ghost = std::dynamic_pointer_cast
-                                <GhostComponent>(
-                                _componentManager->getComponentByType(e,
-                                    static_cast<ComponentType>(1002)));
-
-                            if (ghost) {
-                                for (size_t y = 0; y < grid->getHeight(); y++) {
-                                    for (size_t x = 0; x <
-                                            grid->getWidth(); x++) {
-                                        if (grid->getCellType(x, y) ==
-                                            CellType::GHOST_SPAWN) {
-                                            ghost->setGridPosition(x, y);
-
-                                            auto posComp =
-                                                std::dynamic_pointer_cast
-                                                <PositionComponent>(
-                                                _componentManager->
-                                                    getComponentByType(e,
-                                                    ComponentType::POSITION));
-
-                                            if (posComp) {
-                                                posComp->x = startX + (x
-                                                    * cellSize);
-                                                posComp->y = startY + (y
-                                                    * cellSize);
-                                            }
-
-                                            ghost->setState(GhostState::NORMAL);
-                                            ghost->setCurrentDirection(
-                                                Direction::NONE);
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    pacman->setCurrentDirection(Direction::NONE);
+                    pacman->setNextDirection(Direction::NONE);
+                    break;
                 }
             }
         }
@@ -745,41 +646,38 @@ std::shared_ptr<GridComponent> grid) {
             _componentManager->getComponentByType(entity,
                 static_cast<ComponentType>(1003)));
 
-        if (foodComp && !foodComp->isEaten()) {
-            size_t foodX = foodComp->getGridX();
-            size_t foodY = foodComp->getGridY();
+        if (foodComp && !foodComp->isEaten() &&
+            foodComp->getGridX() == pacmanX &&
+            foodComp->getGridY() == pacmanY) {
+            foodComp->setEaten(true);
+            pacman->addScore(foodComp->getPoints());
+            grid->decrementFoodCount();
 
-            if (pacmanX == foodX && pacmanY == foodY) {
-                foodComp->setEaten(true);
-                pacman->addScore(foodComp->getPoints());
-                grid->decrementFoodCount();
+            auto spriteComp = std::dynamic_pointer_cast<SpriteComponent>(
+                _componentManager->getComponentByType(entity,
+                    ComponentType::SPRITE));
 
-                auto spriteComp = std::dynamic_pointer_cast<SpriteComponent>(
-                    _componentManager->getComponentByType(entity,
-                        ComponentType::SPRITE));
+            if (spriteComp)
+                spriteComp->spritePath = "assets/pacman/empty.png";
 
-                if (spriteComp)
-                    spriteComp->spritePath = "assets/pacman/empty.png";
+            if (foodComp->getFoodType() == FoodType::POWER_PILL) {
+                for (const auto& [e, n] : _entityManager->getEntities()) {
+                    auto ghostComp = std::dynamic_pointer_cast
+                        <GhostComponent>(
+                        _componentManager->getComponentByType(e,
+                            static_cast<ComponentType>(1002)));
 
-                if (foodComp->getFoodType() == FoodType::POWER_PILL) {
-                    for (const auto& [e, n] : _entityManager->getEntities()) {
-                        auto ghostComp = std::dynamic_pointer_cast
-                            <GhostComponent>(
+                    if (ghostComp) {
+                        ghostComp->setState(GhostState::SCARED);
+                        ghostComp->resetStateTimer();
+
+                        auto ghostSprite = std::dynamic_pointer_cast
+                            <SpriteComponent>(
                             _componentManager->getComponentByType(e,
-                                static_cast<ComponentType>(1002)));
-
-                        if (ghostComp) {
-                            ghostComp->setState(GhostState::SCARED);
-                            ghostComp->resetStateTimer();
-
-                            auto ghostSprite = std::dynamic_pointer_cast
-                                <SpriteComponent>(
-                                _componentManager->getComponentByType(e,
-                                    ComponentType::SPRITE));
-                            if (ghostSprite)
-                                ghostSprite->spritePath =
-                                    "assets/pacman/scared_ghost.png";
-                        }
+                                ComponentType::SPRITE));
+                        if (ghostSprite)
+                            ghostSprite->spritePath =
+                                "assets/pacman/scared_ghost.png";
                     }
                 }
             }
@@ -812,7 +710,7 @@ void GameLogic::reloadCurrentMap() {
                 if (foodComp->getFoodType() == FoodType::NORMAL_DOT) {
                     spriteComp->spritePath = "assets/pacman/dot.png";
                 } else {
-                    spriteComp->spritePath = "assets/pacman/power_pill.png";
+                    spriteComp->spritePath = "assets/pacman/power_pellet.png";
                 }
             }
         }

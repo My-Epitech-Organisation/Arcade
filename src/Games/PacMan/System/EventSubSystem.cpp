@@ -10,6 +10,7 @@
 #include <utility>
 #include <memory>
 #include "Games/PacMan/System/EventSubSystem.hpp"
+#include "Games/PacMan/System/GameLogic.hpp"
 #include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
 #include "Shared/Models/EventType.hpp"
 #include "Shared/Models/KeysType.hpp"
@@ -155,17 +156,43 @@ void EventSubSystem::handleKeyRight() {
 }
 
 void EventSubSystem::handleKeyR() {
+    Arcade::Entity gridEntity = 0;
     for (const auto& [entity, name] : _entityManager->getEntities()) {
-        auto component = _componentManager->getComponentByType(entity,
-            static_cast<ComponentType>(1000));
-        if (component) {
-            auto grid = std::dynamic_pointer_cast<GridComponent>(component);
-            if (grid) {
-                std::cout << "Game reset requested" << std::endl;
-                break;
-            }
+        if (name == "Grid") {
+            gridEntity = entity;
+            break;
         }
     }
+
+    if (gridEntity != 0)
+        return;
+
+    auto gridComp = std::dynamic_pointer_cast<GridComponent>(
+        _componentManager->getComponentByType(gridEntity,
+            static_cast<ComponentType>(1000)));
+
+    gridComp->setGameOver(false);
+    gridComp->setGameWon(false);
+
+    for (const auto& [entity, name] : _entityManager->getEntities()) {
+        if (name == "Pacman") {
+            auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
+                _componentManager->getComponentByType(entity,
+                    static_cast<ComponentType>(1001)));
+
+            if (pacmanComp) {
+                pacmanComp->setLives(3);
+                pacmanComp->setScore(0);
+                pacmanComp->setCurrentDirection(Direction::NONE);
+                pacmanComp->setNextDirection(Direction::NONE);
+            }
+            break;
+        }
+    }
+
+    auto gameLogic = std::make_shared<GameLogic>(_componentManager,
+        _entityManager);
+    gameLogic->reloadCurrentMap();
 }
 
 void EventSubSystem::update() {

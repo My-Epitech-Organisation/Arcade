@@ -7,8 +7,10 @@ set(SRC
     Components/PacmanComponent.cpp
     Components/GhostComponent.cpp
     Components/FoodComponent.cpp
+    Components/PacmanStats.cpp
     System/EventSubSystem.cpp
     System/GameLogic.cpp
+    System/UISystem.cpp
 )
 
 add_library(${NAME} SHARED ${SRC})
