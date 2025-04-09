@@ -18,7 +18,6 @@ void NCurses::NCursesColor::initColors() {
     if (has_colors()) {
         start_color();
         try {
-            // Initialize all colors from Arcade::Color enum
             addColorPair("default", COLOR_WHITE, COLOR_BLACK);
             addColorPair("red", COLOR_RED, COLOR_BLACK);
             addColorPair("green", COLOR_GREEN, COLOR_BLACK);
@@ -26,13 +25,12 @@ void NCurses::NCursesColor::initColors() {
             addColorPair("yellow", COLOR_YELLOW, COLOR_BLACK);
             addColorPair("magenta", COLOR_MAGENTA, COLOR_BLACK);
             addColorPair("cyan", COLOR_CYAN, COLOR_BLACK);
-            addColorPair("orange", COLOR_RED, COLOR_BLACK); // NCurses doesn't have orange
-            addColorPair("brown", COLOR_RED, COLOR_BLACK);  // NCurses doesn't have brown
-            addColorPair("grey", COLOR_WHITE, COLOR_BLACK); // Using white at half intensity
+            addColorPair("orange", COLOR_RED, COLOR_BLACK);
+            addColorPair("brown", COLOR_RED, COLOR_BLACK);
+            addColorPair("grey", COLOR_WHITE, COLOR_BLACK);
             addColorPair("white", COLOR_WHITE, COLOR_BLACK);
             addColorPair("black", COLOR_BLACK, COLOR_BLACK);
-            
-            // Also add by enum value to allow direct color access
+
             for (int i = 0; i <= static_cast<int>(Arcade::Color::NOCOLOR); i++) {
                 addColorPairByEnum(static_cast<Arcade::Color>(i));
             }
@@ -67,8 +65,8 @@ void NCurses::NCursesColor::addColorPair(const std::string &colorName,
 }
 
 void NCurses::NCursesColor::addColorPairByEnum(Arcade::Color color) {
-    int16_t fg = COLOR_WHITE; // Default
-    
+    int16_t fg = COLOR_WHITE;
+
     switch (color) {
         case Arcade::Color::RED:
             fg = COLOR_RED;
@@ -89,13 +87,13 @@ void NCurses::NCursesColor::addColorPairByEnum(Arcade::Color color) {
             fg = COLOR_CYAN;
             break;
         case Arcade::Color::ORANGE:
-            fg = COLOR_RED; // Approximation
+            fg = COLOR_RED;
             break;
         case Arcade::Color::BROWN:
-            fg = COLOR_RED; // Approximation
+            fg = COLOR_RED;
             break;
         case Arcade::Color::GREY:
-            fg = COLOR_WHITE; // Approximation
+            fg = COLOR_WHITE;
             break;
         case Arcade::Color::WHITE:
             fg = COLOR_WHITE;
@@ -107,7 +105,7 @@ void NCurses::NCursesColor::addColorPairByEnum(Arcade::Color color) {
             fg = COLOR_WHITE;
             break;
     }
-    
+
     init_pair(_nextPairId, fg, COLOR_BLACK);
     _enumColorPairs[color] = _nextPairId++;
 }
