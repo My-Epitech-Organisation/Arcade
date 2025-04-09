@@ -73,5 +73,6 @@ int NCursesColor::convertColor(Arcade::Color color) {
         std::cerr << "Invalid color value: " << static_cast<int>(color) << std::endl;
         return COLOR_PAIR(COLOR_PAIR_OFFSET + static_cast<int>(Arcade::Color::WHITE));
     }
-    return COLOR_PAIR(COLOR_PAIR_OFFSET + static_cast<int>(color) + 1);
+
+    return COLOR_PAIR(COLOR_PAIR_OFFSET + static_cast<int>(color));
 }
