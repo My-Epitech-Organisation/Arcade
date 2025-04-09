@@ -14,58 +14,42 @@
 #include "NCurses/NCursesKeys.hpp"
 
 bool NCurses::NCursesEvent::isKeyPressed(int keyCode) const {
-    static int lastKey = ERR;
-    int key = lastKey;
-    nodelay(stdscr, TRUE);
+    int key = _lastKeyPressed;
+    
+    auto arcadeKey = static_cast<Arcade::Keys>(keyCode);
+    int ncursesKey = Arcade::NCursesKeyMap::getNCursesKey(arcadeKey);
+    
+    return (key != ERR && key == ncursesKey);
+}
 
-    if (key == ERR) {
-        key = getch();
-        if (key != ERR) {
-            lastKey = key;
-        }
-    }
+void NCurses::NCursesEvent::storeKeyEvent(int key) {
+    _lastKeyPressed = key;
+}
 
-    bool result = (key != ERR && key == Arcade::NCursesKeyMap::getNCursesKey(
-        static_cast<Arcade::Keys>(keyCode)));
-    if (result) {
-        lastKey = ERR;
-    }
-    return result;
+void NCurses::NCursesEvent::storeMouseEvent(const MEVENT& event) {
+    _lastMouseEvent = event;
+    _hasMouseEvent = true;
+}
+
+void NCurses::NCursesEvent::resetMouseEvent() {
+    _hasMouseEvent = false;
 }
 
 bool NCurses::NCursesEvent::isMouseButtonPressed(int button) const {
-    static MEVENT lastEvent;
-    static bool hasEvent = false;
-
-    if (!hasEvent) {
-        int ch = getch();
-        if (ch == KEY_MOUSE) {
-            if (getmouse(&lastEvent) == OK) {
-                hasEvent = true;
-            } else {
-                return false;
-            }
-        } else if (ch != ERR) {
-            ungetch(ch);
-            return false;
-        } else {
-            return false;
-        }
+    if (!_hasMouseEvent) {
+        return false;
     }
-    int ncursesButton = Arcade::NCursesKeyMap::getNCursesButton(
-        static_cast<Arcade::MouseButton>(button));
-    bool result = (lastEvent.bstate & ncursesButton) != 0;
-    if (result) {
-        hasEvent = false;
-    }
-    return result;
+    
+    auto arcadeButton = static_cast<Arcade::MouseButton>(button);
+    unsigned long ncursesButton = Arcade::NCursesKeyMap::getNCursesButton(arcadeButton);
+    
+    return (_lastMouseEvent.bstate & ncursesButton) != 0;
 }
 
 std::pair<size_t, size_t> NCurses::NCursesEvent::getMousePosition() const {
-    MEVENT event;
-    if (getmouse(&event) == OK) {
-        return {static_cast<size_t>(event.x), static_cast<size_t>(event.y)};
+    if (_hasMouseEvent) {
+        return {static_cast<size_t>(_lastMouseEvent.x), 
+                static_cast<size_t>(_lastMouseEvent.y)};
     }
-    static std::pair<size_t, size_t> lastPosition = {0, 0};
-    return lastPosition;
+    return {0, 0};
 }

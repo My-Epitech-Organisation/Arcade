@@ -8,8 +8,8 @@
 
 #ifndef SRC_GRAPHICS_NCURSES_NCURSESKEYS_HPP_
     #define SRC_GRAPHICS_NCURSES_NCURSESKEYS_HPP_
-    #include <ncurses.h>
     #include <unordered_map>
+    #include <ncurses.h>
     #include "Models/KeysType.hpp"
     #include "Models/MouseButtonType.hpp"
 
@@ -77,7 +77,7 @@ const std::unordered_map<MouseButton, unsigned long> NCursesKeyMap::_mouseButton
     {MouseButton::MIDDLE, BUTTON2_PRESSED},
     {MouseButton::RIGHT, BUTTON3_PRESSED},
     {MouseButton::X1, BUTTON4_PRESSED},
-    {MouseButton::X2, 0}  // NCurses doesn't have a standard X2 button mapping
+    {MouseButton::X2, BUTTON5_PRESSED}
 };
 
 }  // namespace Arcade

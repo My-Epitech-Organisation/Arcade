@@ -146,6 +146,7 @@ void NCursesModule::pollEvents() {
     int ch = _window.getChar();
     if (ch == 27) {
         ungetch(ch);
+        _event.storeKeyEvent(ch); // Store escape key press
     } else if (ch == KEY_RESIZE) {
         int newMaxY, newMaxX;
         endwin();
@@ -169,10 +170,15 @@ void NCursesModule::pollEvents() {
         MEVENT event;
         if (getmouse(&event) == OK) {
             // Store the mouse event for later processing
-            // This ensures isMouseButtonPressed will have access to the latest event
+            _event.storeMouseEvent(event);
         }
     } else if (ch != ERR) {
+        // Store non-special key presses
+        _event.storeKeyEvent(ch);
         ungetch(ch);
+    } else {
+        // No event - reset mouse event to avoid false positives
+        _event.resetMouseEvent();
     }
 }
 

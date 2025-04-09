@@ -26,13 +26,16 @@ void NCurses::NCursesWindow::createWindow(int width, int height) {
     curs_set(0);
     nodelay(stdscr, TRUE);
     timeout(100);
+    keypad(stdscr, TRUE);  // Enable function keys and keypad on stdscr
 
+    // Enable all mouse events
     mmask_t mouseMask = ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION;
     mousemask(mouseMask, NULL);
-    mouseinterval(0);
+    mouseinterval(0);  // No click delay
 
-    // Enable extended mouse tracking (works in xterm and similar)
+    // Enable extended mouse tracking (works in xterm and similar terminals)
     printf("\033[?1003h\n");
+    fflush(stdout);
 
     _window = newwin(height, width, 0, 0);
     if (!_window) {
@@ -40,6 +43,7 @@ void NCurses::NCursesWindow::createWindow(int width, int height) {
         throw std::runtime_error("Failed to create NCurses window");
     }
     nodelay(_window, TRUE);
+    keypad(_window, TRUE);  // Enable function keys and keypad on the window
     _windowHeight = height;
     _windowWidth = width;
     _isOpen = true;
