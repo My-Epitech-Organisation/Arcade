@@ -20,7 +20,6 @@ void GameLoop::subscribeEvents() {
     subscribeNum3Event();
     subscribeNum4Event();
     subscribeNum5Event();
-    subscribeNameInputEvents();
 }
 
 void GameLoop::subscribeNameInputEvents() {
@@ -34,7 +33,7 @@ void GameLoop::subscribeNameInputEvents() {
         });
     }
 
-    for (int key = Keys::NUM0; key <= Keys::NUM9; key++) {
+    for (int key = Keys::NUM6; key <= Keys::NUM9; key++) {
         KeyEvent numEvent(static_cast<Keys>(key), EventType::KEY_PRESSED);
         _eventManager->subscribe(numEvent, [this, key]() {
             if (_state == NAME_INPUT && _inputPlayerName.length() < 15) {

@@ -135,6 +135,31 @@ void GameLoop::handleEvents(std::shared_ptr<bool> running) {
 }
 
 void GameLoop::handleState() {
+    static auto previousState = MAIN_MENU;
+
+    if (_state != previousState) {
+        _eventManager->unsubscribeAll();
+
+        switch (_state) {
+            case NAME_INPUT:
+                subscribeNameInputEvents();
+                break;
+            case MAIN_MENU:
+                subscribeEvents();
+                subscribeNavEvents();
+                subscribeMouseEvents();
+                break;
+            case GAME_PLAYING:
+                subscribeEscEvent();
+                break;
+            default:
+                subscribeNavEvents();
+                subscribeMouseEvents();
+                break;
+        }
+        previousState = _state;
+    }
+
     switch (_state) {
         case MAIN_MENU:
             displayMainMenu();

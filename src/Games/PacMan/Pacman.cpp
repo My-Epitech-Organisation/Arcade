@@ -26,8 +26,16 @@ PacmanGame::~PacmanGame() {
     _eventSystem.reset();
 
     if (_entityManager && _componentManager) {
-        for (const auto& [entity, name] : _entityManager->getEntities()) {
-            _entityManager->destroyEntity(entity);
+        auto entities = _entityManager->getEntities();
+        for (const auto& entity : entities) {
+            auto components = _componentManager->getEntityComponents(
+                entity.first);
+            for (const auto& component : components) {
+                _componentManager->unregisterComponent(entity.first,
+                    typeid(*component).name());
+            }
+
+            _entityManager->destroyEntity(entity.first);
         }
     }
 
@@ -109,14 +117,10 @@ bool PacmanGame::hasWon() const {
 
 void PacmanGame::stop() {
     _gameOver = true;
+    _componentManager.reset();
+    _entityManager.reset();
     _systems.clear();
     _eventSystem.reset();
-
-    if (_entityManager && _componentManager) {
-        for (const auto& [entity, name] : _entityManager->getEntities()) {
-            _entityManager->destroyEntity(entity);
-        }
-    }
 }
 
 std::string PacmanGame::getSpecialCompSprite(size_t id) const {
