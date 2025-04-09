@@ -26,7 +26,7 @@ class NCursesEvent {
     bool isKeyPressed(int keyCode) const;
     bool isMouseButtonPressed(int button) const;
     std::pair<size_t, size_t> getMousePosition() const;
-    
+
     // Add methods to update state from the NCurses module
     void storeMouseEvent(const MEVENT& event);
     void storeKeyEvent(int key);
