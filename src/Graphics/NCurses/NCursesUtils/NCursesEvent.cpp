@@ -15,10 +15,10 @@
 
 bool NCurses::NCursesEvent::isKeyPressed(int keyCode) const {
     int key = _lastKeyPressed;
-    
+
     auto arcadeKey = static_cast<Arcade::Keys>(keyCode);
     int ncursesKey = Arcade::NCursesKeyMap::getNCursesKey(arcadeKey);
-    
+
     return (key != ERR && key == ncursesKey);
 }
 
@@ -39,16 +39,16 @@ bool NCurses::NCursesEvent::isMouseButtonPressed(int button) const {
     if (!_hasMouseEvent) {
         return false;
     }
-    
+
     auto arcadeButton = static_cast<Arcade::MouseButton>(button);
     unsigned long ncursesButton = Arcade::NCursesKeyMap::getNCursesButton(arcadeButton);
-    
+
     return (_lastMouseEvent.bstate & ncursesButton) != 0;
 }
 
 std::pair<size_t, size_t> NCurses::NCursesEvent::getMousePosition() const {
     if (_hasMouseEvent) {
-        return {static_cast<size_t>(_lastMouseEvent.x), 
+        return {static_cast<size_t>(_lastMouseEvent.x),
                 static_cast<size_t>(_lastMouseEvent.y)};
     }
     return {0, 0};
