@@ -12,6 +12,7 @@
 #include <iostream>
 #include "GTK+/GTK.hpp"
 #include "Models/ColorType.hpp"
+#include "Models/ModuleInfos.hpp"
 
 GTKModule::GTKModule() : _name("GTK+"), _eventManager(nullptr) {
     gtk_init();
@@ -192,5 +193,11 @@ extern "C" {
 
     Arcade::IArcadeModule* entryPoint(void) {
         return new GTKModule();
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"GTK+", "IDK",
+            "IDK",
+            "./lib/arcade_gtk+.so", Arcade::ModuleType::GRAPHIC_LIB};
     }
 }
