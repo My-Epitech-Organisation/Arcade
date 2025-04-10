@@ -18,6 +18,7 @@
 #include "Games/PacMan/System/UISystem.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
+#include "Shared/Models/ModuleInfos.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -175,6 +176,12 @@ extern "C" {
 
     void destroy(IGameModule* instance) {
         delete instance;
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"PacMan", "IDK",
+            "IDK",
+            "./lib/arcade_pacman.so", Arcade::ModuleType::GAME};
     }
 }
 

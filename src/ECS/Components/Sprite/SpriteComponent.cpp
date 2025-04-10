@@ -7,6 +7,7 @@
 */
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 #include "Shared/Models/ComponentType.hpp"
+#include "Shared/Models/ModuleInfos.hpp"
 
 ComponentType SpriteComponent::getType() const {
     return ComponentType::SPRITE;
@@ -24,5 +25,11 @@ extern "C" {
 
     Arcade::IArcadeModule* entryPoint(void) {
         return new SpriteComponent("");
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"SpriteComponent", "IDK",
+            "IDK",
+            "./lib/arcade_sprite.so", Arcade::ModuleType::GAME_COMPONENT};
     }
 }

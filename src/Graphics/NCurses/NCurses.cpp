@@ -14,6 +14,7 @@
 #include "NCurses/NCurses.hpp"
 #include "NCurses/NCursesColor.hpp"
 #include "Interface/IArcadeModule.hpp"
+#include "Models/ModuleInfos.hpp"
 
 NCursesModule::~NCursesModule() {
     stop();
@@ -231,5 +232,11 @@ extern "C" {
 
     Arcade::IArcadeModule* entryPoint(void) {
         return new NCursesModule();
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"NCurses", "IDK",
+            "IDK",
+            "./lib/arcade_ncurses.so", Arcade::ModuleType::GRAPHIC_LIB};
     }
 }

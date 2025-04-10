@@ -13,6 +13,7 @@
 #include <iostream>
 #include "SFML/SFMLColor.hpp"
 #include "Interface/IArcadeModule.hpp"
+#include "Models/ModuleInfos.hpp"
 
 SFML::~SFML() {
     _window.reset();
@@ -101,4 +102,10 @@ extern "C" __attribute__((destructor)) void fini_sfml(void) {}
 
 extern "C" Arcade::IArcadeModule* entryPoint(void) {
     return new SFML();
+}
+
+extern "C" Arcade::ModuleInfos module_infos() {
+    return {"SFML", "IDK",
+        "IDK",
+        "./lib/arcade_sfml.so", Arcade::ModuleType::GRAPHIC_LIB};
 }
