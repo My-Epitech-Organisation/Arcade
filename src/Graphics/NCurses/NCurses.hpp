@@ -21,37 +21,54 @@
     #include "NCursesUtils/NCursesEntity.hpp"
     #include "NCursesUtils/NCursesEvent.hpp"
 
-    class NCursesModule : public Arcade::IDisplayModule {
-     private:
-        std::string _name;
-        NCurses::NCursesWindow _window;
-        NCurses::NCursesColor _colorManager;
-        NCurses::NCursesText _text;
-        NCurses::NCursesEntity _entity;
-        NCurses::NCursesEvent _event;
-        int _windowWidth = 0;
-        int _windowHeight = 0;
-        bool _running = true;
+class NCursesModule : public Arcade::IDisplayModule {
+ private:
+    std::string _name;
+    NCurses::NCursesWindow _window;
+    NCurses::NCursesColor _colorManager;
+    NCurses::NCursesText _text;
+    NCurses::NCursesEntity _entity;
+    NCurses::NCursesEvent _event;
+    int _windowWidth = 0;
+    int _windowHeight = 0;
+    bool _running = true;
+    float _pixelToCharX = 1.0f;  // Ratio for X-axis conversion
+    float _pixelToCharY = 1.0f;  // Ratio for Y-axis conversion
+    int _referencePixelWidth = 800;  // Reference pixel width
+    int _referencePixelHeight = 600;  // Reference pixel height
+    int _verticalSpacing = 2;  // Vertical spacing between text lines
+    int _lineHeight = 1;  // Fixed line height in character units
+    std::map<int, int> _yPositionMap;  // Maps pixel Y to character Y positions
+    std::map<int, int> _reverseYMap;   // Maps character Y to pixel Y positions
 
-     public:
-        NCursesModule() : _name("NCurses") {}
-        ~NCursesModule() override;
-        void init(float width, float height) override;
-        void stop() override;
-        void clearScreen() override;
-        void refreshScreen() override;
-        void drawEntity(int x, int y, char symbol) override;
-        void drawTexture(int x, int y, const std::string &textureId) override;
-        void drawText(const std::string &text, int x,
-            int y, Arcade::Color color) override;
-        void pollEvents() override;
-        bool isOpen() const override;
-        const std::string& getName() const override;
-        int getWidth() const override;
-        int getHeight() const override;
-        bool isKeyPressed(int keyCode) override;
-        bool isMouseButtonPressed(int button) const override;
-        std::pair<size_t, size_t> getMousePosition() const override;
-    };
+    // Convert pixel coordinates to character-based coordinates
+    int pixelToCharX(int x) const;
+    int pixelToCharY(int y);  // Non-const because it might modify the map
+    void calculateRatio();
+
+ public:
+    NCursesModule() : _name("NCurses") {}
+    ~NCursesModule() override;
+    void init(float width, float height) override;
+    void stop() override;
+    void clearScreen() override;
+    void refreshScreen() override;
+    void drawEntity(int x, int y, char symbol) override;
+    void drawTexture(int x, int y, const std::string &textureId) override;
+    void drawText(const std::string &text, int x,
+        int y, Arcade::Color color) override;
+    void pollEvents() override;
+    bool isOpen() const override;
+    const std::string& getName() const override;
+    int getWidth() const override;
+    int getHeight() const override;
+    bool isKeyPressed(int keyCode) override;
+    bool isMouseButtonPressed(int button) const override;
+    std::pair<size_t, size_t> getMousePosition() const override;
+
+    // Convert character coordinates to pixel coordinates
+    int charToPixelX(int x) const;
+    int charToPixelY(int y) const;
+};
 
 #endif  // SRC_GRAPHICS_NCURSES_NCURSES_HPP_

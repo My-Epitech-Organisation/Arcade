@@ -241,10 +241,10 @@ YourGraphicsLibModule::~YourGraphicsLibModule() {
 void YourGraphicsLibModule::init(float x, float y) {
     int width = static_cast<int>(x);
     int height = static_cast<int>(y);
-    
+
     // Initialize your graphics library here
     // Create window, init renderer, etc.
-    
+
     _windowWidth = width;
     _windowHeight = height;
 }
@@ -408,10 +408,10 @@ class YourComponent : public Arcade::IComponent {
  public:
     // Constructor with necessary parameters
     YourComponent(/* your parameters */);
-    
+
     // Required method to get component type
     ComponentType getType() const override;
-    
+
     // Your component data members
     // Example: position, health, damage, etc.
 
@@ -460,9 +460,9 @@ extern "C" {
 add_library(arcade_yourcomponent SHARED YourComponent.cpp)
 
 set_target_properties(arcade_yourcomponent PROPERTIES PREFIX "" OUTPUT_NAME "arcade_yourcomponent")
-target_include_directories(arcade_yourcomponent PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../.. 
-    ${CMAKE_CURRENT_SOURCE_DIR}/.. 
+target_include_directories(arcade_yourcomponent PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../..
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${CMAKE_ROOT}/src/Shared)
 if(ENABLE_COVERAGE)
     target_compile_options(arcade_yourcomponent PRIVATE -O0 -g --coverage -fprofile-arcs -ftest-coverage)

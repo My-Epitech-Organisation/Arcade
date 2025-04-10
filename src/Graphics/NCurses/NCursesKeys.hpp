@@ -18,7 +18,8 @@ namespace Arcade {
 class NCursesKeyMap {
  private:
     static const std::unordered_map<Keys, int> _keyMap;
-    static const std::unordered_map<MouseButton, int> _mouseButtonMap;
+    static const std::unordered_map<MouseButton,
+        uint64_t> _mouseButtonMap;
 
  public:
     static int getNCursesKey(Keys key) {
@@ -26,7 +27,7 @@ class NCursesKeyMap {
         return (it != _keyMap.end()) ? it->second : ERR;
     }
 
-    static int getNCursesButton(MouseButton button) {
+    static uint64_t getNCursesButton(MouseButton button) {
         auto it = _mouseButtonMap.find(button);
         return (it != _mouseButtonMap.end()) ? it->second : 0;
     }
@@ -38,8 +39,8 @@ const std::unordered_map<Keys, int> NCursesKeyMap::_keyMap = {
     {Keys::DOWN, KEY_DOWN},
     {Keys::LEFT, KEY_LEFT},
     {Keys::RIGHT, KEY_RIGHT},
-    {Keys::ENTER, 10},  // Enter key in ncurses
-    {Keys::ESC, 27},    // Escape key
+    {Keys::ENTER, '\n'},
+    {Keys::ESC, 27},
     {Keys::NUM1, '1'},
     {Keys::NUM2, '2'},
     {Keys::NUM3, '3'},
@@ -72,12 +73,11 @@ const std::unordered_map<Keys, int> NCursesKeyMap::_keyMap = {
     {Keys::Z, 'z'}
 };
 
-// NCurses uses BUTTON1_PRESSED, BUTTON2_PRESSED, etc. with the mmask_t type
-// when mouse events are enabled with mousemask()
-const std::unordered_map<MouseButton, int> NCursesKeyMap::_mouseButtonMap = {
+const std::unordered_map<MouseButton, uint64_t>
+NCursesKeyMap::_mouseButtonMap = {
     {MouseButton::LEFT, BUTTON1_PRESSED},
-    {MouseButton::MIDDLE, BUTTON3_PRESSED},
-    {MouseButton::RIGHT, BUTTON2_PRESSED},
+    {MouseButton::MIDDLE, BUTTON2_PRESSED},
+    {MouseButton::RIGHT, BUTTON3_PRESSED},
     {MouseButton::X1, BUTTON4_PRESSED},
     {MouseButton::X2, BUTTON5_PRESSED}
 };
