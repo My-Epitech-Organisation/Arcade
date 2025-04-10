@@ -446,7 +446,6 @@ void GameLoop::loadGraphicsLibraries() {
             subscribeEvents();
             subscribeNavEvents();
             subscribeMouseEvents();
-            _state = MAIN_MENU;
         }
     } catch (const LibraryLoadException& e) {
         std::cerr << "Failed to load graphics library: "
