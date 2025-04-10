@@ -63,6 +63,12 @@ std::shared_ptr<PacmanComponent> pacman) {
             }
         }
 
+        auto ghostSpriteTemp = std::dynamic_pointer_cast<SpriteComponent>(
+            _componentManager->getComponentByType(entity,
+                ComponentType::SPRITE));
+
+        ghostSpriteTemp->spritePath = "assets/pacman/eyes.png";
+
         if (ghostComp->getGridX() == targetX &&
             ghostComp->getGridY() == targetY) {
             ghostComp->setState(GhostState::NORMAL);
@@ -847,6 +853,7 @@ void GameLogic::reloadCurrentMap() {
     }
 
     grid->setGameOver(false);
+    grid->setGameWon(false);
 }
 
 void GameLogic::increaseGameSpeed() {
@@ -878,6 +885,7 @@ void GameLogic::checkWinCondition(std::shared_ptr<GridComponent> grid) {
     if (grid->getFoodCount() <= 0) {
         grid->setGameWon(true);
         grid->setGameOver(true);
+        grid->incrementLevel();
         reloadCurrentMap();
         increaseGameSpeed();
     }
