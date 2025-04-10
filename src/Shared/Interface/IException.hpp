@@ -17,7 +17,7 @@
 #include <string>
 #include <exception>
 
-namespace arcade {
+namespace Arcade {
 
 /**
  * @class IException
@@ -57,6 +57,6 @@ class IException : public std::exception {
    */
   virtual std::string getFormattedMessage() const noexcept = 0;
 };
-}  // namespace arcade
+}  // namespace Arcade
 
 #endif  // SRC_SHARED_INTERFACE_IEXCEPTION_HPP_

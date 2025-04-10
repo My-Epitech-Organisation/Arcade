@@ -24,7 +24,9 @@ class InputException : public ArcadeException {
      * @param message The error message
      */
     explicit InputException(const std::string& message)
-        : ArcadeException("Input Error: " + message) {}
+        : ArcadeException("Input Error: " + message) {
+        _type = "InputException";
+    }
 };
 
 }  // namespace Arcade
