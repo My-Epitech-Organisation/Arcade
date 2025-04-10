@@ -853,6 +853,7 @@ void GameLogic::reloadCurrentMap() {
     }
 
     grid->setGameOver(false);
+    grid->setGameWon(false);
 }
 
 void GameLogic::increaseGameSpeed() {
@@ -884,6 +885,7 @@ void GameLogic::checkWinCondition(std::shared_ptr<GridComponent> grid) {
     if (grid->getFoodCount() <= 0) {
         grid->setGameWon(true);
         grid->setGameOver(true);
+        grid->incrementLevel();
         reloadCurrentMap();
         increaseGameSpeed();
     }

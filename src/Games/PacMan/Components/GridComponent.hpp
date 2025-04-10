@@ -56,6 +56,8 @@ class GridComponent : public Arcade::IComponent {
     void loadDefaultMap();
     void setCellSize(float cellSize) { _cellSize = cellSize; }
     float getCellSize() const { return _cellSize; }
+    int getLevel() const {return _level;}
+    void incrementLevel() { _level++; }
 
  private:
     std::string _name;
@@ -68,6 +70,7 @@ class GridComponent : public Arcade::IComponent {
     std::vector<std::vector<CellType>> _grid;
     std::vector<std::vector<Arcade::Entity>> _entityGrid;
     float _cellSize;
+    int _level = 1;
 };
 
 }  // namespace PacMan

@@ -134,8 +134,20 @@ void UISystem::updateUITexts() {
     auto levelTextComp = std::dynamic_pointer_cast<TextComponent>(
         _componentManager->getComponentByType(_levelTextEntity,
             ComponentType::TEXT));
-    if (levelTextComp)
-        levelTextComp->text = "LEVEL: " + std::to_string(1);
+    if (levelTextComp) {
+        Arcade::Entity gridEntity = 0;
+        for (const auto& [entity, name] : _entityManager->getEntities()) {
+            if (name == "Grid") {
+                gridEntity = entity;
+                break;
+            }
+        }
+        auto gridComp = std::dynamic_pointer_cast<GridComponent>(
+            _componentManager->getComponentByType(gridEntity,
+                static_cast<ComponentType>(1000)));
+        int level = (gridComp) ? gridComp->getLevel() : 1;
+        levelTextComp->text = "LEVEL: " + std::to_string(level);
+    }
 }
 
 
