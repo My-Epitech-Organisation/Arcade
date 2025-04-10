@@ -24,7 +24,9 @@ class LibraryLoadException : public ArcadeException {
      * @param message The error message
      */
     explicit LibraryLoadException(const std::string& message)
-        : ArcadeException("Library Error: " + message) {}
+        : ArcadeException("Library Error: " + message) {
+        _type = "LibraryLoadException";
+    }
 };
 
 }  // namespace Arcade

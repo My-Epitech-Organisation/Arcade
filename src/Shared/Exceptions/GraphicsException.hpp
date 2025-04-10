@@ -24,7 +24,9 @@ class GraphicsException : public ArcadeException {
      * @param message The error message
      */
     explicit GraphicsException(const std::string& message)
-        : ArcadeException("Graphics Error: " + message) {}
+        : ArcadeException("Graphics Error: " + message) {
+        _type = "GraphicsException";
+    }
 };
 
 }  // namespace Arcade

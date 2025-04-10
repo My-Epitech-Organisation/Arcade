@@ -24,7 +24,9 @@ class GameException : public ArcadeException {
      * @param message The error message
      */
     explicit GameException(const std::string& message)
-        : ArcadeException("Game Error: " + message) {}
+        : ArcadeException("Game Error: " + message) {
+        _type = "GameException";
+    }
 };
 
 }  // namespace Arcade
