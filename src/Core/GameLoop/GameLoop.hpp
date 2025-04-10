@@ -124,6 +124,8 @@ class GameLoop : public IStateManager {
     void subscribeGKeyEvent();
     void subscribeHKeyEvent();
     void switchGameInGame();
+    void subscribeNKeyEvent();
+    void subscribePKeyEvent();
     void subscribeUpEvent();
     void subscribeDownEvent();
     void subscribeEnterEvent();
@@ -139,6 +141,7 @@ class GameLoop : public IStateManager {
     void loadCommonComponents();
     void displayNameInput();
     void subscribeNameInputEvents();
+    void switchGraphicsInGame();
 
     std::shared_ptr<IEventManager> _eventManager;
         /** The event manager for handling input events. */
