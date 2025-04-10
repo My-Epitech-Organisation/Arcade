@@ -8,6 +8,7 @@
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "Shared/Models/ComponentType.hpp"
 #include "Shared/Interface/IArcadeModule.hpp"
+#include "Shared/Models/ModuleInfos.hpp"
 
 ComponentType PositionComponent::getType() const {
     return ComponentType::POSITION;
@@ -25,5 +26,11 @@ extern "C" {
 
     Arcade::IArcadeModule* entryPoint(void) {
         return new PositionComponent(0, 0);
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"PositionComponent", "IDK",
+            "IDK",
+            "./lib/arcade_position.so", Arcade::ModuleType::GAME_COMPONENT};
     }
 }
