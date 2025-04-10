@@ -162,10 +162,11 @@ void NCursesModule::pollEvents() {
     }
     _event.setModule(this);
     int ch = _window.getChar();
-    if (ch == 27) {
-        ungetch(ch);
-        _event.storeKeyEvent(ch);  // Store escape key press
-    } else if (ch == KEY_RESIZE) {
+    // if (ch == 27) {
+    //     ungetch(ch);
+    //     _event.storeKeyEvent(ch);  // Store escape key press
+    // } else
+    if (ch == KEY_RESIZE) {
         int newMaxY, newMaxX;
         endwin();
         refresh();
@@ -187,13 +188,10 @@ void NCursesModule::pollEvents() {
     } else if (ch == KEY_MOUSE) {
         MEVENT event;
         if (getmouse(&event) == OK) {
-            // Store the mouse event for later processing
             _event.storeMouseEvent(event);
         }
     } else if (ch != ERR) {
-        // Store non-special key presses
         _event.storeKeyEvent(ch);
-        ungetch(ch);
     }
 }
 
