@@ -7,7 +7,11 @@
 */
 
 #include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
 #include "GameLoop/GameLoop.hpp"
+#include "ECS/Entity/EntityManager.hpp"
 #include "EventManager/KeyEvent/KeyEvent.hpp"
 #include "EventManager/KeyEvent/MouseEvent.hpp"
 #include "Shared/Models/EventType.hpp"
@@ -20,6 +24,29 @@ void GameLoop::subscribeEvents() {
     subscribeNum3Event();
     subscribeNum4Event();
     subscribeNum5Event();
+    subscribeNKeyEvent();
+    subscribePKeyEvent();
+}
+
+void GameLoop::subscribeNKeyEvent() {
+    KeyEvent nKeyEvent(Keys::N, EventType::KEY_RELEASED);
+    _eventManager->subscribe(nKeyEvent, [this]() {
+        if (_state == GAME_PLAYING && _graphicsLibs.size() > 1) {
+            _selectedGraphics = (_selectedGraphics + 1) % _graphicsLibs.size();
+            switchGraphicsInGame();
+        }
+    });
+}
+
+void GameLoop::subscribePKeyEvent() {
+    KeyEvent pKeyEvent(Keys::P, EventType::KEY_RELEASED);
+    _eventManager->subscribe(pKeyEvent, [this]() {
+        if (_state == GAME_PLAYING && _graphicsLibs.size() > 1) {
+            _selectedGraphics = (_selectedGraphics == 0) ?
+                _graphicsLibs.size() - 1 : _selectedGraphics - 1;
+            switchGraphicsInGame();
+        }
+    });
 }
 
 void GameLoop::subscribeNameInputEvents() {
@@ -297,6 +324,34 @@ void GameLoop::handleLeftClickGraphicsSelection(int x, int y, int centerX) {
     if (!clickedOnGraphics && y >= MENU_START_Y
         + _graphicsLibs.size() * MENU_ITEM_HEIGHT + 40) {
         _state = MAIN_MENU;
+    }
+}
+
+void GameLoop::switchGraphicsInGame() {
+    try {
+        bool wasInGame = (_state == GAME_PLAYING);
+
+        std::string newLibPath = _graphicsLibs[_selectedGraphics];
+        _graphicsLoader.setLibPath(newLibPath);
+        auto newGraphics = _graphicsLoader.getInstanceUPtr("entryPoint");
+        auto sharedPtr = std::shared_ptr<IDisplayModule>(
+            std::move(newGraphics));
+
+        if (sharedPtr) {
+            _currentGraphics = sharedPtr;
+            _window->setDisplayModule(sharedPtr);
+
+            if (wasInGame && _currentGame)
+                _state = GAME_PLAYING;
+        }
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Failed to load graphics library: "
+            << e.what() << std::endl;
+    } catch (const GraphicsException& e) {
+        std::cerr << "Graphics error: " << e.what() << std::endl;
+    } catch (const ArcadeException& e) {
+        std::cerr << "Error loading graphics libraries: "
+            << e.what() << std::endl;
     }
 }
 
