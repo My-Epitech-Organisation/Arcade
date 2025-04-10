@@ -39,6 +39,7 @@ class NCursesModule : public Arcade::IDisplayModule {
     int _verticalSpacing = 2;  // Vertical spacing between text lines
     int _lineHeight = 1;  // Fixed line height in character units
     std::map<int, int> _yPositionMap;  // Maps pixel Y to character Y positions
+    std::map<int, int> _reverseYMap;   // Maps character Y to pixel Y positions
 
     // Convert pixel coordinates to character-based coordinates
     int pixelToCharX(int x) const;
@@ -64,6 +65,10 @@ class NCursesModule : public Arcade::IDisplayModule {
     bool isKeyPressed(int keyCode) override;
     bool isMouseButtonPressed(int button) const override;
     std::pair<size_t, size_t> getMousePosition() const override;
+
+    // Convert character coordinates to pixel coordinates
+    int charToPixelX(int x) const;
+    int charToPixelY(int y) const;
 };
 
 #endif  // SRC_GRAPHICS_NCURSES_NCURSES_HPP_

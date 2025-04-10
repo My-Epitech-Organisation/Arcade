@@ -12,6 +12,7 @@
 #include "Models/KeysType.hpp"
 #include "Models/MouseButtonType.hpp"
 #include "NCurses/NCursesKeys.hpp"
+#include "NCurses/NCurses.hpp"
 
 bool NCurses::NCursesEvent::isKeyPressed(int keyCode) const {
     int key = _lastKeyPressed;
@@ -47,10 +48,26 @@ bool NCurses::NCursesEvent::isMouseButtonPressed(int button) const {
     return (_lastMouseEvent.bstate & ncursesButton) != 0;
 }
 
-std::pair<size_t, size_t> NCurses::NCursesEvent::getMousePosition() const {
+std::pair<size_t, size_t> NCurses::NCursesEvent::getRawMousePosition() const {
     if (_hasMouseEvent) {
         return {static_cast<size_t>(_lastMouseEvent.x),
                 static_cast<size_t>(_lastMouseEvent.y)};
     }
     return {0, 0};
+}
+
+std::pair<size_t, size_t> NCurses::NCursesEvent::getMousePosition(const NCursesModule* module) const {
+    if (!_hasMouseEvent || module == nullptr) {
+        return {0, 0};
+    }
+
+    // Convert from character coordinates to pixel coordinates
+    int pixelX = module->charToPixelX(_lastMouseEvent.x);
+    int pixelY = module->charToPixelY(_lastMouseEvent.y);
+
+    return {static_cast<size_t>(pixelX), static_cast<size_t>(pixelY)};
+}
+
+std::pair<size_t, size_t> NCurses::NCursesEvent::getMousePosition() const {
+    return getRawMousePosition();
 }

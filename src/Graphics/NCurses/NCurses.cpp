@@ -27,6 +27,7 @@ void NCursesModule::calculateRatio() {
         _pixelToCharX = static_cast<float>(maxX) / _referencePixelWidth;
         _pixelToCharY = 1.0f;
         _yPositionMap.clear();
+        _reverseYMap.clear();
     }
 }
 
@@ -54,7 +55,25 @@ int NCursesModule::pixelToCharY(int y) {
         }
     }
     _yPositionMap[y] = nextY;
+    _reverseYMap[nextY] = y;  // Store the reverse mapping too
     return nextY;
+}
+
+int NCursesModule::charToPixelX(int x) const {
+    if (_pixelToCharX <= 0) return 0;
+    return static_cast<int>(x / _pixelToCharX);
+}
+
+int NCursesModule::charToPixelY(int y) const {
+    // Look up the reverse mapping
+    auto it = _reverseYMap.find(y);
+    if (it != _reverseYMap.end()) {
+        return it->second;
+    }
+
+    // If no mapping exists, estimate based on the current position
+    // This is approximate but better than returning character positions
+    return y * 20;
 }
 
 void NCursesModule::init(float width, float height) {
@@ -206,7 +225,14 @@ bool NCursesModule::isMouseButtonPressed(int button) const {
 }
 
 std::pair<size_t, size_t> NCursesModule::getMousePosition() const {
-    return _event.getMousePosition();
+    // Get raw character coordinates from the event handler
+    auto [charX, charY] = _event.getRawMousePosition();
+
+    // Convert character coordinates to pixel coordinates
+    int pixelX = charToPixelX(charX);
+    int pixelY = charToPixelY(charY);
+
+    return {static_cast<size_t>(pixelX), static_cast<size_t>(pixelY)};
 }
 
 extern "C" {
