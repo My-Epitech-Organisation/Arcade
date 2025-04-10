@@ -60,10 +60,11 @@ std::pair<size_t, size_t> NCurses::NCursesEvent::getMousePosition() const {
     if (!_hasMouseEvent || _module == nullptr) {
         return {0, 0};
     }
+    int pixelOffset = 5;
 
     auto [charX, charY] = getRawMousePosition();
-    int pixelX = _module->charToPixelX(charX);
-    int pixelY = _module->charToPixelY(charY);
+    int pixelX = _module->charToPixelX(charX) + pixelOffset;
+    int pixelY = _module->charToPixelY(charY) + pixelOffset;
 
     return {static_cast<size_t>(pixelX), static_cast<size_t>(pixelY)};
 }
