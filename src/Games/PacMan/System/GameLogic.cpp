@@ -63,6 +63,12 @@ std::shared_ptr<PacmanComponent> pacman) {
             }
         }
 
+        auto ghostSpriteTemp = std::dynamic_pointer_cast<SpriteComponent>(
+            _componentManager->getComponentByType(entity,
+                ComponentType::SPRITE));
+
+        ghostSpriteTemp->spritePath = "assets/pacman/eyes.png";
+
         if (ghostComp->getGridX() == targetX &&
             ghostComp->getGridY() == targetY) {
             ghostComp->setState(GhostState::NORMAL);
