@@ -121,6 +121,9 @@ class GameLoop : public IStateManager {
     void subscribeNum3Event();
     void subscribeNum4Event();
     void subscribeNum5Event();
+    void subscribeGKeyEvent();
+    void subscribeHKeyEvent();
+    void switchGameInGame();
     void subscribeUpEvent();
     void subscribeDownEvent();
     void subscribeEnterEvent();
@@ -183,6 +186,7 @@ class GameLoop : public IStateManager {
         /** Height of each menu item. */
     static constexpr int STATUS_OFFSET_Y = 40;
         /** Y-offset for status display. */
+    bool _gameSwitch = false;
 };
 
 }  // namespace Arcade
