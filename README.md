@@ -26,7 +26,7 @@ Using **CMake**:
 ```bash
 mkdir build
 cd build
-cmake .. -DENABLE_CORE=ON
+cmake ..
 cmake --build .
 ```
 
