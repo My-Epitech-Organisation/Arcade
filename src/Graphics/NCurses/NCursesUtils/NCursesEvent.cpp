@@ -56,18 +56,14 @@ std::pair<size_t, size_t> NCurses::NCursesEvent::getRawMousePosition() const {
     return {0, 0};
 }
 
-std::pair<size_t, size_t> NCurses::NCursesEvent::getMousePosition(const NCursesModule* module) const {
-    if (!_hasMouseEvent || module == nullptr) {
+std::pair<size_t, size_t> NCurses::NCursesEvent::getMousePosition() const {
+    if (!_hasMouseEvent || _module == nullptr) {
         return {0, 0};
     }
 
-    // Convert from character coordinates to pixel coordinates
-    int pixelX = module->charToPixelX(_lastMouseEvent.x);
-    int pixelY = module->charToPixelY(_lastMouseEvent.y);
+    auto [charX, charY] = getRawMousePosition();
+    int pixelX = _module->charToPixelX(charX);
+    int pixelY = _module->charToPixelY(charY);
 
     return {static_cast<size_t>(pixelX), static_cast<size_t>(pixelY)};
-}
-
-std::pair<size_t, size_t> NCurses::NCursesEvent::getMousePosition() const {
-    return getRawMousePosition();
 }

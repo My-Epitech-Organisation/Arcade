@@ -160,7 +160,7 @@ void NCursesModule::pollEvents() {
         _running = false;
         return;
     }
-
+    _event.setModule(this);
     int ch = _window.getChar();
     if (ch == 27) {
         ungetch(ch);
@@ -194,9 +194,6 @@ void NCursesModule::pollEvents() {
         // Store non-special key presses
         _event.storeKeyEvent(ch);
         ungetch(ch);
-    } else {
-        // No event - reset mouse event to avoid false positives
-        _event.resetMouseEvent();
     }
 }
 
@@ -225,14 +222,7 @@ bool NCursesModule::isMouseButtonPressed(int button) const {
 }
 
 std::pair<size_t, size_t> NCursesModule::getMousePosition() const {
-    // Get raw character coordinates from the event handler
-    auto [charX, charY] = _event.getRawMousePosition();
-
-    // Convert character coordinates to pixel coordinates
-    int pixelX = charToPixelX(charX);
-    int pixelY = charToPixelY(charY);
-
-    return {static_cast<size_t>(pixelX), static_cast<size_t>(pixelY)};
+    return _event.getMousePosition();
 }
 
 extern "C" {
