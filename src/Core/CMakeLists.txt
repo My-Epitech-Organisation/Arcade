@@ -7,28 +7,32 @@ set(SRC
     ${SRCCORE}/EventManager/EventManager.cpp
     ${SRCCORE}/GameLoop/GameLoop.cpp
     ${SRCCORE}/GameLoop/GameLoopUtils.cpp
-    ${SRCCORE}/Menu/Menu.cpp
     ${SRCCORE}/Window/Window.cpp
     ${SRCCORE}/Exceptions/Exception.cpp
+    ${SRCCORE}/Score/ScoreManager.cpp
 )
 
 set(INC
     ${INCCORE}/DLLoader/DLLoader.hpp
     ${SRCCORE}/EventManager/EventManager.hpp
     ${INCCORE}/GameLoop/GameLoop.hpp
-    ${INCCORE}/Menu/Menu.hpp
     ${INCCORE}/Window/Window.hpp
     ${INCCORE}/Exceptions/Exception.hpp
+    ${INCCORE}/Score/ScoreManager.hpp
 )
+
+add_subdirectory(Menu)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_library(arcade_core STATIC ${SRC} ${INC})
 target_include_directories(arcade_core PUBLIC ${INCCORE} ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_SOURCE_DIR}/../Shared)
 add_executable(arcade main.cpp)
 target_include_directories(arcade PUBLIC ${INCCORE} ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_SOURCE_DIR}/../Shared)
-target_link_libraries(arcade dl arcade_core arcade_ecs)
+target_link_libraries(arcade dl arcade_core arcade_ecs arcade_parser)
 if(ENABLE_COVERAGE)
     target_compile_options(arcade_core PRIVATE -O0 -g --coverage -fprofile-arcs -ftest-coverage)
-    target_link_libraries(arcade_core PRIVATE arcade_ecs --coverage)
+    target_link_libraries(arcade_core PRIVATE arcade_ecs arcade_parser --coverage)
 else ()
-    target_link_libraries(arcade_core PRIVATE arcade_ecs)
+    target_link_libraries(arcade_core PRIVATE arcade_ecs arcade_parser)
 endif()

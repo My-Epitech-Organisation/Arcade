@@ -1,0 +1,10 @@
+add_library(arcade_menu SHARED Menu.cpp)
+
+set_target_properties(arcade_menu PROPERTIES PREFIX "" OUTPUT_NAME "arcade_menu")
+target_include_directories(arcade_menu PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../.. ${CMAKE_CURRENT_SOURCE_DIR}/../../Shared)
+if(ENABLE_COVERAGE)
+    target_compile_options(arcade_menu PRIVATE -O0 -g --coverage -fprofile-arcs -ftest-coverage)
+    target_link_libraries(arcade_menu PRIVATE --coverage arcade_core)
+else ()
+    target_link_libraries(arcade_menu PRIVATE arcade_core)
+endif()
