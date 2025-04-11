@@ -10,6 +10,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
+#include "Models/ModuleInfos.hpp"
 
 OpenGLModule::OpenGLModule()
     : _name("OpenGL"), _windowWidth(800), _windowHeight(600), _running(true) {}
@@ -114,5 +115,11 @@ std::pair<size_t, size_t> OpenGLModule::getMousePosition() const {
 extern "C" {
     Arcade::IDisplayModule* entryPoint(void) {
         return new OpenGLModule();
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"OpenGL", "IDK",
+            "IDK",
+            "./lib/arcade_opengl.so", Arcade::ModuleType::GRAPHIC_LIB};
     }
 }

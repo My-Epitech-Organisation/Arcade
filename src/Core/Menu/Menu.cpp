@@ -14,6 +14,7 @@
 #include "Core/Window/Window.hpp"
 #include "Shared/Interface/Display/IDisplayModule.hpp"
 #include "Shared/Models/ColorType.hpp"
+#include "Shared/Models/ModuleInfos.hpp"
 
 namespace Arcade {
 
@@ -208,5 +209,11 @@ void Menu::setScoreManager(std::shared_ptr<ScoreManager> scoreManager) {
 extern "C" {
     Arcade::IMenu* entryPoint() {
         return new Arcade::Menu(nullptr, nullptr);
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"Menu", "IDK",
+            "IDK",
+            "./lib/arcade_menu.so", Arcade::ModuleType::GAME_COMPONENT};
     }
 }

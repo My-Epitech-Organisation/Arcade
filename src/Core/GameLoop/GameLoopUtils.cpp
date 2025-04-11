@@ -7,7 +7,12 @@
 */
 
 #include <iostream>
+#include <string>
+#include <memory>
+#include <utility>
 #include "GameLoop/GameLoop.hpp"
+#include "ECS/Entity/EntityManager.hpp"
+#include "ECS/Components/ComponentManager.hpp"
 #include "EventManager/KeyEvent/KeyEvent.hpp"
 #include "EventManager/KeyEvent/MouseEvent.hpp"
 #include "Shared/Models/EventType.hpp"
@@ -20,7 +25,52 @@ void GameLoop::subscribeEvents() {
     subscribeNum3Event();
     subscribeNum4Event();
     subscribeNum5Event();
-    subscribeNameInputEvents();
+    subscribeGKeyEvent();
+    subscribeHKeyEvent();
+    subscribeNKeyEvent();
+    subscribePKeyEvent();
+}
+
+void GameLoop::subscribeGKeyEvent() {
+    KeyEvent gKeyEvent(Keys::G, EventType::KEY_RELEASED);
+    _eventManager->subscribe(gKeyEvent, [this]() {
+        if (_state == GAME_PLAYING && _gameLibs.size() > 1 && !_gameSwitch) {
+            _selectedGame = (_selectedGame + 1) % _gameLibs.size();
+            _gameSwitch = true;
+        }
+    });
+}
+
+void GameLoop::subscribeHKeyEvent() {
+    KeyEvent hKeyEvent(Keys::H, EventType::KEY_RELEASED);
+    _eventManager->subscribe(hKeyEvent, [this]() {
+        if (_state == GAME_PLAYING && _gameLibs.size() > 1 && !_gameSwitch) {
+            _selectedGame = (_selectedGame == 0) ?
+                _gameLibs.size() - 1 : _selectedGame - 1;
+            _gameSwitch = true;
+        }
+    });
+}
+
+void GameLoop::subscribeNKeyEvent() {
+    KeyEvent nKeyEvent(Keys::N, EventType::KEY_RELEASED);
+    _eventManager->subscribe(nKeyEvent, [this]() {
+        if (_state == GAME_PLAYING && _graphicsLibs.size() > 1) {
+            _selectedGraphics = (_selectedGraphics + 1) % _graphicsLibs.size();
+            switchGraphicsInGame();
+        }
+    });
+}
+
+void GameLoop::subscribePKeyEvent() {
+    KeyEvent pKeyEvent(Keys::P, EventType::KEY_RELEASED);
+    _eventManager->subscribe(pKeyEvent, [this]() {
+        if (_state == GAME_PLAYING && _graphicsLibs.size() > 1) {
+            _selectedGraphics = (_selectedGraphics == 0) ?
+                _graphicsLibs.size() - 1 : _selectedGraphics - 1;
+            switchGraphicsInGame();
+        }
+    });
 }
 
 void GameLoop::subscribeNameInputEvents() {
@@ -34,7 +84,7 @@ void GameLoop::subscribeNameInputEvents() {
         });
     }
 
-    for (int key = Keys::NUM0; key <= Keys::NUM9; key++) {
+    for (int key = Keys::NUM6; key <= Keys::NUM9; key++) {
         KeyEvent numEvent(static_cast<Keys>(key), EventType::KEY_PRESSED);
         _eventManager->subscribe(numEvent, [this, key]() {
             if (_state == NAME_INPUT && _inputPlayerName.length() < 15) {
@@ -298,6 +348,110 @@ void GameLoop::handleLeftClickGraphicsSelection(int x, int y, int centerX) {
     if (!clickedOnGraphics && y >= MENU_START_Y
         + _graphicsLibs.size() * MENU_ITEM_HEIGHT + 40) {
         _state = MAIN_MENU;
+    }
+}
+
+void GameLoop::switchGameInGame() {
+    try {
+        bool wasInGame = (_state == GAME_PLAYING);
+
+        std::string previousGamePath = "";
+        int previousScore = 0;
+
+        if (_currentGame) {
+            previousGamePath = _gameLibs[_selectedGame];
+            previousScore = _currentGame->getScore();
+
+            _currentGame->stop();
+            _currentGame.reset();
+        }
+
+        _entityManager = std::make_shared<EntityManager>();
+
+        _componentManager = std::make_shared<ComponentManager>();
+
+        _eventManager->unsubscribeAll();
+        subscribeEvents();
+        subscribeNavEvents();
+        subscribeMouseEvents();
+
+        _gameLoader.setLibPath(_gameLibs[_selectedGame]);
+        typedef IArcadeModule* (*EntryPointFunc)(
+            std::shared_ptr<IEventManager>,
+            std::shared_ptr<IComponentManager>,
+            std::shared_ptr<IEntityManager>);
+
+        auto handle = dlopen(_gameLibs[_selectedGame].c_str(), RTLD_LAZY);
+        if (!handle)
+            throw std::runtime_error(dlerror());
+
+        auto entryPoint = reinterpret_cast<EntryPointFunc>(
+            dlsym(handle, "entryPoint"));
+        if (!entryPoint) {
+            dlclose(handle);
+            throw std::runtime_error(dlerror());
+        }
+
+        _entityManager.reset();
+        _entityManager = std::make_shared<EntityManager>();
+
+        auto newGame = std::shared_ptr<IGameModule>(
+            static_cast<IGameModule*>(entryPoint(_eventManager,
+                _componentManager, _entityManager)),
+            [handle](IGameModule* ptr) {
+                typedef void (*DestroyFunc)(IGameModule*);
+                auto destroy = reinterpret_cast<DestroyFunc>(
+                    dlsym(handle, "destroy"));
+                if (destroy) destroy(ptr);
+                dlclose(handle);
+            });
+
+        if (newGame) {
+            _currentGame = newGame;
+
+            if (!previousGamePath.empty()) {
+                _scoreManager->addScore(previousGamePath, previousScore);
+            }
+
+            _window->clearScreen();
+
+            _currentGame->init(_eventManager, _componentManager,
+                _entityManager);
+
+            _state = GAME_PLAYING;
+
+            _window->refreshScreen();
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error switching game: " << e.what() << std::endl;
+    }
+}
+
+void GameLoop::switchGraphicsInGame() {
+    try {
+        bool wasInGame = (_state == GAME_PLAYING);
+
+        std::string newLibPath = _graphicsLibs[_selectedGraphics];
+        _graphicsLoader.setLibPath(newLibPath);
+        auto newGraphics = _graphicsLoader.getInstanceUPtr("entryPoint");
+        auto sharedPtr = std::shared_ptr<IDisplayModule>(
+            std::move(newGraphics));
+
+        if (sharedPtr) {
+            _currentGraphics = sharedPtr;
+            _window->setDisplayModule(sharedPtr);
+
+            if (wasInGame && _currentGame)
+                _state = GAME_PLAYING;
+        }
+    } catch (const LibraryLoadException& e) {
+        std::cerr << "Failed to load graphics library: "
+            << e.what() << std::endl;
+    } catch (const GraphicsException& e) {
+        std::cerr << "Graphics error: " << e.what() << std::endl;
+    } catch (const ArcadeException& e) {
+        std::cerr << "Error loading graphics libraries: "
+            << e.what() << std::endl;
     }
 }
 

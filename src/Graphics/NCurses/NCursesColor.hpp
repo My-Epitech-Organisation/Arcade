@@ -14,7 +14,7 @@
 class NCursesColor {
  private:
     static bool _initialized;  // Just declare it here, don't initialize
-    static const int COLOR_PAIR_OFFSET = 1;
+    static const int COLOR_PAIR_OFFSET = 2;
 
  public:
     static void initColorPairs();

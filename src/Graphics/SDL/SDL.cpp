@@ -15,6 +15,7 @@
 #include <iostream>
 #include "SDL/SDLColor.hpp"
 #include "Interface/IArcadeModule.hpp"
+#include "Models/ModuleInfos.hpp"
 
 SDLModule::~SDLModule() {
     stop();
@@ -145,4 +146,10 @@ extern "C" __attribute__((destructor)) void fini_sdl(void) { }
 
 extern "C" Arcade::IArcadeModule* entryPoint(void) {
     return new SDLModule();
+}
+
+extern "C" Arcade::ModuleInfos module_infos() {
+    return {"SDL2", "IDK",
+        "IDK",
+        "./lib/arcade_sdl2.so", Arcade::ModuleType::GRAPHIC_LIB};
 }

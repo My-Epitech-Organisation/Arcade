@@ -7,6 +7,7 @@
 */
 #include "ECS/Components/Text/TextComponent.hpp"
 #include "Shared/Models/ComponentType.hpp"
+#include "Shared/Models/ModuleInfos.hpp"
 
 ComponentType TextComponent::getType() const {
     return ComponentType::TEXT;
@@ -24,5 +25,11 @@ extern "C" {
 
     Arcade::IArcadeModule* entryPoint(void) {
         return new TextComponent("Default Text", 0, 0, Arcade::Color::WHITE);
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"TextComponent", "IDK",
+            "IDK",
+            "./lib/arcade_text.so", Arcade::ModuleType::GAME_COMPONENT};
     }
 }

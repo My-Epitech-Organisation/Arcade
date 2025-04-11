@@ -24,7 +24,9 @@ class ResourceException : public ArcadeException {
      * @param message The error message
      */
     explicit ResourceException(const std::string& message)
-        : ArcadeException("Resource Error: " + message) {}
+        : ArcadeException("Resource Error: " + message) {
+        _type = "ResourceException";
+    }
 };
 
 }  // namespace Arcade

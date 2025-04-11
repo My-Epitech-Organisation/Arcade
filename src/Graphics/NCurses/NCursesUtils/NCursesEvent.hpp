@@ -12,14 +12,33 @@
     #include <functional>
     #include <utility>
 
+class NCursesModule;
+
 namespace NCurses {
 class NCursesEvent {
+ private:
+    MEVENT _lastMouseEvent;
+    bool _hasMouseEvent;
+    int _lastKeyPressed;
+
+    const NCursesModule* _module;
+
  public:
-    NCursesEvent() = default;
+    NCursesEvent() : _hasMouseEvent(false), _lastKeyPressed(ERR),
+        _module(nullptr) {}
 
     bool isKeyPressed(int keyCode) const;
     bool isMouseButtonPressed(int button) const;
+
+    std::pair<size_t, size_t> getRawMousePosition() const;
+
     std::pair<size_t, size_t> getMousePosition() const;
+
+    void setModule(const NCursesModule* module) { _module = module; }
+
+    void storeMouseEvent(const MEVENT& event);
+    void storeKeyEvent(int key);
+    void resetMouseEvent();
 };
 }  // namespace NCurses
 

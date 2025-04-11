@@ -10,12 +10,71 @@
 #include <utility>
 #include <string>
 #include <iostream>
+#include <map>
 #include "NCurses/NCurses.hpp"
 #include "NCurses/NCursesColor.hpp"
 #include "Interface/IArcadeModule.hpp"
+#include "Models/ModuleInfos.hpp"
 
 NCursesModule::~NCursesModule() {
     stop();
+}
+
+void NCursesModule::calculateRatio() {
+    int maxY, maxX;
+    getmaxyx(stdscr, maxY, maxX);
+
+    if (maxX > 0 && maxY > 0) {
+        _pixelToCharX = static_cast<float>(maxX) / _referencePixelWidth;
+        _pixelToCharY = 1.0f;
+        _yPositionMap.clear();
+        _reverseYMap.clear();
+    }
+}
+
+int NCursesModule::pixelToCharX(int x) const {
+    return static_cast<int>(x * _pixelToCharX);
+}
+
+int NCursesModule::pixelToCharY(int y) {
+    if (_yPositionMap.find(y) != _yPositionMap.end()) {
+        return _yPositionMap[y];
+    }
+
+    int nextY;
+    if (_yPositionMap.empty()) {
+        nextY = 1;
+    } else {
+        auto lastItem = _yPositionMap.rbegin();
+        int keyDiff = y - lastItem->first;
+        if (keyDiff < 10) {
+            nextY = lastItem->second;
+        } else if (keyDiff < 30) {
+            nextY = lastItem->second + 1;
+        } else {
+            nextY = lastItem->second + 2;
+        }
+    }
+    _yPositionMap[y] = nextY;
+    _reverseYMap[nextY] = y;  // Store the reverse mapping too
+    return nextY;
+}
+
+int NCursesModule::charToPixelX(int x) const {
+    if (_pixelToCharX <= 0) return 0;
+    return static_cast<int>(x / _pixelToCharX);
+}
+
+int NCursesModule::charToPixelY(int y) const {
+    // Look up the reverse mapping
+    auto it = _reverseYMap.find(y);
+    if (it != _reverseYMap.end()) {
+        return it->second;
+    }
+
+    // If no mapping exists, estimate based on the current position
+    // This is approximate but better than returning character positions
+    return y * 20;
 }
 
 void NCursesModule::init(float width, float height) {
@@ -25,8 +84,27 @@ void NCursesModule::init(float width, float height) {
     try {
         _window.createWindow(_windowWidth, _windowHeight);
         _window.enableKeypad(true);
-        NCursesColor::initColorPairs();
-        _colorManager.initColors();
+
+        if (has_colors()) {
+            start_color();
+            NCursesColor::initColorPairs();
+            _colorManager.initColors();
+        } else {
+            std::cerr << "Terminal does not support colors" << std::endl;
+        }
+
+        calculateRatio();
+        _yPositionMap.clear();
+
+        clearScreen();
+        refreshScreen();
+
+        WINDOW* win = _window.getWindow();
+        if (win) {
+            box(win, 0, 0);
+            mvwprintw(win, 1, 1, "NCurses Module Initialized");
+            wrefresh(win);
+        }
     } catch (const std::exception &e) {
         std::cerr << "NCurses initialization error: " << e.what() << std::endl;
         _running = false;
@@ -47,15 +125,18 @@ void NCursesModule::refreshScreen() {
 }
 
 void NCursesModule::drawEntity(int x, int y, char symbol) {
-    if (!_window.isOpen() || x < 0 || y < 0 ||
-        x >= _windowWidth || y >= _windowHeight) {
+    int charX = pixelToCharX(x);
+    int charY = pixelToCharY(y);
+
+    if (!_window.isOpen() || charX < 0 || charY < 0 ||
+        charX >= _window.getWidth() || charY >= _window.getHeight()) {
         return;
     }
 
     WINDOW* win = _window.getWindow();
     int colorPair = _entity.getEntityColor(symbol);
 
-    _entity.drawEntity(win, x, y, symbol, colorPair);
+    _entity.drawEntity(win, charX, charY, symbol, colorPair);
 }
 
 void NCursesModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
@@ -75,22 +156,55 @@ void NCursesModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
 }
 
 void NCursesModule::drawTexture(int x, int y, const std::string &textureId) {
+    // Textures are not supported in NCurses
 }
 
 void NCursesModule::drawText(const std::string &text,
     int x, int y, Arcade::Color color) {
-    if (!_window.isOpen() || x < 0 || y < 0 ||
-        x >= _windowWidth || y >= _windowHeight) {
+    int charX = pixelToCharX(x);
+    int charY = pixelToCharY(y);
+
+    if (!_window.isOpen() || charX < 0 || charY < 0 ||
+        charX >= _window.getWidth() || charY >= _window.getHeight()) {
         return;
     }
     WINDOW* win = _window.getWindow();
-    _text.drawText(win, text, x, y, color);
+    _text.drawText(win, text, charX, charY, color);
 }
 
 void NCursesModule::pollEvents() {
     if (!_window.isOpen()) {
         _running = false;
         return;
+    }
+    _event.setModule(this);
+    int ch = _window.getChar();
+    if (ch == KEY_RESIZE) {
+        int newMaxY, newMaxX;
+        endwin();
+        refresh();
+        getmaxyx(stdscr, newMaxY, newMaxX);
+        _windowWidth = newMaxX;
+        _windowHeight = newMaxY;
+        mmask_t currentMouseMask;
+        mousemask(0, &currentMouseMask);
+        _window.closeWindow();
+        _window.createWindow(_windowWidth, _windowHeight);
+        _window.enableKeypad(true);
+        mousemask(currentMouseMask, NULL);
+
+        calculateRatio();
+        _yPositionMap.clear();
+
+        clearScreen();
+        refreshScreen();
+    } else if (ch == KEY_MOUSE) {
+        MEVENT event;
+        if (getmouse(&event) == OK) {
+            _event.storeMouseEvent(event);
+        }
+    } else if (ch != ERR) {
+        _event.storeKeyEvent(ch);
     }
 }
 
@@ -119,9 +233,8 @@ bool NCursesModule::isMouseButtonPressed(int button) const {
 }
 
 std::pair<size_t, size_t> NCursesModule::getMousePosition() const {
-    return {0, 0};
+    return _event.getMousePosition();
 }
-
 
 extern "C" {
     __attribute__((constructor))
@@ -135,5 +248,11 @@ extern "C" {
 
     Arcade::IArcadeModule* entryPoint(void) {
         return new NCursesModule();
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"NCurses", "IDK",
+            "IDK",
+            "./lib/arcade_ncurses.so", Arcade::ModuleType::GRAPHIC_LIB};
     }
 }

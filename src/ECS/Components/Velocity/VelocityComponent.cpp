@@ -8,6 +8,7 @@
 
 #include "ECS/Components/Velocity/VelocityComponent.hpp"
 #include "Shared/Models/ComponentType.hpp"
+#include "Shared/Models/ModuleInfos.hpp"
 
 ComponentType VelocityComponent::getType() const {
     return ComponentType::VELOCITY;
@@ -25,5 +26,11 @@ extern "C" {
 
     Arcade::IArcadeModule* entryPoint(void) {
         return new VelocityComponent(0, 0);
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"VelocityComponent", "IDK",
+            "IDK",
+            "./lib/arcade_velocity.so", Arcade::ModuleType::GAME_COMPONENT};
     }
 }

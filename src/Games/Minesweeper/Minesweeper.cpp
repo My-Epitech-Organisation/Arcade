@@ -26,6 +26,7 @@
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 #include "Games/Minesweeper/MinesweeperFactory.hpp"
 #include "Shared/JSONParser/JSONParser.hpp"
+#include "Shared/Models/ModuleInfos.hpp"
 
 namespace Arcade {
 
@@ -176,6 +177,12 @@ extern "C" {
 
     void destroy(IGameModule* instance) {
         delete instance;
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"Minesweeper", "IDK",
+            "IDK",
+            "./lib/arcade_minesweeper.so", Arcade::ModuleType::GAME};
     }
 }
 

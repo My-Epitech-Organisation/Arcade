@@ -7,6 +7,7 @@
 */
 #include "NCursesUtils/NCursesWindow.hpp"
 #include <stdexcept>
+#include <cstdio>
 
 NCurses::NCursesWindow::~NCursesWindow() {
     if (_isOpen) {
@@ -15,21 +16,37 @@ NCurses::NCursesWindow::~NCursesWindow() {
 }
 
 void NCurses::NCursesWindow::createWindow(int width, int height) {
-    initscr();
+    if (!isendwin()) {
+        initscr();
+    } else {
+        refresh();
+    }
     noecho();
     cbreak();
     curs_set(0);
     nodelay(stdscr, TRUE);
     timeout(100);
+    keypad(stdscr, TRUE);
+
+    mmask_t mouseMask = ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION;
+    mousemask(mouseMask, NULL);
+    mouseinterval(0);
+
+    // Enable extended mouse tracking (works in xterm and similar terminals)
+    printf("\033[?1003h\n");
+    fflush(stdout);
 
     _window = newwin(height, width, 0, 0);
     if (!_window) {
         endwin();
         throw std::runtime_error("Failed to create NCurses window");
     }
+    nodelay(_window, TRUE);
+    keypad(_window, TRUE);
     _windowHeight = height;
     _windowWidth = width;
     _isOpen = true;
+    wrefresh(_window);
 }
 
 void NCurses::NCursesWindow::clearWindow() {
@@ -45,9 +62,16 @@ void NCurses::NCursesWindow::refreshWindow() {
 void NCurses::NCursesWindow::closeWindow() {
     if (!_isOpen) return;
 
-    delwin(_window);
+    // Disable extended mouse tracking before closing
+    printf("\033[?1003l\n");
+
+    if (_window) {
+        werase(_window);
+        wrefresh(_window);
+        delwin(_window);
+        _window = nullptr;
+    }
     endwin();
-    _window = nullptr;
     _isOpen = false;
 }
 

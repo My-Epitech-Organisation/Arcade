@@ -12,6 +12,7 @@
 #include <iostream>
 #include "Allegro5/Allegro5.hpp"
 #include "Models/ColorType.hpp"
+#include "Models/ModuleInfos.hpp"
 
 Allegro5::~Allegro5() {
     stop();
@@ -123,5 +124,11 @@ extern "C" {
 
     Arcade::IArcadeModule* entryPoint(void) {
         return new Allegro5();
+    }
+
+    Arcade::ModuleInfos module_infos() {
+        return {"Allegro5", "IDK",
+            "IDK",
+            "./lib/arcade_allegro5.so", Arcade::ModuleType::GRAPHIC_LIB};
     }
 }
