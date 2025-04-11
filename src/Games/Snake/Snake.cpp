@@ -56,7 +56,14 @@ std::shared_ptr<IEntityManager> entityManager) {
 void SnakeGame::initGame() {
     SnakeFactory factory(_entityManager, _componentManager);
 
-    _snakeEntity = factory.createSnake(300, 300, Direction::RIGHT);
+    size_t gridWidth = 30;
+    size_t gridHeight = 20;
+    float cellSize = 20.0f;
+    _gridEntity = factory.createGrid(gridWidth, gridHeight, cellSize);
+
+    size_t snakeStartX = gridWidth / 2;
+    size_t snakeStartY = gridHeight / 2;
+    _snakeEntity = factory.createSnake(snakeStartX * cellSize, snakeStartY * cellSize, Direction::RIGHT);
 
     spawnFood();
 }
@@ -64,48 +71,33 @@ void SnakeGame::initGame() {
 void SnakeGame::spawnFood() {
     SnakeFactory factory(_entityManager, _componentManager);
 
-    std::shared_ptr<SnakeComponent> snakeComponent = nullptr;
+    auto gridComp = std::dynamic_pointer_cast<GridComponent>(
+        _componentManager->getComponentByType(_gridEntity, static_cast<ComponentType>(1000)));
 
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
-        if (name == "snake" && entity == _snakeEntity) {
-            auto components = _componentManager->getEntityComponents(entity);
-            for (const auto& component : components) {
-                auto castComponent = std::dynamic_pointer_cast<SnakeComponent>(component);
-                if (castComponent) {
-                    snakeComponent = castComponent;
-                    break;
-                }
-            }
-            break;
-        }
-    }
-
-    if (!snakeComponent) {
-        _foodEntity = factory.createFood(rand() % 600, rand() % 400);
+    if (!gridComp) {
+        std::cerr << "Error: Grid component not found" << std::endl;
         return;
     }
 
-    int x, y;
+    size_t gridWidth = gridComp->getWidth();
+    size_t gridHeight = gridComp->getHeight();
+    float cellSize = gridComp->getCellSize();
+
+    size_t foodX, foodY;
     bool validPosition;
 
     do {
         validPosition = true;
-        x = rand() % 600;
-        y = rand() % 400;
 
-        for (auto& segment : snakeComponent->segments) {
-            auto posCompBase =
-            _componentManager->getComponentBase(segment, "PositionComponent");
+        foodX = 1 + (rand() % (gridWidth - 2));
+        foodY = 1 + (rand() % (gridHeight - 2));
 
-            auto posComp = dynamic_cast<PositionComponent*>(posCompBase.get());
-            if (posComp && posComp->x == x && posComp->y == y) {
-                validPosition = false;
-                break;
-            }
+        if (gridComp->getCellType(foodX, foodY) != SnakeCellType::EMPTY) {
+            validPosition = false;
         }
     } while (!validPosition);
 
-    _foodEntity = factory.createFood(x, y);
+    _foodEntity = factory.createFood(foodX * cellSize, foodY * cellSize);
 }
 
 void SnakeGame::update() {
@@ -172,27 +164,13 @@ bool SnakeGame::hasWon() const {
 
 void SnakeGame::stop() {
     _gameOver = true;
-
-    if (_entityManager && _componentManager) {
-        auto entities = _entityManager->getEntities();
-        for (const auto& entity : entities) {
-            auto components = _componentManager->getEntityComponents(entity.first);
-            for (const auto& component : components) {
-                _componentManager->unregisterComponent(entity.first,
-                    typeid(*component).name());
-            }
-            _entityManager->destroyEntity(entity.first);
-        }
-    }
-
+    _componentManager.reset();
+    _entityManager.reset();
     _systems.clear();
     _eventSystem.reset();
     _movementSystem.reset();
     _collisionSystem.reset();
     _renderSystem.reset();
-    _componentManager.reset();
-    _entityManager.reset();
-    _eventManager.reset();
 }
 
 int SnakeGame::getScore() const {

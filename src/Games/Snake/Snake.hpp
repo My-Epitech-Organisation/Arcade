@@ -23,6 +23,7 @@
 #include "Games/Snake/System/RenderSystem.hpp"
 #include "Games/Snake/Components/Snake.hpp"
 #include "Games/Snake/Components/Food.hpp"
+#include "Games/Snake/Components/GridComponent.hpp"
 #include "Games/Snake/SnakeFactory.hpp"
 
 namespace Arcade {
@@ -67,6 +68,7 @@ class SnakeGame : public IGameModule {
     float _moveInterval;
     Arcade::Entity _snakeEntity;
     Arcade::Entity _foodEntity;
+    Arcade::Entity _gridEntity;
 };
 
 }  // namespace Arcade
