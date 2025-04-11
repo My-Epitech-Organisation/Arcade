@@ -12,6 +12,8 @@
 #include "Games/Snake/Components/Snake.hpp"
 #include "Games/Snake/Components/Food.hpp"
 #include "Games/Snake/Types.hpp"
+#include "Games/Snake/Components/GridComponent.hpp"
+#include <iostream>
 
 namespace Arcade {
 
@@ -28,132 +30,194 @@ void MovementSystem::update() {
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         currentTime - _lastUpdateTime).count() / 1000.0f;
 
-    for (const auto& [entity, _] : _entityManager->getEntities()) {
+    Arcade::Entity gridEntity = 0;
+    for (const auto& [entity, name] : _entityManager->getEntities()) {
+        if (name == "grid") {
+            gridEntity = entity;
+            break;
+        }
+    }
+
+    if (gridEntity == 0)
+        return;
+
+    auto gridComp = std::dynamic_pointer_cast<GridComponent>(
+        _componentManager->getComponentByType(gridEntity, 
+            static_cast<ComponentType>(1000)));
+
+    if (!gridComp)
+        return;
+
+    for (const auto& [entity, name] : _entityManager->getEntities()) {
         auto snakeComponentBase = _componentManager->getComponentBase(entity, "SnakeComponent");
         auto snakeComponent = dynamic_cast<SnakeComponent*>(snakeComponentBase.get());
 
         if (snakeComponent) {
+            if (snakeComponent->nextDirection != snakeComponent->direction) {
+                bool validChange = false;
+                switch (snakeComponent->direction) {
+                    case Direction::UP:
+                        validChange = snakeComponent->nextDirection != Direction::DOWN;
+                        break;
+                    case Direction::DOWN:
+                        validChange = snakeComponent->nextDirection != Direction::UP;
+                        break;
+                    case Direction::LEFT:
+                        validChange = snakeComponent->nextDirection != Direction::RIGHT;
+                        break;
+                    case Direction::RIGHT:
+                        validChange = snakeComponent->nextDirection != Direction::LEFT;
+                        break;
+                }
+                if (validChange) {
+                    snakeComponent->direction = snakeComponent->nextDirection;
+                }
+            }
+
             float actualDelay = _movementDelay / snakeComponent->speedMultiplier;
-            if (elapsedTime >= actualDelay) {
+            snakeComponent->updateMovementTimer(elapsedTime);
+
+            if (snakeComponent->canMove()) {
                 _lastUpdateTime = currentTime;
+                snakeComponent->setCanMove(false);
 
                 if (snakeComponent->segments.empty()) {
                     continue;
                 }
 
-                auto headEntity = snakeComponent->segments[0];
-                auto headPosBase = _componentManager->getComponentBase(headEntity, "PositionComponent");
-                auto headPos = dynamic_cast<PositionComponent*>(headPosBase.get());
+                size_t oldHeadX = snakeComponent->getHeadX();
+                size_t oldHeadY = snakeComponent->getHeadY();
 
-                auto headSpriteBase = _componentManager->getComponentBase(headEntity, "SpriteComponent");
-                auto headSprite = dynamic_cast<SpriteComponent*>(headSpriteBase.get());
-
-                if (!headPos) {
-                    continue;
-                }
-
-                std::vector<std::pair<float, float>> oldPositions;
-                for (auto& segment : snakeComponent->segments) {
-                    auto posCompBase = _componentManager->getComponentBase(segment, "PositionComponent");
-                    auto posComp = dynamic_cast<PositionComponent*>(posCompBase.get());
-                    if (posComp) {
-                        oldPositions.push_back(std::make_pair(posComp->x, posComp->y));
-                    }
-                }
+                size_t newHeadX = oldHeadX;
+                size_t newHeadY = oldHeadY;
 
                 switch (snakeComponent->direction) {
                     case Direction::UP:
-                        headPos->y -= 1;
-                        if (headSprite) {
-                            headSprite->spritePath =
-                                "assets/snake/head_up.png";
-                        }
+                        if (newHeadY > 0) newHeadY--;
                         break;
                     case Direction::DOWN:
-                        headPos->y += 1;
-                        if (headSprite) {
-                            headSprite->spritePath =
-                                "assets/snake/head_down.png";
-                        }
+                        newHeadY++;
                         break;
                     case Direction::LEFT:
-                        headPos->x -= 1;
-                        if (headSprite) {
-                            headSprite->spritePath =
-                                "assets/snake/head_left.png";
-                        }
+                        if (newHeadX > 0) newHeadX--;
                         break;
                     case Direction::RIGHT:
-                        headPos->x += 1;
-                        if (headSprite) {
-                            headSprite->spritePath =
-                                "assets/snake/head_right.png";
-                        }
+                        newHeadX++;
                         break;
                 }
 
-                for (const auto& [foodEntity, _] : _entityManager->getEntities()) {
-                    auto foodComponentBase = _componentManager->getComponentBase(foodEntity, "FoodComponent");
-                    auto foodComponent = dynamic_cast<FoodComponent*>(foodComponentBase.get());
+                std::vector<std::pair<size_t, size_t>> oldPositions;
+                oldPositions.clear();
 
-                    if (foodComponent) {
-                        auto foodPosBase = _componentManager->getComponentBase(foodEntity, "PositionComponent");
-                        auto foodPos = dynamic_cast<PositionComponent*>(foodPosBase.get());
+                for (size_t i = 0; i < snakeComponent->segmentPositions.size(); ++i) {
+                    oldPositions.push_back(snakeComponent->segmentPositions[i]);
+                }
 
-                        if (foodPos && headPos->x == foodPos->x && headPos->y == foodPos->y) {
-                            foodComponent->eaten = true;
+                if (gridComp->getCellType(oldHeadX, oldHeadY) == SnakeCellType::SNAKE_HEAD) {
+                    gridComp->clearCell(oldHeadX, oldHeadY);
+                }
 
-                            snakeComponent->shouldGrow = true;
-                            break;
+                bool foundFood = false;
+                if (gridComp->getCellType(newHeadX, newHeadY) == SnakeCellType::FOOD) {
+                    foundFood = true;
+                    snakeComponent->shouldGrow = true;
+
+                    for (const auto& [foodEntity, foodName] : _entityManager->getEntities()) {
+                        auto foodComponentBase = _componentManager->getComponentBase(foodEntity, "FoodComponent");
+                        auto foodComponent = dynamic_cast<FoodComponent*>(foodComponentBase.get());
+
+                        if (foodComponent) {
+                            auto foodPosBase = _componentManager->getComponentBase(foodEntity, "PositionComponent");
+                            auto foodPos = dynamic_cast<PositionComponent*>(foodPosBase.get());
+                            if (foodPos && foodPos->x == newHeadX * gridComp->getCellSize() && 
+                                foodPos->y == newHeadY * gridComp->getCellSize()) {
+                                foodComponent->eaten = true;
+                                snakeComponent->addScore(10);
+                                break;
+                            }
                         }
                     }
                 }
+
+                snakeComponent->setHeadPosition(newHeadX, newHeadY);
+
+                auto headEntity = snakeComponent->segments[0];
+                auto headPosBase = _componentManager->getComponentBase(headEntity, "PositionComponent");
+                auto headPos = dynamic_cast<PositionComponent*>(headPosBase.get());
+                auto headSpriteBase = _componentManager->getComponentBase(headEntity, "SpriteComponent");
+                auto headSprite = dynamic_cast<SpriteComponent*>(headSpriteBase.get());
+
+                if (headPos) {
+                    headPos->x = newHeadX * gridComp->getCellSize();
+                    headPos->y = newHeadY * gridComp->getCellSize();
+
+                    if (headSprite) {
+                        switch (snakeComponent->direction) {
+                            case Direction::UP:
+                                headSprite->spritePath = "assets/snake/head_up.png";
+                                break;
+                            case Direction::DOWN:
+                                headSprite->spritePath = "assets/snake/head_down.png";
+                                break;
+                            case Direction::LEFT:
+                                headSprite->spritePath = "assets/snake/head_left.png";
+                                break;
+                            case Direction::RIGHT:
+                                headSprite->spritePath = "assets/snake/head_right.png";
+                                break;
+                        }
+                    }
+                }
+
+                if (snakeComponent->segmentPositions.empty()) {
+                    snakeComponent->segmentPositions.push_back(std::make_pair(newHeadX, newHeadY));
+                } else {
+                    snakeComponent->segmentPositions[0] = std::make_pair(newHeadX, newHeadY);
+                }
+
+                gridComp->setCellType(newHeadX, newHeadY, SnakeCellType::SNAKE_HEAD);
+                gridComp->setEntityAtCell(newHeadX, newHeadY, headEntity);
 
                 for (size_t i = 1; i < snakeComponent->segments.size(); ++i) {
                     auto segmentEntity = snakeComponent->segments[i];
                     auto segmentPosBase = _componentManager->getComponentBase(segmentEntity, "PositionComponent");
                     auto segmentPos = dynamic_cast<PositionComponent*>(segmentPosBase.get());
-
                     auto segmentSpriteBase = _componentManager->getComponentBase(segmentEntity, "SpriteComponent");
                     auto segmentSprite = dynamic_cast<SpriteComponent*>(segmentSpriteBase.get());
 
                     if (segmentPos) {
-                        segmentPos->x = oldPositions[i - 1].first;
-                        segmentPos->y = oldPositions[i - 1].second;
+                        size_t oldX = snakeComponent->segmentPositions[i].first;
+                        size_t oldY = snakeComponent->segmentPositions[i].second;
+                        gridComp->clearCell(oldX, oldY);
+
+                        size_t newX = oldPositions[i - 1].first;
+                        size_t newY = oldPositions[i - 1].second;
+                        snakeComponent->segmentPositions[i] = std::make_pair(newX, newY);
+
+                        segmentPos->x = newX * gridComp->getCellSize();
+                        segmentPos->y = newY * gridComp->getCellSize();
+
+                        SnakeCellType cellType = (i == snakeComponent->segments.size() - 1) ? 
+                            SnakeCellType::SNAKE_TAIL : SnakeCellType::SNAKE_BODY;
+                        gridComp->setCellType(newX, newY, cellType);
+                        gridComp->setEntityAtCell(newX, newY, segmentEntity);
 
                         if (segmentSprite) {
                             if (i == snakeComponent->segments.size() - 1) {
-                                if (segmentPos->x < oldPositions[i - 1].first) {
+                                if (newX < oldPositions[i - 1].first) {
                                     segmentSprite->spritePath = "assets/snake/tail_left.png";
-                                } else if (segmentPos->x > oldPositions[i - 1].first) {
+                                } else if (newX > oldPositions[i - 1].first) {
                                     segmentSprite->spritePath = "assets/snake/tail_right.png";
-                                } else if (segmentPos->y < oldPositions[i - 1].second) {
+                                } else if (newY < oldPositions[i - 1].second) {
                                     segmentSprite->spritePath = "assets/snake/tail_up.png";
                                 } else {
                                     segmentSprite->spritePath = "assets/snake/tail_down.png";
                                 }
                             } else {
-                                if ((i + 1 < oldPositions.size()) &&
-                                    (oldPositions[i - 1].first == oldPositions[i + 1].first ||
-                                    oldPositions[i - 1].second == oldPositions[i + 1].second)) {
-                                    if (oldPositions[i - 1].first == oldPositions[i + 1].first) {
-                                        segmentSprite->spritePath = "assets/snake/body_vertical.png";
-                                    } else {
-                                        segmentSprite->spritePath = "assets/snake/body_horizontal.png";
-                                    }
-                                } else if (i + 1 < oldPositions.size()) {
-                                    if ((oldPositions[i - 1].first < oldPositions[i].first && oldPositions[i + 1].second < oldPositions[i].second) ||
-                                        (oldPositions[i - 1].second < oldPositions[i].second && oldPositions[i + 1].first < oldPositions[i].first)) {
-                                        segmentSprite->spritePath = "assets/snake/body_bottomleft.png";
-                                    } else if ((oldPositions[i - 1].first < oldPositions[i].first && oldPositions[i + 1].second > oldPositions[i].second) ||
-                                              (oldPositions[i - 1].second > oldPositions[i].second && oldPositions[i + 1].first < oldPositions[i].first)) {
-                                        segmentSprite->spritePath = "assets/snake/body_topleft.png";
-                                    } else if ((oldPositions[i - 1].first > oldPositions[i].first && oldPositions[i + 1].second < oldPositions[i].second) ||
-                                              (oldPositions[i - 1].second < oldPositions[i].second && oldPositions[i + 1].first > oldPositions[i].first)) {
-                                        segmentSprite->spritePath = "assets/snake/body_bottomright.png";
-                                    } else {
-                                        segmentSprite->spritePath = "assets/snake/body_topright.png";
-                                    }
+                                if (newX == oldPositions[i + 1].first) {
+                                    segmentSprite->spritePath = "assets/snake/body_vertical.png";
+                                } else {
+                                    segmentSprite->spritePath = "assets/snake/body_horizontal.png";
                                 }
                             }
                         }
@@ -161,26 +225,33 @@ void MovementSystem::update() {
                 }
 
                 if (snakeComponent->shouldGrow) {
-                    auto tailIndex = snakeComponent->segments.size() - 1;
-                    auto tailEntity = snakeComponent->segments[tailIndex];
-                    auto tailPosBase = _componentManager->getComponentBase(tailEntity, "PositionComponent");
-                    auto tailPos = dynamic_cast<PositionComponent*>(tailPosBase.get());
+                    size_t tailIndex = snakeComponent->segments.size() - 1;
+                    size_t oldTailX = snakeComponent->segmentPositions[tailIndex].first;
+                    size_t oldTailY = snakeComponent->segmentPositions[tailIndex].second;
 
-                    if (tailPos) {
-                        auto newSegmentEntity = _entityManager->createEntity("snake_segment");
+                    auto newSegmentEntity = _entityManager->createEntity("snake_segment");
+                    auto newPosComp = std::make_shared<PositionComponent>(
+                        oldTailX * gridComp->getCellSize(), 
+                        oldTailY * gridComp->getCellSize()
+                    );
+                    _componentManager->registerComponent(newSegmentEntity, newPosComp);
 
-                        float x = oldPositions[tailIndex].first;
-                        float y = oldPositions[tailIndex].second;
-                        auto newPosComp = std::make_shared<PositionComponent>(x, y);
-                        _componentManager->registerComponent(newSegmentEntity, newPosComp);
+                    auto newSpriteComp = std::make_shared<SpriteComponent>("assets/snake/tail_down.png");
+                    _componentManager->registerComponent(newSegmentEntity, newSpriteComp);
 
-                        auto newSpriteComp = std::make_shared<SpriteComponent>("assets/snake/tail_down.png"); // Default, will be updated on next move
-                        _componentManager->registerComponent(newSegmentEntity, newSpriteComp);
+                    snakeComponent->segments.push_back(newSegmentEntity);
+                    snakeComponent->segmentPositions.push_back(std::make_pair(oldTailX, oldTailY));
 
-                        snakeComponent->segments.push_back(newSegmentEntity);
-
-                        snakeComponent->shouldGrow = false;
+                    auto oldTailEntity = snakeComponent->segments[tailIndex];
+                    auto oldTailSpriteBase = _componentManager->getComponentBase(oldTailEntity, "SpriteComponent");
+                    auto oldTailSprite = dynamic_cast<SpriteComponent*>(oldTailSpriteBase.get());
+                    if (oldTailSprite) {
+                        oldTailSprite->spritePath = "assets/snake/body_vertical.png";
                     }
+                    gridComp->setCellType(oldTailX, oldTailY, SnakeCellType::SNAKE_TAIL);
+                    gridComp->setEntityAtCell(oldTailX, oldTailY, newSegmentEntity);
+
+                    snakeComponent->shouldGrow = false;
                 }
             }
         }
