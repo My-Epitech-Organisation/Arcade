@@ -69,8 +69,6 @@ void Qt5Module::threadMain() {
 
         if (!_window || !_window->isVisible())
             _running = false;
-
-        // std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 
     if (_painter && _painter->isActive())
@@ -135,9 +133,7 @@ void Qt5Module::init(float x, float y) {
     _threadRunning = true;
     _qtThread = std::thread(&Qt5Module::threadMain, this);
 
-    while (!_initialized && _threadRunning) {
-        // std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+    while (!_initialized && _threadRunning) {}
 }
 
 void Qt5Module::stop() {

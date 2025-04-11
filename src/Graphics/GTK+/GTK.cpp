@@ -164,9 +164,7 @@ void GTKModule::init(float x, float y) {
     _threadRunning = true;
     _gtkThread = std::thread(&GTKModule::threadMain, this);
 
-    while (!_initialized && _threadRunning) {
-        // std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
+    while (!_initialized && _threadRunning) {}
 }
 
 void GTKModule::stop() {
