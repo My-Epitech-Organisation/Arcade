@@ -19,11 +19,10 @@ MovementSystem::MovementSystem(
 std::shared_ptr<IComponentManager> componentManager,
 std::shared_ptr<IEntityManager> entityManager)
 : _componentManager(componentManager),
-    _entityManager(entityManager),
-    _lastUpdateTime(std::chrono::high_resolution_clock::now()) {}
+_entityManager(entityManager),
+_lastUpdateTime(std::chrono::high_resolution_clock::now()) {}
 
-void MovementSystem::update()
-{
+void MovementSystem::update() {
     auto currentTime = std::chrono::high_resolution_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
         currentTime - _lastUpdateTime).count() / 1000.0f;
