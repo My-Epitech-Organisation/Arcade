@@ -15,7 +15,7 @@ env:
   MIRROR_URL: https://github.com/EpitechPromo2028/B-OOP-400-NAN-4-1-arcade-samuel.tesson.git
   GITHUB_URL: git@github.com:EpitechPromo2028/B-OOP-400-NAN-4-1-arcade-samuel.tesson.git
   EXECUTABLE: arcade
-  LIBRARY: "arcade_ncurses.so,arcade_sfml.so,arcade_sdl2.so,arcade_minesweeper.so,arcade_pacman.so,arcade_allegro5.so,arcade_game1.so,arcade_game2.so,arcade_game3.so,arcade_gtk+.so"
+  LIBRARY: "arcade_ncurses.so,arcade_sfml.so,arcade_sdl2.so,arcade_minesweeper.so,arcade_pacman.so,arcade_allegro5.so,arcade_game1.so,arcade_game2.so,arcade_game3.so,arcade_gtk+.so,arcade_qt5.so"
 
 jobs:
   cancel-if-mirror:
@@ -69,7 +69,8 @@ jobs:
             mesa-vulkan-drivers vulkan-tools libx11-dev libxft-dev libcaca-dev \
             liballegro5-dev libgtk-4-dev libvulkan-dev libboost-all-dev gcovr \
             liballegro-image5-dev liballegro-ttf5-dev libglew-dev libglfw3-dev  \
-            libfreetype-dev libglm-dev libcairo2-dev
+            libfreetype-dev libglm-dev libcairo2-dev qtchooser qt5-qmake qtbase5-dev-tools \
+            qtmultimedia5-dev qtdeclarative5-dev
 
       - name: Build project
         run: |
