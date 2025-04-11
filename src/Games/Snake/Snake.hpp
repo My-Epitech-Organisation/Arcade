@@ -71,4 +71,4 @@ class SnakeGame : public IGameModule {
 
 }  // namespace Arcade
 
-#endif  // SRC_GAMES_SNAKE_SNAKE_HPP_ 
+#endif  // SRC_GAMES_SNAKE_SNAKE_HPP_
