@@ -56,7 +56,6 @@ std::shared_ptr<IEntityManager> entityManager) {
 void SnakeGame::initGame() {
     SnakeFactory factory(_entityManager, _componentManager);
 
-    // Utiliser des coordonnées plus appropriées pour la taille de l'écran
     _snakeEntity = factory.createSnake(300, 300, Direction::RIGHT);
 
     spawnFood();
@@ -82,7 +81,6 @@ void SnakeGame::spawnFood() {
     }
 
     if (!snakeComponent) {
-        // Utiliser des coordonnées plus grandes pour correspondre à l'échelle du serpent
         _foodEntity = factory.createFood(rand() % 600, rand() % 400);
         return;
     }
@@ -92,7 +90,6 @@ void SnakeGame::spawnFood() {
 
     do {
         validPosition = true;
-        // Utiliser des coordonnées plus grandes pour correspondre à l'échelle du serpent
         x = rand() % 600;
         y = rand() % 400;
 
@@ -176,7 +173,6 @@ bool SnakeGame::hasWon() const {
 void SnakeGame::stop() {
     _gameOver = true;
 
-    // Nettoyer toutes les entités et composants avant de reset les managers
     if (_entityManager && _componentManager) {
         auto entities = _entityManager->getEntities();
         for (const auto& entity : entities) {
@@ -185,18 +181,15 @@ void SnakeGame::stop() {
                 _componentManager->unregisterComponent(entity.first,
                     typeid(*component).name());
             }
-
             _entityManager->destroyEntity(entity.first);
         }
     }
 
-    // Maintenant, on peut reset les systèmes et managers en toute sécurité
     _systems.clear();
     _eventSystem.reset();
     _movementSystem.reset();
     _collisionSystem.reset();
     _renderSystem.reset();
-
     _componentManager.reset();
     _entityManager.reset();
     _eventManager.reset();
