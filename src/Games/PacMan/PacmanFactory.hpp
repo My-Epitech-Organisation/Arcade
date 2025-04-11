@@ -11,10 +11,12 @@
 
 #include <memory>
 #include <string>
+#include <map>
 #include "Shared/Interface/ECS/IEntityManager.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
 #include "Games/PacMan/Components/GridComponent.hpp"
 #include "Games/PacMan/Components/PacmanComponent.hpp"
 #include "Games/PacMan/Components/GhostComponent.hpp"
@@ -27,8 +29,10 @@ class PacmanFactory {
  public:
     PacmanFactory(
         std::shared_ptr<Arcade::IEntityManager> entityManager,
-        std::shared_ptr<Arcade::IComponentManager> componentManager)
-        : _entityManager(entityManager), _componentManager(componentManager) {}
+        std::shared_ptr<Arcade::IComponentManager> componentManager,
+        const std::map<std::string, DrawableComponent>& assets)
+        : _entityManager(entityManager), _componentManager(componentManager),
+        _assets(assets) {}
 
     Arcade::Entity createGrid(size_t width, size_t height);
     Arcade::Entity createPacman(float x, float y, size_t gridX, size_t gridY);
@@ -42,6 +46,7 @@ class PacmanFactory {
  private:
     std::shared_ptr<Arcade::IEntityManager> _entityManager;
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
+    const std::map<std::string, DrawableComponent>& _assets;
     std::string getGhostSpritePath(GhostType type);
     char getGhostCharacter(GhostType type);
     void createFoodEntities(std::shared_ptr<GridComponent> grid,
@@ -52,6 +57,8 @@ class PacmanFactory {
         float cellSize, Arcade::Entity gridEntity);
     void createPacmanEntity(std::shared_ptr<GridComponent> grid,
         float cellSize, Arcade::Entity gridEntity);
+    std::shared_ptr<DrawableComponent>
+        getDrawableAsset(const std::string& key) const;
 };
 
 }  // namespace PacMan

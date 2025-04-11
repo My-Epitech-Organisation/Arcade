@@ -9,6 +9,8 @@
 #include <iostream>
 #include <utility>
 #include <memory>
+#include <map>
+#include <string>
 #include "Games/PacMan/System/EventSubSystem.hpp"
 #include "Games/PacMan/System/GameLogic.hpp"
 #include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
@@ -16,6 +18,7 @@
 #include "Shared/Models/KeysType.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "Games/PacMan/Components/PacmanComponent.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -23,10 +26,13 @@ namespace PacMan {
 EventSubSystem::EventSubSystem(
 std::shared_ptr<Arcade::IComponentManager> componentManager,
 std::shared_ptr<Arcade::IEntityManager> entityManager,
-std::shared_ptr<Arcade::IEventManager> eventManager)
-: _componentManager(componentManager),
-_entityManager(entityManager),
-_eventManager(eventManager) {
+std::shared_ptr<Arcade::IEventManager> eventManager,
+const std::map<std::string, Arcade::DrawableComponent>&
+drawableAssets)
+: _componentManager(std::move(componentManager)),
+_entityManager(std::move(entityManager)),
+_eventManager(std::move(eventManager)),
+_drawableAssets(drawableAssets) {
     subscribeToEvents();
 }
 
@@ -191,7 +197,7 @@ void EventSubSystem::handleKeyR() {
     }
 
     auto gameLogic = std::make_shared<GameLogic>(_componentManager,
-        _entityManager);
+        _entityManager, _drawableAssets);
     gameLogic->reloadCurrentMap();
 }
 

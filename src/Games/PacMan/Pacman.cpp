@@ -18,7 +18,9 @@
 #include "Games/PacMan/System/UISystem.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
 #include "Shared/Models/ModuleInfos.hpp"
+#include "Shared/JSONParser/JSONParser.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -54,22 +56,44 @@ std::shared_ptr<IEntityManager> entityManager) {
     _eventManager = eventManager;
     _componentManager = componentManager;
     _entityManager = entityManager;
-
+    loadDrawableAssets();
     createGame();
 
     _eventSystem = std::make_shared<EventSubSystem>(
-        _componentManager, _entityManager, _eventManager);
+        _componentManager, _entityManager, _eventManager, _drawableAssets);
     _systems.push_back(std::make_shared<GameLogic>(_componentManager,
-        _entityManager));
+        _entityManager, _drawableAssets));
     _systems.push_back(std::make_shared<UISystem>(_componentManager,
-        _entityManager));
+        _entityManager, _drawableAssets));
     _systems.push_back(_eventSystem);
 }
 
 void PacmanGame::createGame() {
-    PacmanFactory factory(_entityManager, _componentManager);
+    PacmanFactory factory(_entityManager, _componentManager, _drawableAssets);
     factory.initializeGame(16.0f);
 }
+
+void PacmanGame::loadDrawableAssets() {
+    try {
+        JSONParser parser;
+        _drawableAssets = parser.convertAssetsToGraphicalElements(
+            "./config/pacman.json");
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to load Pacman assets: "
+                  << e.what() << std::endl;
+    }
+}
+
+std::shared_ptr<DrawableComponent> PacmanGame::getDrawableAsset(
+const std::string& key) const {
+    auto it = _drawableAssets.find(key);
+    if (it != _drawableAssets.end()) {
+        auto component = std::make_shared<DrawableComponent>(it->second);
+        return component;
+    }
+    return nullptr;
+}
+
 
 void PacmanGame::update() {
     checkGameStatus();

@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <map>
 #include "Shared/Interface/Game/IGameModule.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "Shared/Interface/ECS/IEntityManager.hpp"
@@ -22,6 +23,7 @@
 #include "Games/PacMan/Components/GridComponent.hpp"
 #include "Games/PacMan/Components/PacmanComponent.hpp"
 #include "Games/PacMan/PacmanFactory.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -43,7 +45,10 @@ class PacmanGame : public IGameModule {
  private:
     void createGame();
     void checkGameStatus();
-
+    void loadDrawableAssets();
+    std::shared_ptr<DrawableComponent>
+      getDrawableAsset(const std::string& key) const;
+    std::map<std::string, DrawableComponent> _drawableAssets;
     std::shared_ptr<IEventManager> _eventManager;
     std::shared_ptr<IComponentManager> _componentManager;
     std::shared_ptr<IEntityManager> _entityManager;

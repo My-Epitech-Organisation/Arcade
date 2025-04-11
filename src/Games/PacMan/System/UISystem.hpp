@@ -11,10 +11,13 @@
 
 #include <memory>
 #include <vector>
+#include <map>
+#include <string>
 #include "Shared/Interface/ECS/ISystem.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "Shared/Interface/ECS/IEntityManager.hpp"
 #include "Shared/Models/ColorType.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -22,7 +25,8 @@ namespace PacMan {
 class UISystem : public Arcade::ISystem {
  public:
     UISystem(std::shared_ptr<Arcade::IComponentManager> componentManager,
-             std::shared_ptr<Arcade::IEntityManager> entityManager);
+             std::shared_ptr<Arcade::IEntityManager> entityManager,
+             const std::map<std::string, DrawableComponent>& assets);
 
     ~UISystem() = default;
 
@@ -31,7 +35,7 @@ class UISystem : public Arcade::ISystem {
  private:
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
     std::shared_ptr<Arcade::IEntityManager> _entityManager;
-
+    const std::map<std::string, DrawableComponent>& _assets;
     Arcade::Entity _scoreTextEntity;
     Arcade::Entity _livesTextEntity;
     Arcade::Entity _levelTextEntity;

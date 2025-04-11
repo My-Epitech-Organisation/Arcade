@@ -49,8 +49,11 @@ size_t gridX, size_t gridY) {
     Arcade::Entity pacmanEntity = _entityManager->createEntity("Pacman");
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(pacmanEntity, positionComponent);
-    auto spriteComponent = std::make_shared<DrawableComponent>();
-    spriteComponent->setAsTexture("assets/pacman/pacman.png", 32, 32);
+    auto spriteComponent = getDrawableAsset("pacman.default");
+    if (!spriteComponent) {
+        spriteComponent = std::make_shared<DrawableComponent>();
+        spriteComponent->setAsTexture("assets/pacman/pacman.png", 32, 32);
+    }
     spriteComponent->posX = x;
     spriteComponent->posY = y;
     _componentManager->registerComponent(pacmanEntity, spriteComponent);
@@ -65,32 +68,37 @@ size_t gridX, size_t gridY) {
 Arcade::Entity PacmanFactory::createGhost(float x,
 float y, size_t gridX, size_t gridY, GhostType type) {
     std::string ghostName;
+    std::string assetKey;
     switch (type) {
         case GhostType::RED:
             ghostName = "Blinky";
+            assetKey = "ghosts.red";
             break;
         case GhostType::PINK:
             ghostName = "Pinky";
+            assetKey = "ghosts.pink";
             break;
         case GhostType::BLUE:
             ghostName = "Inky";
+            assetKey = "ghosts.blue";
             break;
         case GhostType::ORANGE:
             ghostName = "Clyde";
+            assetKey = "ghosts.orange";
             break;
     }
-
     Arcade::Entity ghostEntity = _entityManager->createEntity(ghostName);
-
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(ghostEntity, positionComponent);
-
-    auto spriteComponent = std::make_shared<DrawableComponent>();
-    spriteComponent->setAsTexture(getGhostSpritePath(type), 32, 32);
+    auto spriteComponent = getDrawableAsset(assetKey);
+    if (!spriteComponent) {
+        spriteComponent = std::make_shared<DrawableComponent>();
+        spriteComponent->setAsTexture(getGhostSpritePath(type), 32, 32);
+        spriteComponent->setAsCharacter(getGhostCharacter(type));
+    }
     spriteComponent->posX = x;
     spriteComponent->posY = y;
     spriteComponent->isVisible = true;
-    spriteComponent->setAsCharacter(getGhostCharacter(type));
     _componentManager->registerComponent(ghostEntity, spriteComponent);
 
     auto ghostComponent = std::make_shared<GhostComponent>(type);
@@ -105,6 +113,8 @@ float y, size_t gridX, size_t gridY, GhostType type) {
 Arcade::Entity PacmanFactory::createFood(float x, float y,
 size_t gridX, size_t gridY, FoodType type) {
     std::string foodName = type == FoodType::POWER_PILL ? "PowerPill" : "Food";
+    std::string assetKey = type == FoodType::POWER_PILL
+        ? "map.power_pellet" : "map.food";
     foodName += "_" + std::to_string(gridX) + "_" + std::to_string(gridY);
 
     Arcade::Entity foodEntity = _entityManager->createEntity(foodName);
@@ -112,22 +122,24 @@ size_t gridX, size_t gridY, FoodType type) {
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(foodEntity, positionComponent);
 
-    std::string spritePath = type == FoodType::POWER_PILL ?
-                            "assets/pacman/power_pellet.png" :
-                            "assets/pacman/dot.png";
-    auto spriteComponent = std::make_shared<DrawableComponent>();
-    spriteComponent->setAsTexture(spritePath, 32, 32);
+    auto spriteComponent = getDrawableAsset(assetKey);
+    if (!spriteComponent) {
+        spriteComponent = std::make_shared<DrawableComponent>();
+        std::string spritePath = type == FoodType::POWER_PILL ?
+                                "assets/pacman/power_pellet.png" :
+                                "assets/pacman/dot.png";
+        spriteComponent->setAsTexture(spritePath, 32, 32);
+        spriteComponent->setAsCharacter
+            (type == FoodType::POWER_PILL ? 'O' : '.');
+    }
     spriteComponent->posX = x;
     spriteComponent->posY = y;
     spriteComponent->isVisible = true;
-    spriteComponent->setAsCharacter(type == FoodType::POWER_PILL ? 'O' : '.');
     _componentManager->registerComponent(foodEntity, spriteComponent);
-
     auto foodComponent = std::make_shared<FoodComponent>(type);
     foodComponent->setName(foodName);
     foodComponent->setGridPosition(gridX, gridY);
     _componentManager->registerComponent(foodEntity, foodComponent);
-
     return foodEntity;
 }
 
@@ -136,18 +148,18 @@ size_t gridX, size_t gridY) {
     std::string wallName = "Wall_" + std::to_string(gridX)
     + "_" + std::to_string(gridY);
     Arcade::Entity wallEntity = _entityManager->createEntity(wallName);
-
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(wallEntity, positionComponent);
-
-    auto spriteComponent = std::make_shared<DrawableComponent>();
-    spriteComponent->setAsTexture("assets/pacman/wall.png", 32, 32);
+    auto spriteComponent = getDrawableAsset("map.wall");
+    if (!spriteComponent) {
+        spriteComponent = std::make_shared<DrawableComponent>();
+        spriteComponent->setAsTexture("assets/pacman/wall.png", 32, 32);
+        spriteComponent->setAsCharacter('#');
+    }
     spriteComponent->posX = x;
     spriteComponent->posY = y;
     spriteComponent->isVisible = true;
-    spriteComponent->setAsCharacter('#');
     _componentManager->registerComponent(wallEntity, spriteComponent);
-
     return wallEntity;
 }
 
@@ -308,6 +320,16 @@ grid, float cellSize, Arcade::Entity gridEntity) {
     Arcade::Entity pacmanEntity = createPacman(pacmanX,
         pacmanY, centerX, centerY);
     grid->setEntityAtCell(centerX, centerY, pacmanEntity);
+}
+
+std::shared_ptr<DrawableComponent>
+PacmanFactory::getDrawableAsset(const std::string& key) const {
+    auto it = _assets.find(key);
+    if (it != _assets.end()) {
+        auto component = std::make_shared<DrawableComponent>(it->second);
+        return component;
+    }
+    return nullptr;
 }
 
 }  // namespace PacMan

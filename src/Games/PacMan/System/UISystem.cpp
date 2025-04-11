@@ -8,6 +8,7 @@
 
 #include <string>
 #include <memory>
+#include <map>
 #include <iostream>
 #include "Games/PacMan/System/UISystem.hpp"
 #include "Games/PacMan/Components/PacmanStats.hpp"
@@ -21,34 +22,57 @@ namespace PacMan {
 
 UISystem::UISystem(
 std::shared_ptr<Arcade::IComponentManager> componentManager,
-std::shared_ptr<Arcade::IEntityManager> entityManager)
+std::shared_ptr<Arcade::IEntityManager> entityManager,
+const std::map<std::string, DrawableComponent>& assets)
 : _componentManager(componentManager),
-_entityManager(entityManager) {
+_entityManager(entityManager),
+_assets(assets) {
     createUIEntities();
 }
 
 void UISystem::createUIEntities() {
+    // Get font path from assets
+    std::string fontPath = "./assets/fonts/Arial.ttf";
+    auto defaultFontIt = _assets.find("fonts.default");
+    if (defaultFontIt != _assets.end()) {
+        fontPath = defaultFontIt->second.path;
+    }
+    // Score Text
     _scoreTextEntity = _entityManager->createEntity("UI_ScoreText");
     auto scoreText = std::make_shared<DrawableComponent>();
-    scoreText->setAsText("SCORE: 0", "./assets/fonts/Arial.ttf", 24);
+    auto scoreAsset = _assets.find("ui.score");
+    if (scoreAsset != _assets.end()) {
+        *scoreText = scoreAsset->second;
+        scoreText->text = "SCORE: 0";
+    } else {
+        scoreText->setAsText("SCORE: 0", fontPath, 24);
+    }
     scoreText->posX = 20;
     scoreText->posY = 20;
     scoreText->color = Color::YELLOW;
     scoreText->isVisible = true;
     _componentManager->registerComponent(_scoreTextEntity, scoreText);
 
+    // Level Text
     _levelTextEntity = _entityManager->createEntity("UI_LevelText");
     auto levelText = std::make_shared<DrawableComponent>();
-    levelText->setAsText("LEVEL: 1", "./assets/fonts/Arial.ttf", 24);
+    levelText->setAsText("LEVEL: 1", fontPath, 24);
     levelText->posX = 20;
     levelText->posY = 50;
     levelText->color = Color::YELLOW;
     levelText->isVisible = true;
     _componentManager->registerComponent(_levelTextEntity, levelText);
 
+    // Lives Text
     _livesTextEntity = _entityManager->createEntity("UI_LivesText");
     auto livesText = std::make_shared<DrawableComponent>();
-    livesText->setAsText("LIVES:", "./assets/fonts/Arial.ttf", 24);
+    auto livesAsset = _assets.find("ui.lives");
+    if (livesAsset != _assets.end()) {
+        *livesText = livesAsset->second;
+        livesText->text = "LIVES:";
+    } else {
+        livesText->setAsText("LIVES:", fontPath, 24);
+    }
     livesText->posX = 20;
     livesText->posY = 80;
     livesText->color = Color::YELLOW;
@@ -59,6 +83,7 @@ void UISystem::createUIEntities() {
     float startX = 20.0f;
     float y = 110.0f;
 
+    // Life Icons
     for (int i = 0; i < 3; i++) {
         Arcade::Entity lifeIcon = _entityManager->createEntity("UI_LifeIcon_"
             + std::to_string(i));
@@ -68,7 +93,12 @@ void UISystem::createUIEntities() {
         _componentManager->registerComponent(lifeIcon, posComp);
 
         auto spriteComp = std::make_shared<DrawableComponent>();
-        spriteComp->setAsTexture("assets/pacman/pacman.png", 32, 32);
+        auto pacmanAsset = _assets.find("pacman.default");
+        if (pacmanAsset != _assets.end()) {
+            *spriteComp = pacmanAsset->second;
+        } else {
+            spriteComp->setAsTexture("assets/pacman/pacman.png", 32, 32);
+        }
         spriteComp->posX = startX + (i * iconSpacing);
         spriteComp->posY = y;
         spriteComp->isVisible = true;
@@ -77,28 +107,41 @@ void UISystem::createUIEntities() {
         _livesIconEntities.push_back(lifeIcon);
     }
 
+    // Game Over Text
     _gameOverTextEntity = _entityManager->createEntity("UI_GameOverText");
     auto gameOverText = std::make_shared<DrawableComponent>();
-    gameOverText->setAsText("GAME OVER", "./assets/fonts/Arial.ttf", 32);
+    auto gameOverAsset = _assets.find("ui.game_over");
+    if (gameOverAsset != _assets.end()) {
+        *gameOverText = gameOverAsset->second;
+    } else {
+        gameOverText->setAsText("GAME OVER", fontPath, 32);
+    }
     gameOverText->posX = 350;
     gameOverText->posY = 300;
     gameOverText->color = Color::RED;
     gameOverText->isVisible = false;
     _componentManager->registerComponent(_gameOverTextEntity, gameOverText);
 
+    // Win Text
     _gameWinTextEntity = _entityManager->createEntity("UI_GameWinText");
     auto gameWinText = std::make_shared<DrawableComponent>();
-    gameWinText->setAsText("YOU WIN!", "./assets/fonts/Arial.ttf", 32);
+    auto winAsset = _assets.find("ui.win");
+    if (winAsset != _assets.end()) {
+        *gameWinText = winAsset->second;
+    } else {
+        gameWinText->setAsText("YOU WIN!", fontPath, 32);
+    }
     gameWinText->posX = 350;
     gameWinText->posY = 300;
     gameWinText->color = Color::GREEN;
     gameWinText->isVisible = false;
     _componentManager->registerComponent(_gameWinTextEntity, gameWinText);
 
+    // Restart Text
     _restartTextEntity = _entityManager->createEntity("UI_RestartText");
     auto restartText = std::make_shared<DrawableComponent>();
     restartText->setAsText("Press 'R' to restart or ESC for menu",
-                          "./assets/fonts/Arial.ttf", 24);
+        fontPath, 24);
     restartText->posX = 250;
     restartText->posY = 350;
     restartText->color = Color::WHITE;
@@ -198,8 +241,13 @@ void UISystem::updateLivesIcons() {
         if (i < static_cast<size_t>(lives)) {
             if (!spriteComp) {
                 auto newDrawableComp = std::make_shared<DrawableComponent>();
-                newDrawableComp->setAsTexture
-                    ("assets/pacman/pacman.png", 32, 32);
+                auto pacmanAsset = _assets.find("pacman.default");
+                if (pacmanAsset != _assets.end()) {
+                    *newDrawableComp = pacmanAsset->second;
+                } else {
+                    newDrawableComp->setAsTexture
+                        ("assets/pacman/pacman.png", 32, 32);
+                }
                 _componentManager->registerComponent(_livesIconEntities[i],
                     newDrawableComp);
             } else {

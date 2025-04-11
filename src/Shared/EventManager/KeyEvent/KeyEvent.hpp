@@ -23,6 +23,10 @@ class KeyEvent : public IEvent {
     bool isType(EventType type) const {
         return _eventType == type;
     }
+    MouseButton getMouseButton() const override { return MouseButton::NONE; }
+    bool hasKeyInfo() const { return _key != Keys::NONE; }
+    bool hasMouseInfo() const { return false; }
+
  private:
     Keys _key;
     EventType _eventType;
