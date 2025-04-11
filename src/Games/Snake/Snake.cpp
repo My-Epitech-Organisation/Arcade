@@ -8,6 +8,7 @@
 
 #include <string>
 #include <memory>
+#include <iostream>
 #include "Games/Snake/Snake.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
@@ -16,7 +17,6 @@
 #include "Games/Snake/Components/Snake.hpp"
 #include "Games/Snake/Components/Food.hpp"
 #include "Shared/Models/ModuleInfos.hpp"
-#include <iostream>
 
 namespace Arcade {
 
