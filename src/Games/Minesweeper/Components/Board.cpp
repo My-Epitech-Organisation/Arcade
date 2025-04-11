@@ -7,6 +7,7 @@
 */
 #include <stdexcept>
 #include <vector>
+#include <memory>
 #include "Games/Minesweeper/Components/Board.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "Shared/Interface/ECS/IEntityManager.hpp"

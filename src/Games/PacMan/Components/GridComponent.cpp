@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <vector>
 #include <string>
+#include <memory>
 #include <iostream>
 #include "Games/PacMan/Components/GridComponent.hpp"
 
@@ -41,7 +42,7 @@ CellType GridComponent::getCellType(size_t x, size_t y) const {
 }
 
 void GridComponent::setEntityAtCell(size_t x, size_t y,
-    std::shared_ptr<Arcade::IEntity> entity) {
+std::shared_ptr<Arcade::IEntity> entity) {
     if (x >= _width || y >= _height) {
         throw std::out_of_range("Cell position out of bounds");
     }

@@ -6,8 +6,10 @@
 ** Score provider implementation
 */
 
-#include "ScoreProvider.hpp"
+#include "ScoreProvider/ScoreProvider.hpp"
 #include <iomanip>
+#include <iostream>
+#include <string>
 #include <sstream>
 
 namespace Arcade {
@@ -15,7 +17,7 @@ namespace Arcade {
 ScoreProvider::ScoreProvider() : _score(0), _playerName("Player") {}
 
 ScoreProvider::ScoreProvider(const std::string& name) :
-    _score(0), _playerName(name) {}
+_score(0), _playerName(name) {}
 
 int ScoreProvider::getScore() const {
     return _score;

@@ -18,8 +18,6 @@ class Entity : public IEntity {
     Entity();
     Entity(int id, const std::string& name);
     ~Entity() override = default;
-
-    // IEntity implementation
     int getId() const override;
     const std::string getName() const override;
     void setName(const std::string& name) override;

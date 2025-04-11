@@ -80,7 +80,8 @@ void UISystem::createUIEntities() {
     float y = 110.0f;
 
     for (int i = 0; i < 3; i++) {
-        std::shared_ptr<Arcade::IEntity> lifeIcon = _entityManager->createEntity("UI_LifeIcon_"
+        std::shared_ptr<Arcade::IEntity> lifeIcon
+            = _entityManager->createEntity("UI_LifeIcon_"
             + std::to_string(i));
 
         auto posComp = std::make_shared<PositionComponent>(startX +

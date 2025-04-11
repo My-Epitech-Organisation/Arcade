@@ -7,15 +7,17 @@
 */
 
 #include "Entity/Entity.hpp"
+#include <iostream>
+#include <string>
 
 namespace Arcade {
 
 Entity::Entity()
-    : _id(0), _name("")
+: _id(0), _name("")
 {}
 
 Entity::Entity(int id, const std::string& name)
-    : _id(id), _name(name)
+: _id(id), _name(name)
 {}
 
 int Entity::getId() const {

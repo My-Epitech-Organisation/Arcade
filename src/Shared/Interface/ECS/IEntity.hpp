@@ -8,6 +8,8 @@
 
 #ifndef SRC_SHARED_INTERFACE_ECS_IENTITY_HPP_
     #define SRC_SHARED_INTERFACE_ECS_IENTITY_HPP_
+    #include <string>
+    #include <memory>
 
 namespace Arcade {
 class IEntity {

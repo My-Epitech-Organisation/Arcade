@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <string>
 #include <unordered_map>
+#include <memory>
 #include <vector>
 #include "Entity/Entity.hpp"
 #include "Entity/EntityManager.hpp"
@@ -43,7 +44,7 @@ EntityManager::getEntitiesVector() const {
 }
 
 const std::unordered_map<std::shared_ptr<IEntity>, std::string>
-    EntityManager::getEntitiesMap() const {
+EntityManager::getEntitiesMap() const {
     return _activeEntities;
 }
 

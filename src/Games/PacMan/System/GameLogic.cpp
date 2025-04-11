@@ -444,7 +444,8 @@ void GameLogic::update() {
             if (ghostComp->canMove()) {
                 if (ghostComp->getCurrentDirection() == Direction::NONE) {
                     unsigned int seed = static_cast<unsigned int>(
-                        std::time(nullptr) + reinterpret_cast<std::uintptr_t>(entity.get()) +
+                        std::time(nullptr)
+                        + reinterpret_cast<std::uintptr_t>(entity.get()) +
                         static_cast<unsigned int>(std::chrono::duration_cast
                             <std::chrono::milliseconds>(
                             std::chrono::high_resolution_clock::
@@ -910,7 +911,8 @@ void GameLogic::reloadCurrentMap() {
             }
 
             if (grid->getCellType(x, y) == CellType::GHOST_SPAWN) {
-                for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
+                for (const auto& [entity, name]
+                    : _entityManager->getEntitiesMap()) {
                     auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
                         _componentManager->getComponentByType(entity,
                             static_cast<ComponentType>(1002)));
