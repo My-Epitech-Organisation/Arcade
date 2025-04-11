@@ -20,7 +20,7 @@ namespace Arcade {
 namespace PacMan {
 
 Arcade::Entity PacmanFactory::createGrid(size_t width, size_t height) {
-    Arcade::Entity gridEntity = _entityManager->createEntity("Grid");
+Arcade::Entity gridEntity = _entityManager->createEntity("Grid");
 
     float screenWidth = 800.0f;
     float screenHeight = 600.0f;
@@ -45,22 +45,22 @@ Arcade::Entity PacmanFactory::createGrid(size_t width, size_t height) {
 }
 
 Arcade::Entity PacmanFactory::createPacman(float x, float y,
-    size_t gridX, size_t gridY) {
-        Arcade::Entity pacmanEntity = _entityManager->createEntity("Pacman");
-        auto positionComponent = std::make_shared<PositionComponent>(x, y);
-        _componentManager->registerComponent(pacmanEntity, positionComponent);
-        auto spriteComponent = std::make_shared<DrawableComponent>();
-        spriteComponent->setAsTexture("assets/pacman/pacman.png", 32, 32);
-        spriteComponent->posX = x;
-        spriteComponent->posY = y;
-        _componentManager->registerComponent(pacmanEntity, spriteComponent);
-        auto pacmanComponent = std::make_shared<PacmanComponent>();
-        pacmanComponent->setName("Pacman");
-        pacmanComponent->setGridPosition(gridX, gridY);
-        pacmanComponent->setCurrentDirection(Direction::NONE);
-        _componentManager->registerComponent(pacmanEntity, pacmanComponent);
-        return pacmanEntity;
-    }
+size_t gridX, size_t gridY) {
+    Arcade::Entity pacmanEntity = _entityManager->createEntity("Pacman");
+    auto positionComponent = std::make_shared<PositionComponent>(x, y);
+    _componentManager->registerComponent(pacmanEntity, positionComponent);
+    auto spriteComponent = std::make_shared<DrawableComponent>();
+    spriteComponent->setAsTexture("assets/pacman/pacman.png", 32, 32);
+    spriteComponent->posX = x;
+    spriteComponent->posY = y;
+    _componentManager->registerComponent(pacmanEntity, spriteComponent);
+    auto pacmanComponent = std::make_shared<PacmanComponent>();
+    pacmanComponent->setName("Pacman");
+    pacmanComponent->setGridPosition(gridX, gridY);
+    pacmanComponent->setCurrentDirection(Direction::NONE);
+    _componentManager->registerComponent(pacmanEntity, pacmanComponent);
+    return pacmanEntity;
+}
 
 Arcade::Entity PacmanFactory::createGhost(float x,
 float y, size_t gridX, size_t gridY, GhostType type) {
