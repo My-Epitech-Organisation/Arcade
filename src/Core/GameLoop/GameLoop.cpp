@@ -137,8 +137,6 @@ void GameLoop::handleEvents(std::shared_ptr<bool> running) {
 
 void GameLoop::handleState() {
     if (_gameSwitch && _state == GAME_PLAYING) {
-        std::cout << "Game switch flag detected - switching to game: "
-                  << _gameLibs[_selectedGame] << std::endl;
         _gameSwitch = false;
         switchGameInGame();
     }

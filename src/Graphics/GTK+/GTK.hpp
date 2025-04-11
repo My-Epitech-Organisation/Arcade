@@ -14,6 +14,10 @@
     #include <utility>
     #include <unordered_map>
     #include <functional>
+    #include <thread>
+    #include <mutex>
+    #include <condition_variable>
+    #include <atomic>
     #include "Interface/Display/IDisplayModule.hpp"
     #include "GTKUtils/GTKWindow.hpp"
     #include "GTKUtils/GTKRenderer.hpp"
@@ -29,7 +33,6 @@
         std::shared_ptr<GtkApplication> _app;
         int _windowWidth = 0;
         int _windowHeight = 0;
-        bool _running = true;
         GTK::GTKWindow _window;
         GTK::GTKRenderer _renderer;
         GTK::GTKTexture _textureManager;
@@ -49,6 +52,16 @@
 
         void draw(std::shared_ptr<GtkDrawingArea> area,
             std::shared_ptr<cairo_t> cr, int width, int height);
+        std::thread _gtkThread;
+        std::mutex _mutex;
+        std::condition_variable _cv;
+        std::atomic<bool> _initialized{false};
+        std::atomic<bool> _windowValid{false};
+        std::atomic<bool> _drawingAreaValid{false};
+
+        void gtkThreadFunction();
+        void waitForInitialization();
+        void signalInitialized();
 
      public:
         GTKModule();
@@ -69,6 +82,8 @@
         bool isKeyPressed(int keyCode) override;
         bool isMouseButtonPressed(int button) const override;
         std::pair<size_t, size_t> getMousePosition() const override;
+        bool _running = true;
+        std::atomic<bool> _threadRunning{false};
     };
 
 #endif  // SRC_GRAPHICS_GTK__GTK_HPP_
