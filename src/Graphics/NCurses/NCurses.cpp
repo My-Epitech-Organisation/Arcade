@@ -11,6 +11,7 @@
 #include <string>
 #include <iostream>
 #include <map>
+#include <cstring>
 #include "NCurses/NCurses.hpp"
 #include "NCurses/NCursesColor.hpp"
 #include "Interface/IArcadeModule.hpp"
@@ -142,16 +143,8 @@ void NCursesModule::drawEntity(int x, int y, char symbol) {
 void NCursesModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
     if (!drawable.isVisible)
         return;
-
-    if (drawable.shouldRenderAsText()) {
-        drawText(drawable.text, static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.color);
-    } else if (drawable.shouldRenderAsTexture()) {
-        drawTexture(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.path);
-    } else if (drawable.shouldRenderAsCharacter()) {
-        drawEntity(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.character);
+    if (drawable.text.size() == 1) {
+        drawEntity(drawable.posX, drawable.posY, drawable.character);
     }
 }
 

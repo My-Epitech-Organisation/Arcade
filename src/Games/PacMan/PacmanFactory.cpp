@@ -10,9 +10,11 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <utility>
 #include <memory>
 #include <iostream>
 #include "Games/PacMan/PacmanFactory.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -43,24 +45,22 @@ Arcade::Entity PacmanFactory::createGrid(size_t width, size_t height) {
 }
 
 Arcade::Entity PacmanFactory::createPacman(float x, float y,
-size_t gridX, size_t gridY) {
-    Arcade::Entity pacmanEntity = _entityManager->createEntity("Pacman");
-
-    auto positionComponent = std::make_shared<PositionComponent>(x, y);
-    _componentManager->registerComponent(pacmanEntity, positionComponent);
-
-    auto spriteComponent = std::make_shared<SpriteComponent>
-        ("assets/pacman/pacman.png");
-    _componentManager->registerComponent(pacmanEntity, spriteComponent);
-
-    auto pacmanComponent = std::make_shared<PacmanComponent>();
-    pacmanComponent->setName("Pacman");
-    pacmanComponent->setGridPosition(gridX, gridY);
-    pacmanComponent->setCurrentDirection(Direction::NONE);
-    _componentManager->registerComponent(pacmanEntity, pacmanComponent);
-
-    return pacmanEntity;
-}
+    size_t gridX, size_t gridY) {
+        Arcade::Entity pacmanEntity = _entityManager->createEntity("Pacman");
+        auto positionComponent = std::make_shared<PositionComponent>(x, y);
+        _componentManager->registerComponent(pacmanEntity, positionComponent);
+        auto spriteComponent = std::make_shared<DrawableComponent>();
+        spriteComponent->setAsTexture("assets/pacman/pacman.png", 32, 32);
+        spriteComponent->posX = x;
+        spriteComponent->posY = y;
+        _componentManager->registerComponent(pacmanEntity, spriteComponent);
+        auto pacmanComponent = std::make_shared<PacmanComponent>();
+        pacmanComponent->setName("Pacman");
+        pacmanComponent->setGridPosition(gridX, gridY);
+        pacmanComponent->setCurrentDirection(Direction::NONE);
+        _componentManager->registerComponent(pacmanEntity, pacmanComponent);
+        return pacmanEntity;
+    }
 
 Arcade::Entity PacmanFactory::createGhost(float x,
 float y, size_t gridX, size_t gridY, GhostType type) {
@@ -85,8 +85,12 @@ float y, size_t gridX, size_t gridY, GhostType type) {
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(ghostEntity, positionComponent);
 
-    auto spriteComponent = std::make_shared<SpriteComponent>(
-        getGhostSpritePath(type));
+    auto spriteComponent = std::make_shared<DrawableComponent>();
+    spriteComponent->setAsTexture(getGhostSpritePath(type), 32, 32);
+    spriteComponent->posX = x;
+    spriteComponent->posY = y;
+    spriteComponent->isVisible = true;
+    spriteComponent->setAsCharacter(getGhostCharacter(type));
     _componentManager->registerComponent(ghostEntity, spriteComponent);
 
     auto ghostComponent = std::make_shared<GhostComponent>(type);
@@ -111,7 +115,12 @@ size_t gridX, size_t gridY, FoodType type) {
     std::string spritePath = type == FoodType::POWER_PILL ?
                             "assets/pacman/power_pellet.png" :
                             "assets/pacman/dot.png";
-    auto spriteComponent = std::make_shared<SpriteComponent>(spritePath);
+    auto spriteComponent = std::make_shared<DrawableComponent>();
+    spriteComponent->setAsTexture(spritePath, 32, 32);
+    spriteComponent->posX = x;
+    spriteComponent->posY = y;
+    spriteComponent->isVisible = true;
+    spriteComponent->setAsCharacter(type == FoodType::POWER_PILL ? 'O' : '.');
     _componentManager->registerComponent(foodEntity, spriteComponent);
 
     auto foodComponent = std::make_shared<FoodComponent>(type);
@@ -131,8 +140,12 @@ size_t gridX, size_t gridY) {
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(wallEntity, positionComponent);
 
-    auto spriteComponent = std::make_shared<SpriteComponent>(
-        "assets/pacman/wall.png");
+    auto spriteComponent = std::make_shared<DrawableComponent>();
+    spriteComponent->setAsTexture("assets/pacman/wall.png", 32, 32);
+    spriteComponent->posX = x;
+    spriteComponent->posY = y;
+    spriteComponent->isVisible = true;
+    spriteComponent->setAsCharacter('#');
     _componentManager->registerComponent(wallEntity, spriteComponent);
 
     return wallEntity;
@@ -150,6 +163,21 @@ std::string PacmanFactory::getGhostSpritePath(GhostType type) {
             return "assets/pacman/ghost_orange.png";
         default:
             return "assets/pacman/ghost_red.png";
+    }
+}
+
+char PacmanFactory::getGhostCharacter(GhostType type) {
+    switch (type) {
+        case GhostType::RED:
+            return 'r';
+        case GhostType::PINK:
+            return 'i';
+        case GhostType::BLUE:
+            return 'c';
+        case GhostType::ORANGE:
+            return 'o';
+        default:
+            return 'G';
     }
 }
 

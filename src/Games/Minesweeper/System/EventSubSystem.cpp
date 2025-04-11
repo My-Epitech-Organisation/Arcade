@@ -259,7 +259,6 @@ int cellX, int cellY, std::shared_ptr<Arcade::Minesweeper::Board> board) {
                                     (safeEntity, bombComponent);
                             }
                         }
-
                         safeCells.erase(safeCells.begin() + randomIndex);
                     }
                 }
@@ -396,7 +395,7 @@ void EventSubSystem::handleLeftClick() {
                         (cellEntity, revealedSprite);
                 }
             } else {
-                auto emptySpriteAsset = _drawableAssets.find("cell.empty");
+                auto emptySpriteAsset = _drawableAssets.find("cell.revealed");
                 if (emptySpriteAsset != _drawableAssets.end()) {
                     auto emptySprite = std::make_shared
                         <Arcade::DrawableComponent>(emptySpriteAsset->second);

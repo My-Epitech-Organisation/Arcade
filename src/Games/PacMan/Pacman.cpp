@@ -147,21 +147,6 @@ void PacmanGame::stop() {
     _eventSystem.reset();
 }
 
-std::string PacmanGame::getSpecialCompSprite(size_t id) const {
-    switch (id) {
-        case static_cast<size_t>(ComponentType::SPRITE):
-            return "assets/pacman/pacman.png";
-        case 1001:
-            return "assets/pacman/pacman.png";
-        case 1002:
-            return "assets/pacman/ghost_red.png";
-        case 1003:
-            return "assets/pacman/dot.png";
-        default:
-            return "";
-    }
-}
-
 // Entry points for dynamic loading
 extern "C" {
     IArcadeModule* entryPoint(void) {

@@ -43,6 +43,7 @@ class PacmanFactory {
     std::shared_ptr<Arcade::IEntityManager> _entityManager;
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
     std::string getGhostSpritePath(GhostType type);
+    char getGhostCharacter(GhostType type);
     void createFoodEntities(std::shared_ptr<GridComponent> grid,
         float cellSize, Arcade::Entity gridEntity);
     void createWallEntities(std::shared_ptr<GridComponent> grid,

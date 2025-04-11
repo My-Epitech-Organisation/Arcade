@@ -19,6 +19,7 @@
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 #include "Games/PacMan/Components/PacmanComponent.hpp"
 #include "Games/PacMan/Components/FoodComponent.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -63,36 +64,52 @@ std::shared_ptr<PacmanComponent> pacman) {
             }
         }
 
-        auto ghostSpriteTemp = std::dynamic_pointer_cast<SpriteComponent>(
+        auto ghostSpriteTemp = std::dynamic_pointer_cast<DrawableComponent>(
             _componentManager->getComponentByType(entity,
-                ComponentType::SPRITE));
+                ComponentType::DRAWABLE));
 
-        ghostSpriteTemp->spritePath = "assets/pacman/eyes.png";
+        ghostSpriteTemp->path = "assets/pacman/eyes.png";
+        ghostSpriteTemp->setAsTexture("assets/pacman/eyes.png", 32, 32);
+        ghostSpriteTemp->setAsCharacter('G');
 
         if (ghostComp->getGridX() == targetX &&
             ghostComp->getGridY() == targetY) {
             ghostComp->setState(GhostState::NORMAL);
             ghostComp->setCurrentDirection(Direction::NONE);
 
-            auto ghostSprite = std::dynamic_pointer_cast<SpriteComponent>(
+            auto ghostSprite = std::dynamic_pointer_cast<DrawableComponent>(
                 _componentManager->getComponentByType(entity,
-                    ComponentType::SPRITE));
+                    ComponentType::DRAWABLE));
+            ghostSprite->isVisible = true;
             if (ghostSprite) {
                 switch (ghostComp->getGhostType()) {
                     case GhostType::RED:
-                        ghostSprite->spritePath = "assets/pacman/ghost_red.png";
+                        ghostSprite->path =
+                            "assets/pacman/ghost_red.png";
+                        ghostSprite->setAsTexture(
+                            "assets/pacman/ghost_red.png", 32, 32);
+                        ghostSprite->setAsCharacter('r');
                         break;
                     case GhostType::PINK:
-                        ghostSprite->spritePath =
+                        ghostSprite->path =
                             "assets/pacman/ghost_pink.png";
+                        ghostSprite->setAsTexture(
+                            "assets/pacman/ghost_pink.png", 32, 32);
+                        ghostSprite->setAsCharacter('i');
                         break;
                     case GhostType::BLUE:
-                        ghostSprite->spritePath =
+                        ghostSprite->path =
                             "assets/pacman/ghost_cyan.png";
+                        ghostSprite->setAsTexture(
+                            "assets/pacman/ghost_cyan.png", 32, 32);
+                        ghostSprite->setAsCharacter('c');
                         break;
                     case GhostType::ORANGE:
-                        ghostSprite->spritePath =
+                        ghostSprite->path =
                             "assets/pacman/ghost_orange.png";
+                        ghostSprite->setAsTexture(
+                            "assets/pacman/ghost_orange.png", 32, 32);
+                        ghostSprite->setAsCharacter('o');
                         break;
                 }
             }
@@ -308,26 +325,31 @@ std::shared_ptr<PacmanComponent> pacman) {
 
         if (!ghostCollision) {
             ghostComp->setGridPosition(newX, newY);
-
             auto posComp = std::dynamic_pointer_cast<PositionComponent>(
                 _componentManager->getComponentByType(entity,
                     ComponentType::POSITION));
-
             if (posComp) {
                 auto gridEntity = findGridEntity();
                 auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
                     _componentManager->getComponentByType(gridEntity,
                         ComponentType::POSITION));
-
                 float startX = gridPosComp ? gridPosComp->x : 0;
                 float startY = gridPosComp ? gridPosComp->y : 0;
                 float cellSize = grid->getCellSize();
-
                 posComp->x = startX + (newX * cellSize);
                 posComp->y = startY + (newY * cellSize);
+                // Add this code to update the DrawableComponent
+                auto ghostDrawable
+                    = std::dynamic_pointer_cast<DrawableComponent>(
+                    _componentManager->getComponentByType(entity,
+                        ComponentType::DRAWABLE));
+                if (ghostDrawable) {
+                    ghostDrawable->posX = startX + (newX * cellSize);
+                    ghostDrawable->posY = startY + (newY * cellSize);
+                }
             }
-
             ghostComp->setCanMove(false);
+            ghostComp->resetMovementTimer();
         } else {
             ghostComp->setCurrentDirection(Direction::NONE);
         }
@@ -404,27 +426,38 @@ void GameLogic::update() {
             }
             if (previousState == GhostState::SCARED &&
                 ghostComp->getState() == GhostState::NORMAL) {
-                auto ghostSprite = std::dynamic_pointer_cast<SpriteComponent>(
+                auto ghostSprite = std::dynamic_pointer_cast<DrawableComponent>(
                     _componentManager->getComponentByType(entity,
-                        ComponentType::SPRITE));
-
+                        ComponentType::DRAWABLE));
                 if (ghostSprite) {
                     switch (ghostComp->getGhostType()) {
                         case GhostType::RED:
-                            ghostSprite->spritePath =
+                            ghostSprite->path =
                                 "assets/pacman/ghost_red.png";
+                            ghostSprite->setAsTexture(
+                                "assets/pacman/ghost_red.png", 32, 32);
+                            ghostSprite->setAsCharacter('r');
                             break;
                         case GhostType::PINK:
-                            ghostSprite->spritePath =
+                            ghostSprite->path =
                                 "assets/pacman/ghost_pink.png";
+                            ghostSprite->setAsTexture(
+                                "assets/pacman/ghost_pink.png", 32, 32);
+                            ghostSprite->setAsCharacter('i');
                             break;
                         case GhostType::BLUE:
-                            ghostSprite->spritePath =
+                            ghostSprite->path =
                                 "assets/pacman/ghost_cyan.png";
+                            ghostSprite->setAsTexture(
+                                "assets/pacman/ghost_cyan.png", 32, 32);
+                            ghostSprite->setAsCharacter('c');
                             break;
                         case GhostType::ORANGE:
-                            ghostSprite->spritePath =
+                            ghostSprite->path =
                                 "assets/pacman/ghost_orange.png";
+                            ghostSprite->setAsTexture(
+                                "assets/pacman/ghost_orange.png", 32, 32);
+                            ghostSprite->setAsCharacter('o');
                             break;
                     }
                 }
@@ -548,7 +581,6 @@ void GameLogic::movePacman() {
     size_t x = pacmanComp->getGridX();
     size_t y = pacmanComp->getGridY();
 
-
     if (nextDir != Direction::NONE &&
         canMoveInDirection(nextDir, x, y, gridComp)) {
         moveDir = nextDir;
@@ -582,22 +614,25 @@ void GameLogic::movePacman() {
 
         Arcade::Entity pacmanEntity = findPacmanEntity();
         if (pacmanEntity) {
-            auto posComp = std::dynamic_pointer_cast<PositionComponent>(
+            auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
+                _componentManager->getComponentByType(findGridEntity(),
+                    ComponentType::POSITION));
+            float startX = gridPosComp ? gridPosComp->x : 0;
+            float startY = gridPosComp ? gridPosComp->y : 0;
+            float cellSize = gridComp->getCellSize();
+            auto pacmanPosComp = std::dynamic_pointer_cast<PositionComponent>(
                 _componentManager->getComponentByType(pacmanEntity,
                     ComponentType::POSITION));
-
-            if (posComp) {
-                auto gridEntity = findGridEntity();
-                auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
-                    _componentManager->getComponentByType(gridEntity,
-                        ComponentType::POSITION));
-
-                float startX = gridPosComp ? gridPosComp->x : 0;
-                float startY = gridPosComp ? gridPosComp->y : 0;
-                float cellSize = gridComp->getCellSize();
-
-                posComp->x = startX + (newX * cellSize);
-                posComp->y = startY + (newY * cellSize);
+            if (pacmanPosComp) {
+                pacmanPosComp->x = startX + (newX * cellSize);
+                pacmanPosComp->y = startY + (newY * cellSize);
+            }
+            auto pacmanDrawable = std::dynamic_pointer_cast<DrawableComponent>(
+                _componentManager->getComponentByType(pacmanEntity,
+                    ComponentType::DRAWABLE));
+            if (pacmanDrawable) {
+                pacmanDrawable->posX = startX + (newX * cellSize);
+                pacmanDrawable->posY = startY + (newY * cellSize);
             }
         }
 
@@ -700,12 +735,15 @@ std::shared_ptr<GridComponent> grid) {
             pacman->addScore(foodComp->getPoints());
             grid->decrementFoodCount();
 
-            auto spriteComp = std::dynamic_pointer_cast<SpriteComponent>(
+            auto spriteComp = std::dynamic_pointer_cast<DrawableComponent>(
                 _componentManager->getComponentByType(entity,
-                    ComponentType::SPRITE));
+                    ComponentType::DRAWABLE));
 
-            if (spriteComp)
-                spriteComp->spritePath = "assets/pacman/empty.png";
+            if (spriteComp) {
+                spriteComp->path = "assets/pacman/empty.png";
+                spriteComp->setAsTexture("assets/pacman/empty.png", 32, 32);
+                spriteComp->setAsCharacter(' ');
+            }
 
             if (foodComp->getFoodType() == FoodType::POWER_PILL) {
                 for (const auto& [e, n] : _entityManager->getEntities()) {
@@ -719,12 +757,16 @@ std::shared_ptr<GridComponent> grid) {
                         ghostComp->resetStateTimer();
 
                         auto ghostSprite = std::dynamic_pointer_cast
-                            <SpriteComponent>(
+                            <DrawableComponent>(
                             _componentManager->getComponentByType(e,
-                                ComponentType::SPRITE));
-                        if (ghostSprite)
-                            ghostSprite->spritePath =
+                                ComponentType::DRAWABLE));
+                        if (ghostSprite) {
+                            ghostSprite->path =
                                 "assets/pacman/scared_ghost.png";
+                            ghostSprite->setAsTexture(
+                                "assets/pacman/scared_ghost.png", 32, 32);
+                            ghostSprite->setAsCharacter('s');
+                        }
                     }
                 }
             }
@@ -749,15 +791,20 @@ void GameLogic::reloadCurrentMap() {
         if (foodComp) {
             foodComp->setEaten(false);
 
-            auto spriteComp = std::dynamic_pointer_cast<SpriteComponent>(
+            auto spriteComp = std::dynamic_pointer_cast<DrawableComponent>(
                 _componentManager->getComponentByType(entity,
-                    ComponentType::SPRITE));
+                    ComponentType::DRAWABLE));
 
             if (spriteComp) {
                 if (foodComp->getFoodType() == FoodType::NORMAL_DOT) {
-                    spriteComp->spritePath = "assets/pacman/dot.png";
+                    spriteComp->path = "assets/pacman/dot.png";
+                    spriteComp->setAsTexture("assets/pacman/dot.png", 32, 32);
+                    spriteComp->setAsCharacter('.');
                 } else {
-                    spriteComp->spritePath = "assets/pacman/power_pellet.png";
+                    spriteComp->path = "assets/pacman/power_pellet.png";
+                    spriteComp->setAsTexture("assets/pacman/power_pellet.png",
+                        32, 32);
+                    spriteComp->setAsCharacter('U');
                 }
             }
         }
@@ -795,6 +842,14 @@ void GameLogic::reloadCurrentMap() {
                     pacmanPosComp->x = startX + (x * cellSize);
                     pacmanPosComp->y = startY + (y * cellSize);
                 }
+                auto pacmanDrawable
+                    = std::dynamic_pointer_cast<DrawableComponent>(
+                    _componentManager->getComponentByType(pacmanEntity,
+                        ComponentType::DRAWABLE));
+                if (pacmanDrawable) {
+                    pacmanDrawable->posX = startX + (x * cellSize);
+                    pacmanDrawable->posY = startY + (y * cellSize);
+                }
             }
 
             if (grid->getCellType(x, y) == CellType::GHOST_SPAWN) {
@@ -821,28 +876,49 @@ void GameLogic::reloadCurrentMap() {
                             ghostPosComp->y = startY + (y * cellSize);
                         }
 
-                        auto ghostSprite = std::dynamic_pointer_cast
-                            <SpriteComponent>(
+                        auto ghostDrawable
+                            = std::dynamic_pointer_cast<DrawableComponent>(
                             _componentManager->getComponentByType(entity,
-                                ComponentType::SPRITE));
+                                ComponentType::DRAWABLE));
+                        if (ghostDrawable) {
+                            ghostDrawable->posX = startX + (x * cellSize);
+                            ghostDrawable->posY = startY + (y * cellSize);
+                        }
 
+                        auto ghostSprite
+                            = std::dynamic_pointer_cast<DrawableComponent>(
+                            _componentManager->getComponentByType(entity,
+                            ComponentType::DRAWABLE));
                         if (ghostSprite) {
                             switch (ghostComp->getGhostType()) {
                                 case GhostType::RED:
-                                    ghostSprite->spritePath =
+                                    ghostSprite->path =
                                         "assets/pacman/ghost_red.png";
+                                    ghostSprite->setAsTexture(
+                                        "assets/pacman/ghost_red.png", 32, 32);
+                                    ghostSprite->setAsCharacter('r');
                                     break;
                                 case GhostType::PINK:
-                                    ghostSprite->spritePath =
+                                    ghostSprite->path =
                                         "assets/pacman/ghost_pink.png";
+                                    ghostSprite->setAsTexture(
+                                        "assets/pacman/ghost_pink.png", 32, 32);
+                                    ghostSprite->setAsCharacter('i');
                                     break;
                                 case GhostType::BLUE:
-                                    ghostSprite->spritePath =
+                                    ghostSprite->path =
                                         "assets/pacman/ghost_cyan.png";
+                                    ghostSprite->setAsTexture(
+                                        "assets/pacman/ghost_cyan.png", 32, 32);
+                                    ghostSprite->setAsCharacter('c');
                                     break;
                                 case GhostType::ORANGE:
-                                    ghostSprite->spritePath =
+                                    ghostSprite->path =
                                         "assets/pacman/ghost_orange.png";
+                                    ghostSprite->setAsTexture(
+                                        "assets/pacman/ghost_orange.png",
+                                        32, 32);
+                                    ghostSprite->setAsCharacter('o');
                                     break;
                             }
                         }

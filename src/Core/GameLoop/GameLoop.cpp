@@ -385,6 +385,10 @@ void GameLoop::loadAndStartGame() {
             _entityManager.reset();
             _entityManager = std::make_shared<EntityManager>();
         }
+        if (_componentManager) {
+            _componentManager.reset();
+            _componentManager = std::make_shared<ComponentManager>();
+        }
         _currentGame = std::shared_ptr<IGameModule>(
             static_cast<IGameModule*>(entryPoint(_eventManager,
                 _componentManager, _entityManager)),

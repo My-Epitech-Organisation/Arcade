@@ -13,9 +13,8 @@
 #include "Games/PacMan/Components/PacmanStats.hpp"
 #include "Games/PacMan/Components/GridComponent.hpp"
 #include "Games/PacMan/Components/PacmanComponent.hpp"
-#include "ECS/Components/Text/TextComponent.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
-#include "ECS/Components/Sprite/SpriteComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -30,21 +29,30 @@ _entityManager(entityManager) {
 
 void UISystem::createUIEntities() {
     _scoreTextEntity = _entityManager->createEntity("UI_ScoreText");
-    auto scoreText = std::make_shared<TextComponent>("SCORE: 0", 20, 20,
-        Color::YELLOW);
-    scoreText->visible = true;
+    auto scoreText = std::make_shared<DrawableComponent>();
+    scoreText->setAsText("SCORE: 0", "./assets/fonts/Arial.ttf", 24);
+    scoreText->posX = 20;
+    scoreText->posY = 20;
+    scoreText->color = Color::YELLOW;
+    scoreText->isVisible = true;
     _componentManager->registerComponent(_scoreTextEntity, scoreText);
 
     _levelTextEntity = _entityManager->createEntity("UI_LevelText");
-    auto levelText = std::make_shared<TextComponent>("LEVEL: 1", 20, 50,
-        Color::YELLOW);
-    levelText->visible = true;
+    auto levelText = std::make_shared<DrawableComponent>();
+    levelText->setAsText("LEVEL: 1", "./assets/fonts/Arial.ttf", 24);
+    levelText->posX = 20;
+    levelText->posY = 50;
+    levelText->color = Color::YELLOW;
+    levelText->isVisible = true;
     _componentManager->registerComponent(_levelTextEntity, levelText);
 
     _livesTextEntity = _entityManager->createEntity("UI_LivesText");
-    auto livesText = std::make_shared<TextComponent>("LIVES:", 20, 80,
-        Color::YELLOW);
-    livesText->visible = true;
+    auto livesText = std::make_shared<DrawableComponent>();
+    livesText->setAsText("LIVES:", "./assets/fonts/Arial.ttf", 24);
+    livesText->posX = 20;
+    livesText->posY = 80;
+    livesText->color = Color::YELLOW;
+    livesText->isVisible = true;
     _componentManager->registerComponent(_livesTextEntity, livesText);
 
     float iconSpacing = 32.0f;
@@ -59,29 +67,42 @@ void UISystem::createUIEntities() {
             (i * iconSpacing), y);
         _componentManager->registerComponent(lifeIcon, posComp);
 
-        auto spriteComp = std::make_shared<SpriteComponent>
-            ("assets/pacman/pacman.png");
+        auto spriteComp = std::make_shared<DrawableComponent>();
+        spriteComp->setAsTexture("assets/pacman/pacman.png", 32, 32);
+        spriteComp->posX = startX + (i * iconSpacing);
+        spriteComp->posY = y;
+        spriteComp->isVisible = true;
         _componentManager->registerComponent(lifeIcon, spriteComp);
 
         _livesIconEntities.push_back(lifeIcon);
     }
 
     _gameOverTextEntity = _entityManager->createEntity("UI_GameOverText");
-    auto gameOverText = std::make_shared<TextComponent>("GAME OVER", 350, 300,
-        Color::RED);
-    gameOverText->visible = false;
+    auto gameOverText = std::make_shared<DrawableComponent>();
+    gameOverText->setAsText("GAME OVER", "./assets/fonts/Arial.ttf", 32);
+    gameOverText->posX = 350;
+    gameOverText->posY = 300;
+    gameOverText->color = Color::RED;
+    gameOverText->isVisible = false;
     _componentManager->registerComponent(_gameOverTextEntity, gameOverText);
 
     _gameWinTextEntity = _entityManager->createEntity("UI_GameWinText");
-    auto gameWinText = std::make_shared<TextComponent>("YOU WIN!", 350, 300,
-        Color::GREEN);
-    gameWinText->visible = false;
+    auto gameWinText = std::make_shared<DrawableComponent>();
+    gameWinText->setAsText("YOU WIN!", "./assets/fonts/Arial.ttf", 32);
+    gameWinText->posX = 350;
+    gameWinText->posY = 300;
+    gameWinText->color = Color::GREEN;
+    gameWinText->isVisible = false;
     _componentManager->registerComponent(_gameWinTextEntity, gameWinText);
 
     _restartTextEntity = _entityManager->createEntity("UI_RestartText");
-    auto restartText = std::make_shared<TextComponent>(
-        "Press 'R' to restart or ESC for menu", 250, 350, Color::WHITE);
-    restartText->visible = false;
+    auto restartText = std::make_shared<DrawableComponent>();
+    restartText->setAsText("Press 'R' to restart or ESC for menu",
+                          "./assets/fonts/Arial.ttf", 24);
+    restartText->posX = 250;
+    restartText->posY = 350;
+    restartText->color = Color::WHITE;
+    restartText->isVisible = false;
     _componentManager->registerComponent(_restartTextEntity, restartText);
 }
 
@@ -124,16 +145,16 @@ void UISystem::updateUITexts() {
 
     if (!pacmanComp) return;
 
-    auto scoreTextComp = std::dynamic_pointer_cast<TextComponent>(
+    auto scoreTextComp = std::dynamic_pointer_cast<DrawableComponent>(
         _componentManager->getComponentByType(_scoreTextEntity,
-            ComponentType::TEXT));
+            ComponentType::DRAWABLE));
     if (scoreTextComp)
         scoreTextComp->text = "SCORE: " + std::to_string(
             pacmanComp->getScore());
 
-    auto levelTextComp = std::dynamic_pointer_cast<TextComponent>(
+    auto levelTextComp = std::dynamic_pointer_cast<DrawableComponent>(
         _componentManager->getComponentByType(_levelTextEntity,
-            ComponentType::TEXT));
+            ComponentType::DRAWABLE));
     if (levelTextComp) {
         Arcade::Entity gridEntity = 0;
         for (const auto& [entity, name] : _entityManager->getEntities()) {
@@ -149,7 +170,6 @@ void UISystem::updateUITexts() {
         levelTextComp->text = "LEVEL: " + std::to_string(level);
     }
 }
-
 
 void UISystem::updateLivesIcons() {
     Arcade::Entity pacmanEntity = 0;
@@ -171,28 +191,22 @@ void UISystem::updateLivesIcons() {
     int lives = pacmanComp->getLives();
 
     for (size_t i = 0; i < _livesIconEntities.size(); i++) {
-        auto posComp = std::dynamic_pointer_cast<PositionComponent>(
+        auto spriteComp = std::dynamic_pointer_cast<DrawableComponent>(
             _componentManager->getComponentByType(_livesIconEntities[i],
-                ComponentType::POSITION));
+                ComponentType::DRAWABLE));
 
-        if (posComp) {
-            auto spriteComp = std::dynamic_pointer_cast<SpriteComponent>(
-                _componentManager->getComponentByType(_livesIconEntities[i],
-                    ComponentType::SPRITE));
-
-            if (i < static_cast<size_t>(lives)) {
-                if (!spriteComp) {
-                    auto newSpriteComp = std::make_shared<SpriteComponent>
-                        ("assets/pacman/pacman.png");
-                    _componentManager->registerComponent(_livesIconEntities[i],
-                        newSpriteComp);
-                }
+        if (i < static_cast<size_t>(lives)) {
+            if (!spriteComp) {
+                auto newDrawableComp = std::make_shared<DrawableComponent>();
+                newDrawableComp->setAsTexture
+                    ("assets/pacman/pacman.png", 32, 32);
+                _componentManager->registerComponent(_livesIconEntities[i],
+                    newDrawableComp);
             } else {
-                if (spriteComp) {
-                    _componentManager->unregisterComponent(
-                        _livesIconEntities[i], typeid(*spriteComp).name());
-                }
+                spriteComp->isVisible = true;
             }
+        } else if (spriteComp) {
+            spriteComp->isVisible = false;
         }
     }
 }
@@ -206,7 +220,7 @@ void UISystem::updateGameOverState() {
         }
     }
 
-    if (gridEntity != 0)
+    if (gridEntity == 0)
         return;
 
     auto gridComp = std::dynamic_pointer_cast<GridComponent>(
@@ -216,36 +230,36 @@ void UISystem::updateGameOverState() {
     if (!gridComp)
         return;
 
-    auto gameOverTextComp = std::dynamic_pointer_cast<TextComponent>(
+    auto gameOverTextComp = std::dynamic_pointer_cast<DrawableComponent>(
         _componentManager->getComponentByType(_gameOverTextEntity,
-            ComponentType::TEXT));
+            ComponentType::DRAWABLE));
 
-    auto gameWinTextComp = std::dynamic_pointer_cast<TextComponent>(
+    auto gameWinTextComp = std::dynamic_pointer_cast<DrawableComponent>(
         _componentManager->getComponentByType(_gameWinTextEntity,
-            ComponentType::TEXT));
+            ComponentType::DRAWABLE));
 
-    auto restartTextComp = std::dynamic_pointer_cast<TextComponent>(
+    auto restartTextComp = std::dynamic_pointer_cast<DrawableComponent>(
         _componentManager->getComponentByType(_restartTextEntity,
-            ComponentType::TEXT));
+            ComponentType::DRAWABLE));
 
     if (gridComp->isGameOver()) {
         if (gameOverTextComp)
-            gameOverTextComp->visible = !gridComp->isGameWon();
+            gameOverTextComp->isVisible = !gridComp->isGameWon();
 
         if (gameWinTextComp)
-            gameWinTextComp->visible = gridComp->isGameWon();
+            gameWinTextComp->isVisible = gridComp->isGameWon();
 
         if (restartTextComp)
-            restartTextComp->visible = true;
+            restartTextComp->isVisible = true;
     } else {
         if (gameOverTextComp)
-            gameOverTextComp->visible = false;
+            gameOverTextComp->isVisible = false;
 
         if (gameWinTextComp)
-            gameWinTextComp->visible = false;
+            gameWinTextComp->isVisible = false;
 
         if (restartTextComp)
-            restartTextComp->visible = false;
+            restartTextComp->isVisible = false;
     }
 }
 

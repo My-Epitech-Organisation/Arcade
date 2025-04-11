@@ -39,7 +39,6 @@ class PacmanGame : public IGameModule {
     bool hasWon() const override;
     void stop() override;
     int getScore() const override;
-    std::string getSpecialCompSprite(size_t id) const override;
 
  private:
     void createGame();
