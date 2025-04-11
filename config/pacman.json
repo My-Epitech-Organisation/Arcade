@@ -1,0 +1,184 @@
+{
+    "assets": {
+      "fonts": {
+        "default": "./assets/fonts/Arial.ttf"
+      },
+      "textures": {
+        "pacman": {
+          "default": {
+            "path": "assets/pacman/pacman.png",
+            "char": "P",
+            "width": 32,
+            "height": 32
+          },
+          "right": [
+            {
+              "path": "assets/pacman/pacman-right/1.png",
+              "char": ">",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "path": "assets/pacman/pacman-right/2.png",
+              "char": "O",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "path": "assets/pacman/pacman-right/3.png",
+              "char": "C",
+              "width": 32,
+              "height": 32
+            }
+          ],
+          "left": [
+            {
+              "path": "assets/pacman/pacman-left/1.png",
+              "char": "<",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "path": "assets/pacman/pacman-left/2.png",
+              "char": "O",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "path": "assets/pacman/pacman-left/3.png",
+              "char": "C",
+              "width": 32,
+              "height": 32
+            }
+          ],
+          "up": [
+            {
+              "path": "assets/pacman/pacman-up/1.png",
+              "char": "^",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "path": "assets/pacman/pacman-up/2.png",
+              "char": "O",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "path": "assets/pacman/pacman-up/3.png",
+              "char": "C",
+              "width": 32,
+              "height": 32
+            }
+          ],
+          "down": [
+            {
+              "path": "assets/pacman/pacman-down/1.png",
+              "char": "v",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "path": "assets/pacman/pacman-down/2.png",
+              "char": "O",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "path": "assets/pacman/pacman-down/3.png",
+              "char": "C",
+              "width": 32,
+              "height": 32
+            }
+          ]
+        },
+        "ghosts": {
+          "red": {
+            "path": "assets/pacman/ghost_red.png",
+            "char": "R",
+            "width": 32,
+            "height": 32
+          },
+          "pink": {
+            "path": "assets/pacman/ghost_pink.png",
+            "char": "P",
+            "width": 32,
+            "height": 32
+          },
+          "blue": {
+            "path": "assets/pacman/ghost_cyan.png",
+            "char": "B",
+            "width": 32,
+            "height": 32
+          },
+          "orange": {
+            "path": "assets/pacman/ghost_orange.png",
+            "char": "O",
+            "width": 32,
+            "height": 32
+          },
+          "frightened": {
+            "path": "assets/pacman/scared_ghost.png",
+            "char": "F",
+            "width": 32,
+            "height": 32
+          },
+          "eyes": {
+            "path": "assets/pacman/eyes.png",
+            "char": "y",
+            "width": 32,
+            "height": 32
+          }
+        },
+        "map": {
+          "wall": {
+            "path": "assets/pacman/wall.png",
+            "char": "W",
+            "width": 32,
+            "height": 32
+          },
+          "food": {
+            "path": "assets/pacman/dot.png",
+            "char": ".",
+            "width": 32,
+            "height": 32
+          },
+          "power_pellet": {
+            "path": "assets/pacman/power_pellet.png",
+            "char": "U",
+            "width": 32,
+            "height": 32
+          },
+          "empty": {
+            "path": "assets/pacman/empty.png",
+            "char": " ",
+            "width": 32,
+            "height": 32
+          }
+        },
+        "fruits": {
+          "strawberry": {
+            "path": "assets/pacman/other/strawberry.png",
+            "char": "S",
+            "width": 32,
+            "height": 32
+          }
+        },
+        "ui": {
+          "score": {
+            "text": "Score: ",
+            "char": "S",
+            "width": 128,
+            "height": 32
+          },
+          "lives": {
+            "text": "Lives: ",
+            "path": "assets/pacman/pacman.png",
+            "char": "L",
+            "width": 32,
+            "height": 32
+          }
+        }
+      }
+    }
+  }
