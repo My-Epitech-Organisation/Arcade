@@ -11,6 +11,8 @@
 #include "Games/Snake/Components/Snake.hpp"
 #include "Games/Snake/Components/Food.hpp"
 #include "Games/Snake/Types.hpp"
+#include "Games/Snake/Components/GridComponent.hpp"
+#include <iostream>
 
 namespace Arcade {
 
@@ -24,25 +26,45 @@ _collision(false) {}
 void CollisionSystem::update() {
     _collision = false;
 
+    Arcade::Entity gridEntity = 0;
+    for (const auto& [entity, name] : _entityManager->getEntities()) {
+        if (name == "grid") {
+            gridEntity = entity;
+            break;
+        }
+    }
+
+    if (gridEntity == 0)
+        return;
+
+    auto gridComp = std::dynamic_pointer_cast<GridComponent>(
+        _componentManager->getComponentByType(gridEntity, 
+            static_cast<ComponentType>(1000)));
+
+    if (!gridComp)
+        return;
+
     for (const auto& [entity, _] : _entityManager->getEntities()) {
         auto snakeComponentBase = _componentManager->getComponentBase(entity, "SnakeComponent");
         auto snakeComponent = dynamic_cast<SnakeComponent*>(snakeComponentBase.get());
 
-        if (snakeComponent && !snakeComponent->segments.empty()) {
-            auto headEntity = snakeComponent->segments[0];
-            auto headPosBase = _componentManager->getComponentBase(headEntity, "PositionComponent");
-            auto headPos = dynamic_cast<PositionComponent*>(headPosBase.get());
+        if (snakeComponent) {
+            size_t headX = snakeComponent->getHeadX();
+            size_t headY = snakeComponent->getHeadY();
 
-            if (headPos) {
-                if (checkBoundaryCollision(headPos->x, headPos->y)) {
-                    _collision = true;
-                    return;
-                }
+            if (headX >= gridComp->getWidth() || headY >= gridComp->getHeight() ||
+                gridComp->getCellType(headX, headY) == SnakeCellType::WALL) {
+                _collision = true;
+                gridComp->setGameOver(true);
+                std::cout << "Wall collision detected!" << std::endl;
+                return;
+            }
 
-                if (checkSelfCollision(snakeComponent->segments)) {
-                    _collision = true;
-                    return;
-                }
+            if (checkSelfCollision(snakeComponent)) {
+                _collision = true;
+                gridComp->setGameOver(true);
+                std::cout << "Self collision detected!" << std::endl;
+                return;
             }
         }
     }
@@ -50,36 +72,26 @@ void CollisionSystem::update() {
 
 bool CollisionSystem::checkBoundaryCollision(float x, float y)
 {
-    const float minX = 0;
-    const float maxX = 29;
-    const float minY = 0;
-    const float maxY = 29;
-
-    return (x < minX || x > maxX || y < minY || y > maxY);
+    return false;
 }
 
-bool CollisionSystem::checkSelfCollision(const std::vector<Entity>& segments) {
-    if (segments.size() <= 1) {
+bool CollisionSystem::checkSelfCollision(SnakeComponent* snakeComponent) {
+    if (snakeComponent->segmentPositions.size() <= 1) {
         return false;
     }
 
-    auto headEntity = segments[0];
-    auto headPosBase = _componentManager->getComponentBase(headEntity, "PositionComponent");
-    auto headPos = dynamic_cast<PositionComponent*>(headPosBase.get());
+    size_t headX = snakeComponent->getHeadX();
+    size_t headY = snakeComponent->getHeadY();
 
-    if (!headPos) {
-        return false;
-    }
+    for (size_t i = 3; i < snakeComponent->segmentPositions.size(); ++i) {
+        size_t segX = snakeComponent->segmentPositions[i].first;
+        size_t segY = snakeComponent->segmentPositions[i].second;
 
-    for (size_t i = 3; i < segments.size(); ++i) {
-        auto segmentPosBase = _componentManager->getComponentBase(segments[i], "PositionComponent");
-        auto segmentPos = dynamic_cast<PositionComponent*>(segmentPosBase.get());
-
-        if (segmentPos && headPos->x == segmentPos->x && headPos->y == segmentPos->y) {
+        if (headX == segX && headY == segY) {
+            std::cout << "Snake collided with itself at position (" << headX << ", " << headY << ")" << std::endl;
             return true;
         }
     }
-
     return false;
 }
 
