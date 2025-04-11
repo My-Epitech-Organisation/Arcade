@@ -31,13 +31,11 @@ _assets(assets) {
 }
 
 void UISystem::createUIEntities() {
-    // Get font path from assets
     std::string fontPath = "./assets/fonts/Arial.ttf";
     auto defaultFontIt = _assets.find("fonts.default");
     if (defaultFontIt != _assets.end()) {
         fontPath = defaultFontIt->second.path;
     }
-    // Score Text
     _scoreTextEntity = _entityManager->createEntity("UI_ScoreText");
     auto scoreText = std::make_shared<DrawableComponent>();
     auto scoreAsset = _assets.find("ui.score");
@@ -53,7 +51,6 @@ void UISystem::createUIEntities() {
     scoreText->isVisible = true;
     _componentManager->registerComponent(_scoreTextEntity, scoreText);
 
-    // Level Text
     _levelTextEntity = _entityManager->createEntity("UI_LevelText");
     auto levelText = std::make_shared<DrawableComponent>();
     levelText->setAsText("LEVEL: 1", fontPath, 24);
@@ -63,7 +60,6 @@ void UISystem::createUIEntities() {
     levelText->isVisible = true;
     _componentManager->registerComponent(_levelTextEntity, levelText);
 
-    // Lives Text
     _livesTextEntity = _entityManager->createEntity("UI_LivesText");
     auto livesText = std::make_shared<DrawableComponent>();
     auto livesAsset = _assets.find("ui.lives");
@@ -83,7 +79,6 @@ void UISystem::createUIEntities() {
     float startX = 20.0f;
     float y = 110.0f;
 
-    // Life Icons
     for (int i = 0; i < 3; i++) {
         Arcade::Entity lifeIcon = _entityManager->createEntity("UI_LifeIcon_"
             + std::to_string(i));
@@ -107,7 +102,6 @@ void UISystem::createUIEntities() {
         _livesIconEntities.push_back(lifeIcon);
     }
 
-    // Game Over Text
     _gameOverTextEntity = _entityManager->createEntity("UI_GameOverText");
     auto gameOverText = std::make_shared<DrawableComponent>();
     auto gameOverAsset = _assets.find("ui.game_over");
@@ -122,7 +116,6 @@ void UISystem::createUIEntities() {
     gameOverText->isVisible = false;
     _componentManager->registerComponent(_gameOverTextEntity, gameOverText);
 
-    // Win Text
     _gameWinTextEntity = _entityManager->createEntity("UI_GameWinText");
     auto gameWinText = std::make_shared<DrawableComponent>();
     auto winAsset = _assets.find("ui.win");
@@ -137,7 +130,6 @@ void UISystem::createUIEntities() {
     gameWinText->isVisible = false;
     _componentManager->registerComponent(_gameWinTextEntity, gameWinText);
 
-    // Restart Text
     _restartTextEntity = _entityManager->createEntity("UI_RestartText");
     auto restartText = std::make_shared<DrawableComponent>();
     restartText->setAsText("Press 'R' to restart or ESC for menu",

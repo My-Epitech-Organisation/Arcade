@@ -46,7 +46,6 @@ size_t gridX, size_t gridY, bool hasMine) {
     cellComponent->_gridY = gridY;
     _componentManager->registerComponent(cellEntity, cellComponent);
 
-    // Create DrawableComponent instead of SpriteComponent
     auto drawable = std::make_shared<DrawableComponent>();
     drawable->setAsTexture("assets/minesweeper/hidden.png", 100.0f, 100.0f);
     drawable->posX = x;
@@ -55,7 +54,6 @@ size_t gridX, size_t gridY, bool hasMine) {
     _componentManager->registerComponent(cellEntity, drawable);
 
     if (hasMine) {
-        // Store bomb information in a custom component
         auto bombComponent = std::make_shared<BombComponent>(
             "assets/minesweeper/hidden.png",
             "assets/minesweeper/mine.png");

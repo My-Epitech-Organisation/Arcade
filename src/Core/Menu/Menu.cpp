@@ -30,7 +30,6 @@ void Menu::displayTitle(const std::string &title) {
         throw std::runtime_error("Window cast failed");
     }
     int centerX = window->getWidth() / 2;
-    // Create DrawableComponent for the title
     DrawableComponent titleText;
     titleText.setAsText(title, "./assets/fonts/Arial.ttf", 32.0f);
     titleText.posX = centerX - (title.length() * 8);
@@ -46,7 +45,6 @@ int y, Color color, bool isSelected) {
     if (!window) {
         throw std::runtime_error("Window cast failed");
     }
-    // Format the option text and create a DrawableComponent
     std::string displayText = isSelected ? "> " + option : option;
     DrawableComponent optionText;
     optionText.setAsText(displayText, "./assets/fonts/Arial.ttf", 20.0f);
@@ -63,13 +61,12 @@ const std::string &value, int y, Color color) {
     if (!window) {
         throw std::runtime_error("Window cast failed");
     }
-    // Create DrawableComponent for the status text
     std::string statusText = label + ": "
         + (value.empty() ? "None" : value);
     DrawableComponent statusComponent;
     statusComponent.setAsText(statusText,
         "./assets/fonts/Arial.ttf", 16.0f);
-    statusComponent.posX = 10;  // Left-aligned position
+    statusComponent.posX = 10;
     statusComponent.posY = y;
     statusComponent.color = color;
     statusComponent.isVisible = true;
@@ -175,8 +172,6 @@ void Menu::displayNameInput(const std::string &currentInput) {
     int centerY = window->getHeight() / 2;
 
     displayTitle("ENTER YOUR NAME");
-
-    // Create DrawableComponent for the user input
     std::string displayName = currentInput + "_";
     DrawableComponent nameInput;
     nameInput.setAsText(displayName, "./assets/fonts/Arial.ttf", 24.0f);
@@ -184,8 +179,6 @@ void Menu::displayNameInput(const std::string &currentInput) {
     nameInput.posY = centerY;
     nameInput.color = Color::GREEN;
     nameInput.isVisible = true;
-
-    // Create DrawableComponent for instructions
     DrawableComponent instructions;
     instructions.setAsText("Press ENTER to confirm, ESC to cancel",
                           "./assets/fonts/Arial.ttf", 18.0f);
@@ -193,7 +186,6 @@ void Menu::displayNameInput(const std::string &currentInput) {
     instructions.posY = centerY + 60;
     instructions.color = Color::WHITE;
     instructions.isVisible = true;
-    // Draw using the new component-based approach
     window->drawDrawable(nameInput);
     window->drawDrawable(instructions);
 }
