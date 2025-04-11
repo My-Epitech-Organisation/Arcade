@@ -16,6 +16,7 @@
 #include "Games/Snake/Components/Snake.hpp"
 #include "Games/Snake/Components/Food.hpp"
 #include "Shared/Models/ModuleInfos.hpp"
+#include <iostream>
 
 namespace Arcade {
 
@@ -63,10 +64,26 @@ void SnakeGame::initGame() {
 void SnakeGame::spawnFood() {
     SnakeFactory factory(_entityManager, _componentManager);
 
-    auto snakeComponentBase =
-        _componentManager->getComponentBase(_snakeEntity, "SnakeComponent");
-    auto snakeComponent =
-        dynamic_cast<SnakeComponent*>(snakeComponentBase.get());
+    std::shared_ptr<SnakeComponent> snakeComponent = nullptr;
+
+    for (const auto& [entity, name] : _entityManager->getEntities()) {
+        if (name == "snake" && entity == _snakeEntity) {
+            auto components = _componentManager->getEntityComponents(entity);
+            for (const auto& component : components) {
+                auto castComponent = std::dynamic_pointer_cast<SnakeComponent>(component);
+                if (castComponent) {
+                    snakeComponent = castComponent;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    if (!snakeComponent) {
+        _foodEntity = factory.createFood(rand() % 30, rand() % 30);
+        return;
+    }
 
     int x, y;
     bool validPosition;
@@ -99,14 +116,36 @@ void SnakeGame::update() {
         system->update();
     }
 
-    auto snakeComponentBase =
-        _componentManager->getComponentBase(_snakeEntity, "SnakeComponent");
-    auto snakeComponent =
-        dynamic_cast<SnakeComponent*>(snakeComponentBase.get());
+    std::shared_ptr<SnakeComponent> snakeComponent = nullptr;
+    std::shared_ptr<FoodComponent> foodComponent = nullptr;
 
-    auto foodComponentBase =
-        _componentManager->getComponentBase(_foodEntity, "FoodComponent");
-    auto foodComponent = dynamic_cast<FoodComponent*>(foodComponentBase.get());
+    for (const auto& [entity, name] : _entityManager->getEntities()) {
+        if (name == "snake" && entity == _snakeEntity) {
+            auto components = _componentManager->getEntityComponents(entity);
+            for (const auto& component : components) {
+                auto castComponent = std::dynamic_pointer_cast<SnakeComponent>(component);
+                if (castComponent) {
+                    snakeComponent = castComponent;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    for (const auto& [entity, name] : _entityManager->getEntities()) {
+        if (name == "food" && entity == _foodEntity) {
+            auto components = _componentManager->getEntityComponents(entity);
+            for (const auto& component : components) {
+                auto castComponent = std::dynamic_pointer_cast<FoodComponent>(component);
+                if (castComponent) {
+                    foodComponent = castComponent;
+                    break;
+                }
+            }
+            break;
+        }
+    }
 
     if (snakeComponent && foodComponent && foodComponent->eaten) {
         _score += 10;
@@ -214,17 +253,18 @@ std::string SnakeGame::getSpecialCompSprite(size_t id) const {
 }
 
 extern "C" {
-    __attribute__((constructor))
-    const char *init_snake(void) {
-        return "Lib";
-    }
-
-    __attribute__((destructor))
-    void fini_snake(void) {
-    }
-
     Arcade::IArcadeModule* entryPoint(void) {
-        return new Arcade::SnakeGame();
+        try {
+            return new Arcade::SnakeGame();
+        } catch (const std::exception& e) {
+            std::cerr << "Error creating Snake instance: "
+                << e.what() << std::endl;
+            return nullptr;
+        }
+    }
+
+    void destroy(IGameModule* instance) {
+        delete instance;
     }
 
     Arcade::ModuleInfos module_infos() {
