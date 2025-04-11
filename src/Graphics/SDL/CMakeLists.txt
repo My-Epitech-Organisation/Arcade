@@ -40,6 +40,7 @@ target_include_directories(arcade_sdl2 PUBLIC
     ${SDL2_TTF_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../
 )
 
 target_link_directories(arcade_sdl2 PUBLIC

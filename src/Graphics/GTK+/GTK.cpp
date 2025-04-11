@@ -107,6 +107,22 @@ void GTKModule::refreshScreen() {
     gtk_widget_queue_draw(_window.getDrawingArea().get());
 }
 
+void GTKModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
+    if (!drawable.isVisible)
+        return;
+
+    if (drawable.shouldRenderAsText()) {
+        drawText(drawable.text, static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.color);
+    } else if (drawable.shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.path);
+    } else if (drawable.shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.character);
+    }
+}
+
 void GTKModule::drawEntity(int x, int y, char symbol) {
 }
 

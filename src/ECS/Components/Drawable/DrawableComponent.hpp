@@ -10,9 +10,9 @@
 #define SRC_ECS_COMPONENTS_DRAWABLE_DRAWABLECOMPONENT_HPP_
 
 #include <string>
-#include "Shared/Interface/ECS/IComponent.hpp"
-#include "Shared/Models/ComponentType.hpp"
-#include "Shared/Models/ColorType.hpp"
+#include "Interface/ECS/IComponent.hpp"
+#include "Models/ComponentType.hpp"
+#include "Models/ColorType.hpp"
 
 namespace Arcade {
 

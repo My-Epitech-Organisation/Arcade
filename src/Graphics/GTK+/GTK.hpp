@@ -36,6 +36,10 @@
         GTK::GTKText _textManager;
         GTK::GTKFont _fontManager;
         GTK::GTKEvent _eventManager;
+        void drawEntity(int x, int y, char symbol);
+        void drawTexture(int x, int y, const std::string &textureId);
+        void drawText(const std::string &text, int x, int y,
+            Arcade::Color color);
         struct TextureData {
             std::shared_ptr<cairo_surface_t> surface;
             int width;
@@ -57,10 +61,7 @@
         void stop() override;
         void clearScreen() override;
         void refreshScreen() override;
-        void drawEntity(int x, int y, char symbol) override;
-        void drawTexture(int x, int y, const std::string &textureId) override;
-        void drawText(const std::string &text, int x, int y,
-            Arcade::Color color) override;
+        void drawDrawable(const Arcade::DrawableComponent &drawable) override;
         void pollEvents() override;
         bool isOpen() const override;
         const std::string& getName() const override;

@@ -58,6 +58,22 @@ void NCursesModule::drawEntity(int x, int y, char symbol) {
     _entity.drawEntity(win, x, y, symbol, colorPair);
 }
 
+void NCursesModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
+    if (!drawable.isVisible)
+        return;
+
+    if (drawable.shouldRenderAsText()) {
+        drawText(drawable.text, static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.color);
+    } else if (drawable.shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.path);
+    } else if (drawable.shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.character);
+    }
+}
+
 void NCursesModule::drawTexture(int x, int y, const std::string &textureId) {
 }
 

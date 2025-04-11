@@ -33,8 +33,6 @@ class ComponentManager : public IComponentManager {
         component) override;
     std::shared_ptr<IComponent> getComponentByType(Entity entity,
         ComponentType type) override;
-    std::shared_ptr<IComponent> getComponentBase(Entity entity,
-        const std::string& typeName) override;
     std::vector<std::shared_ptr<IComponent>> getAllComponentsByType
         (ComponentType type) override;
     void unregisterComponent(Entity entity, const std::string&

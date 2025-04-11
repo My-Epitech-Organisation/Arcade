@@ -63,6 +63,22 @@ void SFML::drawTexture(int x, int y, const std::string& texturePath) {
     _window->draw(sprite);
 }
 
+void SFML::drawDrawable(const Arcade::DrawableComponent& drawable) {
+    if (!drawable.isVisible)
+        return;
+
+    if (drawable.shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.path);
+    } else if (drawable.shouldRenderAsText()) {
+        drawText(drawable.text, static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.color);
+    } else if (drawable.shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.character);
+    }
+}
+
 void SFML::drawText(const std::string& text, int x, int y,
     Arcade::Color color) {
     auto font = loadFont("assets/fonts/arial.ttf");

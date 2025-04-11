@@ -44,6 +44,22 @@ void Allegro5::refreshScreen() {
     al_flip_display();
 }
 
+void Allegro5::drawDrawable(const Arcade::DrawableComponent& drawable) {
+    if (!drawable.isVisible)
+        return;
+
+    if (drawable.shouldRenderAsText()) {
+        drawText(drawable.text, static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.color);
+    } else if (drawable.shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.path);
+    } else if (drawable.shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.character);
+    }
+}
+
 void Allegro5::drawEntity(int x, int y, char symbol) {
 }
 

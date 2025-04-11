@@ -24,6 +24,7 @@ target_include_directories(arcade_opengl PUBLIC
     ${OPENGL_INCLUDE_DIR}
     ${FREETYPE_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../..
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

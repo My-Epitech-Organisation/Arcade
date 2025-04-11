@@ -25,6 +25,7 @@
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 #include "Games/Minesweeper/MinesweeperFactory.hpp"
+#include "Shared/JSONParser/JSONParser.hpp"
 
 namespace Arcade {
 
@@ -60,9 +61,10 @@ std::shared_ptr<IEntityManager> entityManager) {
     _componentManager = componentManager;
     _entityManager = entityManager;
 
+    loadDrawableAssets();
     createBoard();
     _eventSystem = std::make_shared<EventSubSystem>(
-        _componentManager, _entityManager, _eventManager);
+        _componentManager, _entityManager, _eventManager, _drawableAssets);
     _systems.push_back(std::make_shared<GameLogic>(_componentManager,
         _entityManager));
     _systems.push_back(std::make_shared<RenderSystem>(_componentManager,
@@ -71,6 +73,27 @@ std::shared_ptr<IEntityManager> entityManager) {
         _entityManager));
 
     _systems.push_back(_eventSystem);
+}
+
+void MinesweeperGame::loadDrawableAssets() {
+    try {
+        JSONParser parser;
+        _drawableAssets = parser.convertAssetsToGraphicalElements(
+            "./config/minesweeper.json");
+    } catch (const std::exception& e) {
+        std::cerr << "Failed to load Minesweeper assets: "
+                  << e.what() << std::endl;
+    }
+}
+
+std::shared_ptr<DrawableComponent> MinesweeperGame::getDrawableAsset(
+const std::string& key) const {
+    auto it = _drawableAssets.find(key);
+    if (it != _drawableAssets.end()) {
+        auto component = std::make_shared<DrawableComponent>(it->second);
+        return component;
+    }
+    return nullptr;
 }
 
 void MinesweeperGame::update() {
@@ -200,41 +223,6 @@ bool MinesweeperGame::checkVictory(Arcade::Entity boardEntity) {
         }
     }
     return true;
-}
-
-std::string MinesweeperGame::getSpecialCompSprite(size_t id) const {
-    auto component = _componentManager->getComponentByType(id,
-        ComponentType::BOMB);
-    auto bombComponent = std::dynamic_pointer_cast
-        <Arcade::Minesweeper::BombComponent>(component);
-    if (bombComponent) {
-        if (bombComponent->isRevealed()) {
-            return "assets/minesweeper/mine.png";
-        } else {
-            return "assets/minesweeper/hidden.png";
-        }
-    }
-    auto comp2 = _componentManager->getComponentByType(id, ComponentType::CELL);
-    auto cellComponent = std::dynamic_pointer_cast<Arcade::Minesweeper::Cell>
-        (comp2);
-    if (cellComponent) {
-        if (cellComponent->getState() == Arcade::Minesweeper::Cell::FLAGGED) {
-            return "assets/minesweeper/flag.png";
-        } else if (cellComponent->getState() ==
-            Arcade::Minesweeper::Cell::REVEALED && !cellComponent->isMine()) {
-            int adjacentMines = cellComponent->getAdjacentMines();
-            if (adjacentMines > 0) {
-                return "assets/minesweeper/number_" +
-                    std::to_string(adjacentMines) + ".png";
-            } else {
-                return "assets/minesweeper/empty.png";
-            }
-        } else if (cellComponent->getState() ==
-            Arcade::Minesweeper::Cell::HIDDEN) {
-            return "assets/minesweeper/hidden.png";
-        }
-    }
-    return "";
 }
 
 int MinesweeperGame::getScore() const {

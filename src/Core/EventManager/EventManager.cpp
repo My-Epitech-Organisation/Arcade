@@ -9,6 +9,7 @@
 #include <iostream>
 #include <utility>
 #include <string>
+#include <vector>
 #include "EventManager/EventManager.hpp"
 #include "Shared/Models/KeysType.hpp"
 #include "Shared/Interface/Display/IDisplayModule.hpp"
@@ -136,21 +137,40 @@ void EventManager::unsubscribeAll() {
 }
 
 // Added to handle publishing errors with proper exceptions
+// ...existing code...
+
 void EventManager::publish(const IEvent& eventType) {
     try {
+        std::vector<Callback> callbacksToInvoke;
         if (dynamic_cast<const MouseEvent*>(&eventType) != nullptr) {
             auto mouseEvent = dynamic_cast<const MouseEvent*>(&eventType);
             auto mouseFound = std::pair<EventType, MouseButton>
                 (mouseEvent->getType(), mouseEvent->getButton());
-            for (auto& callback : _mouseSubscribers[mouseFound]) {
-                callback();
+            // Find and copy callbacks safely
+            auto it = _mouseSubscribers.find(mouseFound);
+            if (it != _mouseSubscribers.end()) {
+                callbacksToInvoke = it->second;
+            }
+            // Execute the callbacks from our safe copy
+            for (const auto& callback : callbacksToInvoke) {
+                if (callback) {  // Verify callback is valid
+                    callback();
+                }
             }
         } else if (dynamic_cast<const KeyEvent*>(&eventType) != nullptr) {
             auto keyEvent = dynamic_cast<const KeyEvent*>(&eventType);
             auto keyFound = std::pair<EventType, Keys>
                 (eventType.getType(), eventType.getKey());
-            for (auto& callback : _subscribers[keyFound]) {
-                callback();
+            // Find and copy callbacks safely
+            auto it = _subscribers.find(keyFound);
+            if (it != _subscribers.end()) {
+                callbacksToInvoke = it->second;
+            }
+            // Execute the callbacks from our safe copy
+            for (const auto& callback : callbacksToInvoke) {
+                if (callback) {  // Verify callback is valid
+                    callback();
+                }
             }
         } else {
             throw InputException("Unknown event type for publishing");

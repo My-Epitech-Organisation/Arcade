@@ -98,9 +98,9 @@ void Window::refreshScreen() {
     _displayModule->refreshScreen();
 }
 
-void Window::drawText(const std::string &text, int x, int y, Color color) {
+void Window::drawDrawable(const DrawableComponent& drawable) {
     if (_isShuttingDown || !_displayModule) return;
-    _displayModule->drawText(text, x, y, color);
+    _displayModule->drawDrawable(drawable);
 }
 
 bool Window::isKeyPressed(int keyCode) {

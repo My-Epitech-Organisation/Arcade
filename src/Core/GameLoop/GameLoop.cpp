@@ -170,53 +170,39 @@ void GameLoop::updateGame() {
     if (_currentGame) {
         _currentGame->update();
         auto entities = _entityManager->getEntities();
-        std::vector<std::shared_ptr<TextComponent>> textComponents;
+        std::vector<std::shared_ptr<DrawableComponent>> textComponents;
+        std::vector<std::shared_ptr<DrawableComponent>> textureComponents;
+        std::vector<std::shared_ptr<DrawableComponent>> characterComponents;
         for (const auto& [entityId, entityName] : entities) {
-            auto textComp = _componentManager->getComponentByType(entityId,
-                ComponentType::TEXT);
-            auto textComponent = std::dynamic_pointer_cast<TextComponent>
-                (textComp);
-
-            if (textComponent && textComponent->visible) {
-                textComponents.push_back(textComponent);
-                continue;
+            auto components = _componentManager->getAllComponentsByType(
+                ComponentType::DRAWABLE);
+            for (const auto& component : components) {
+                auto drawableComp
+                = std::dynamic_pointer_cast<DrawableComponent>(
+                    component);
+                if (drawableComp.get() && drawableComp->isVisible) {
+                    if (drawableComp->shouldRenderAsText()) {
+                        if (drawableComp)
+                            textComponents.push_back(drawableComp);
+                    } else if (drawableComp->shouldRenderAsTexture()) {
+                        if (drawableComp)
+                            textureComponents.push_back(drawableComp);
+                    } else if (drawableComp->shouldRenderAsCharacter()) {
+                        if (drawableComp)
+                            characterComponents.push_back(drawableComp);
+                    } else {
+                        std::cerr << "Unknown drawable type for entity "
+                            << entityId << std::endl;
+                    }
+                }
             }
-
-            auto position = _componentManager->getComponentByType(entityId,
-                ComponentType::POSITION);
-            auto positionComponent = std::dynamic_pointer_cast
-                <PositionComponent>(position);
-            if (!positionComponent) {
-                continue;
-            }
-
-            int x = static_cast<int>(positionComponent->x);
-            int y = static_cast<int>(positionComponent->y);
-
-            auto sprite = _componentManager->getComponentByType(entityId,
-                ComponentType::SPRITE);
-            auto spriteComponent = std::dynamic_pointer_cast<SpriteComponent>
-                (sprite);
-            if (spriteComponent) {
-                _currentGraphics->drawTexture(x, y,
-                    spriteComponent->spritePath);
-                continue;
-            }
-
-            std::string specialCompo = _currentGame->getSpecialCompSprite
-                (entityId);
-            if (specialCompo != "") {
-                _currentGraphics->drawTexture(x, y, specialCompo);
-                continue;
-            }
-
-            _currentGraphics->drawEntity(x, y, '?');
         }
-
-        for (const auto& textComponent : textComponents) {
-            _currentGraphics->drawText(textComponent->text,
-                textComponent->x, textComponent->y, textComponent->color);
-        }
+        for (auto& texture : textureComponents)
+            _currentGraphics->drawDrawable(*texture);
+        for (auto& character : characterComponents)
+            _currentGraphics->drawDrawable(*character);
+        for (auto& text : textComponents)
+            _currentGraphics->drawDrawable(*text);
     } else {
         std::cout << "[DEBUG] No current game to update" << std::endl;
     }
@@ -472,14 +458,34 @@ void GameLoop::displayNameInput() {
     int centerX = _window->getWidth() / 2;
     int centerY = _window->getHeight() / 2;
 
-    _window->drawText("ENTER YOUR NAME", centerX - 80, TITLE_Y, Color::WHITE);
+    auto titleText = std::make_shared<DrawableComponent>();
+    titleText->setAsText("ENTER YOUR NAME",
+        "assets/fonts/arial.ttf", 30);
+    titleText->posX = centerX - 80;
+    titleText->posY = TITLE_Y;
+    titleText->color = Color::WHITE;
+    titleText->isVisible = true;
+    _currentGraphics->drawDrawable(*titleText);
 
-    std::string displayName = _inputPlayerName + "_";
-    _window->drawText(displayName, centerX - (displayName.length() * 5),
-        centerY, Color::GREEN);
+    auto inputText = std::make_shared<DrawableComponent>();
+    inputText->setAsText(_inputPlayerName + "_",
+        "assets/fonts/arial.ttf", 30);
+    inputText->posX = centerX - (inputText->text.length() * 5);
+    inputText->posY = centerY;
+    inputText->isVisible = true;
+    inputText->text = _inputPlayerName + "_";
+    inputText->color = Color::GREEN;
+    _currentGraphics->drawDrawable(*inputText);
 
-    _window->drawText("Press ENTER to confirm, ESC to cancel",
-                     centerX - 150, centerY + 60, Color::WHITE);
+    auto instructionsText = std::make_shared<DrawableComponent>();
+    instructionsText->setAsText("Press ENTER to confirm, ESC to cancel",
+        "assets/fonts/arial.ttf", 20);
+    instructionsText->posX = centerX - 150;
+    instructionsText->posY = centerY + 60;
+    instructionsText->isVisible = true;
+    instructionsText->text = "Press ENTER to confirm, ESC to cancel";
+    instructionsText->color = Color::WHITE;
+    _currentGraphics->drawDrawable(*instructionsText);
 }
 
 void GameLoop::changeState(std::shared_ptr<IGameState> newState) {
