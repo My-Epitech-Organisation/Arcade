@@ -20,7 +20,8 @@ std::shared_ptr<IComponentManager> componentManager,
 std::shared_ptr<IEntityManager> entityManager)
 : _componentManager(componentManager),
 _entityManager(entityManager),
-_lastUpdateTime(std::chrono::high_resolution_clock::now()) {}
+_lastUpdateTime(std::chrono::high_resolution_clock::now()),
+_movementDelay(0.2f) {}
 
 void MovementSystem::update() {
     auto currentTime = std::chrono::high_resolution_clock::now();
