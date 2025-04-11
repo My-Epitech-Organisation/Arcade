@@ -262,4 +262,9 @@ void GTKEvent::setMousePosition(double x, double y) {
     _mouseY = static_cast<size_t>(y);
 }
 
+void GTKEvent::addSignalHandler(gulong handlerId) {
+    if (handlerId > 0)
+        _signalHandlerIds.push_back(handlerId);
+}
+
 }  // namespace GTK
