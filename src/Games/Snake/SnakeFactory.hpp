@@ -34,6 +34,7 @@ class SnakeFactory {
         bool isHead = false, bool isTail = false,
         Direction dir = Direction::RIGHT);
     Arcade::Entity createFood(float x, float y);
+    Arcade::Entity createGrid(size_t width, size_t height, float cellSize = 20.0f);
 
  private:
     std::shared_ptr<Arcade::IEntityManager> _entityManager;
