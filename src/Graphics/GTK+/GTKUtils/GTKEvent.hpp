@@ -50,6 +50,7 @@ class GTKEvent {
     void setMouseButtonReleased(guint button);
     void setMousePosition(double x, double y);
     void disconnectSignals();
+    void addSignalHandler(gulong handlerId);
 };
 
 class GTKEventCallback : public std::enable_shared_from_this<GTKEventCallback> {
