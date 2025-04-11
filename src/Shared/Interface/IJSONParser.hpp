@@ -13,7 +13,7 @@
 #include <vector>
 #include <memory>
 #include <map>
-#include "Shared/JSONParser/JSONParser.hpp"
+#include "JSONParser/JSONParser.hpp"
 #include "ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {

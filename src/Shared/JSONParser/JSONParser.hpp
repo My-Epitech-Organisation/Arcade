@@ -13,8 +13,8 @@
 #include <memory>
 #include <map>
 #include <vector>
-#include "Shared/Interface/IJSONParser.hpp"
-#include "Shared/JSONParser/Tokenizer.hpp"
+#include "Interface/IJSONParser.hpp"
+#include "JSONParser/Tokenizer.hpp"
 
 namespace Arcade {
 

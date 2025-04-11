@@ -6,7 +6,7 @@
 ** JSONParser
 */
 
-#include "Shared/JSONParser/JSONParser.hpp"
+#include "JSONParser/JSONParser.hpp"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
