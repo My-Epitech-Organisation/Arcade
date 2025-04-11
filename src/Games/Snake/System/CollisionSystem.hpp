@@ -17,6 +17,8 @@
 
 namespace Arcade {
 
+class SnakeComponent;
+
 class CollisionSystem : public ISystem {
  public:
     CollisionSystem(
@@ -34,7 +36,7 @@ class CollisionSystem : public ISystem {
     bool _collision;
 
     bool checkBoundaryCollision(float x, float y);
-    bool checkSelfCollision(const std::vector<Entity>& segments);
+    bool checkSelfCollision(SnakeComponent* snakeComponent);
 };
 
 }  // namespace Arcade
