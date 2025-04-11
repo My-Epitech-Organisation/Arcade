@@ -144,6 +144,72 @@ int SnakeGame::getScore() const {
 }
 
 std::string SnakeGame::getSpecialCompSprite(size_t id) const {
+    auto snakeCompBase = _componentManager->getComponentBase(id, "SnakeComponent");
+    auto snakeComp = dynamic_cast<SnakeComponent*>(snakeCompBase.get());
+    if (snakeComp) {
+        switch (snakeComp->direction) {
+            case Direction::UP:
+                return "assets/snake/head_up.png";
+            case Direction::DOWN:
+                return "assets/snake/head_down.png";
+            case Direction::LEFT:
+                return "assets/snake/head_left.png";
+            case Direction::RIGHT:
+                return "assets/snake/head_right.png";
+        }
+    }
+
+    auto foodCompBase = _componentManager->getComponentBase(id, "FoodComponent");
+    auto foodComp = dynamic_cast<FoodComponent*>(foodCompBase.get());
+    if (foodComp) {
+        return "assets/snake/apple.png";
+    }
+
+    for (const auto& [entity, _] : _entityManager->getEntities()) {
+        auto snakeComponentBase = _componentManager->getComponentBase(entity, "SnakeComponent");
+        auto snakeComponent = dynamic_cast<SnakeComponent*>(snakeComponentBase.get());
+        if (snakeComponent) {
+            for (size_t i = 0; i < snakeComponent->segments.size(); ++i) {
+                if (snakeComponent->segments[i] == id) {
+                    if (i == 0) {
+                        switch (snakeComponent->direction) {
+                            case Direction::UP:
+                                return "assets/snake/head_up.png";
+                            case Direction::DOWN:
+                                return "assets/snake/head_down.png";
+                            case Direction::LEFT:
+                                return "assets/snake/head_left.png";
+                            case Direction::RIGHT:
+                                return "assets/snake/head_right.png";
+                        }
+                    } else if (i == snakeComponent->segments.size() - 1) {
+                        auto tailPosBase = _componentManager->getComponentBase(id, "PositionComponent");
+                        auto tailPos = dynamic_cast<PositionComponent*>(tailPosBase.get());
+
+                        auto prevSegmentPosBase = _componentManager->getComponentBase(
+                            snakeComponent->segments[i - 1], "PositionComponent");
+                        auto prevPos = dynamic_cast<PositionComponent*>(prevSegmentPosBase.get());
+
+                        if (tailPos && prevPos) {
+                            if (tailPos->x < prevPos->x) {
+                                return "assets/snake/tail_left.png";
+                            } else if (tailPos->x > prevPos->x) {
+                                return "assets/snake/tail_right.png";
+                            } else if (tailPos->y < prevPos->y) {
+                                return "assets/snake/tail_up.png";
+                            } else {
+                                return "assets/snake/tail_down.png";
+                            }
+                        }
+                    } else {
+                        return "assets/snake/body_horizontal.png";
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     return "";
 }
 
