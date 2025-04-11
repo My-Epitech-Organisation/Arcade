@@ -11,6 +11,7 @@
     #include <gtk/gtk.h>
     #include <memory>
     #include <string>
+    #include <queue>
     #include <utility>
     #include <unordered_map>
     #include <functional>
@@ -51,20 +52,21 @@
         static void on_activate(GtkApplication *app, gpointer user_data);
 
         void draw(std::shared_ptr<GtkDrawingArea> area,
-            std::shared_ptr<cairo_t> cr, int width, int height);
+        std::shared_ptr<cairo_t> cr, int width, int height);
         std::thread _gtkThread;
-        std::mutex _mutex;
-        std::condition_variable _cv;
+        std::mutex _commandMutex;
+        std::condition_variable _commandCV;
+        std::queue<std::function<void()>> _commandQueue;
+        std::atomic<bool> _threadRunning{false};
         std::atomic<bool> _initialized{false};
-        std::atomic<bool> _windowValid{false};
-        std::atomic<bool> _drawingAreaValid{false};
 
-        void gtkThreadFunction();
-        void waitForInitialization();
-        void signalInitialized();
+        void threadMain();
+        void executeCommand(std::function<void()> command);
+        void executeCommandAndWait(std::function<void()> command);
 
      public:
-        GTKModule();
+        GTKModule() : _running(false), _initialized(false),
+            _threadRunning(false) {}
         ~GTKModule() override;
         void init(float width = 800.f, float height = 600.f) override;
         void stop() override;
@@ -82,8 +84,7 @@
         bool isKeyPressed(int keyCode) override;
         bool isMouseButtonPressed(int button) const override;
         std::pair<size_t, size_t> getMousePosition() const override;
-        bool _running = true;
-        std::atomic<bool> _threadRunning{false};
+        std::atomic<bool> _running{false};
     };
 
 #endif  // SRC_GRAPHICS_GTK__GTK_HPP_
