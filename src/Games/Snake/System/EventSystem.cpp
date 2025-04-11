@@ -34,7 +34,6 @@ EventSystem::~EventSystem() {
 }
 
 void EventSystem::subscribeToEvents() {
-    // Subscribe to key press events
     Arcade::KeyEvent upKey(Arcade::Keys::UP, Arcade::EventType::KEY_PRESSED);
     _eventManager->subscribe(upKey, [this]() {
         handleKeyUp();
