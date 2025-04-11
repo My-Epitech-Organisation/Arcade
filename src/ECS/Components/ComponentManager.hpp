@@ -12,7 +12,7 @@
     #include <memory>
     #include <vector>
     #include <string>
-    #include "Shared/Models/EntityType.hpp"
+    #include "Shared/Interface/ECS/IEntity.hpp"
     #include "Shared/Interface/ECS/IComponentManager.hpp"
     #include "Shared/Interface/ECS/IComponent.hpp"
     #include "Shared/Models/ComponentType.hpp"
@@ -21,7 +21,8 @@ namespace Arcade {
 
 class ComponentManager : public IComponentManager {
  private:
-    std::unordered_map<Entity, std::unordered_map<ComponentType,
+    std::unordered_map<std::shared_ptr<IEntity>,
+        std::unordered_map<ComponentType,
         std::shared_ptr<IComponent>>> _componentsByType;
     std::unordered_map<std::string, ComponentType> _typeNameMap;
 
@@ -29,17 +30,22 @@ class ComponentManager : public IComponentManager {
     ComponentManager() = default;
     ~ComponentManager() = default;
 
-    void registerComponent(Entity entity, std::shared_ptr<IComponent>
-        component) override;
-    std::shared_ptr<IComponent> getComponentByType(Entity entity,
+    void registerComponent(std::shared_ptr<IEntity> entity,
+        std::shared_ptr<IComponent> component) override;
+    std::shared_ptr<IComponent>
+        getComponentByType(std::shared_ptr<IEntity> entity,
         ComponentType type) override;
     std::vector<std::shared_ptr<IComponent>> getAllComponentsByType
         (ComponentType type) override;
-    void unregisterComponent(Entity entity, const std::string&
+    void unregisterComponent(std::shared_ptr<IEntity> entity, const std::string&
         componentName) override;
-    std::vector<std::shared_ptr<IComponent>> getEntityComponents(Entity
+    std::vector<std::shared_ptr<IComponent>>
+        getEntityComponents(std::shared_ptr<IEntity>
         entity) override;
     std::vector<std::shared_ptr<IComponent>> getAllComponents() override;
+    void clearComponents() override;
+    std::shared_ptr<IComponent> hasComponent(std::shared_ptr<IEntity> entity,
+        ComponentType type) override;
 };
 
 }  // namespace Arcade

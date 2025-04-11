@@ -13,20 +13,23 @@
 #include <vector>
 namespace Arcade {
 
-void ComponentManager::registerComponent(Entity entity,
+void ComponentManager::registerComponent(std::shared_ptr<IEntity> entity,
 std::shared_ptr<IComponent> component) {
-    if (!component) return;
+    if (!component || !entity) return;
 
+    std::shared_ptr<IEntity> entityId = entity;
     ComponentType type = component->getType();
-    _componentsByType[entity][type] = component;
+    _componentsByType[entityId][type] = component;
 
     _typeNameMap[typeid(*component).name()] = type;
 }
 
-void ComponentManager::unregisterComponent(Entity entity,
+void ComponentManager::unregisterComponent(std::shared_ptr<IEntity> entity,
 const std::string& componentName) {
-    if (_componentsByType.find(entity) != _componentsByType.end()) {
-        auto& components = _componentsByType[entity];
+    if (!entity) return;
+    std::shared_ptr<IEntity> entityId = entity;
+    if (_componentsByType.find(entityId) != _componentsByType.end()) {
+        auto& components = _componentsByType[entityId];
         auto it = _typeNameMap.find(componentName);
         if (it != _typeNameMap.end()) {
             ComponentType type = it->second;
@@ -45,12 +48,15 @@ std::vector<std::shared_ptr<IComponent>> ComponentManager::getAllComponents() {
     return result;
 }
 
-std::shared_ptr<IComponent> ComponentManager::getComponentByType(Entity entity,
+std::shared_ptr<IComponent>
+ComponentManager::getComponentByType(std::shared_ptr<IEntity> entity,
 ComponentType type) {
-    if (_componentsByType.find(entity) == _componentsByType.end())
+    if (!entity) return nullptr;
+    std::shared_ptr<IEntity> entityId = entity;
+    if (_componentsByType.find(entityId) == _componentsByType.end())
         return nullptr;
 
-    auto& entityComponents = _componentsByType[entity];
+    auto& entityComponents = _componentsByType[entityId];
     if (entityComponents.find(type) == entityComponents.end())
         return nullptr;
 
@@ -72,16 +78,28 @@ ComponentManager::getAllComponentsByType(ComponentType type) {
 }
 
 std::vector<std::shared_ptr<IComponent>> ComponentManager::getEntityComponents(
-Entity entity) {
+std::shared_ptr<IEntity> entity) {
     std::vector<std::shared_ptr<IComponent>> result;
-
-    if (_componentsByType.find(entity) != _componentsByType.end()) {
-        for (const auto& [type, component] : _componentsByType[entity]) {
+    if (!entity) return result;
+    std::shared_ptr<IEntity> entityId = entity;
+    if (_componentsByType.find(entityId) != _componentsByType.end()) {
+        for (const auto& [type, component] : _componentsByType[entityId]) {
             result.push_back(component);
         }
     }
 
     return result;
+}
+
+void ComponentManager::clearComponents() {
+    _componentsByType.clear();
+    _typeNameMap.clear();
+}
+
+std::shared_ptr<IComponent>
+ComponentManager::hasComponent(std::shared_ptr<IEntity> entity,
+ComponentType type) {
+    return getComponentByType(entity, type);
 }
 
 }  // namespace Arcade

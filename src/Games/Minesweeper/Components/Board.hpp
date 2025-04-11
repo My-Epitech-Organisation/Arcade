@@ -25,8 +25,9 @@ class Board : public Arcade::IComponent {
     Board(size_t width, size_t height, size_t mineCount);
     ~Board() = default;
 
-    void addCellEntity(size_t x, size_t y, Arcade::Entity cellEntity);
-    Arcade::Entity getCellEntity(size_t x, size_t y) const;
+    void addCellEntity(size_t x, size_t y,
+        std::shared_ptr<Arcade::IEntity> cellEntity);
+    std::shared_ptr<Arcade::IEntity> getCellEntity(size_t x, size_t y) const;
     void setWidth(size_t width) { _width = width; }
     void setHeight(size_t height) { _height = height; }
     void setMineCount(size_t mineCount) { _mineCount = mineCount; }
@@ -54,7 +55,7 @@ class Board : public Arcade::IComponent {
     bool _gameOver;
     bool _gameWon;
     bool _gameInitialized;
-    std::vector<std::vector<Arcade::Entity>> _cellEntities;
+    std::vector<std::vector<std::shared_ptr<Arcade::IEntity>>> _cellEntities;
 };
 
 }  // namespace Minesweeper

@@ -10,11 +10,12 @@
 #define SRC_GAMES_PACMAN_COMPONENTS_GRIDCOMPONENT_HPP_
 
 #include <vector>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include "Shared/Interface/ECS/IComponent.hpp"
 #include "Shared/Models/ComponentType.hpp"
-#include "Shared/Models/EntityType.hpp"
+#include "Shared/Interface/ECS/IEntity.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -39,8 +40,9 @@ class GridComponent : public Arcade::IComponent {
 
     void setCellType(size_t x, size_t y, CellType type);
     CellType getCellType(size_t x, size_t y) const;
-    void setEntityAtCell(size_t x, size_t y, Arcade::Entity entity);
-    Arcade::Entity getEntityAtCell(size_t x, size_t y) const;
+    void setEntityAtCell(size_t x, size_t y,
+        std::shared_ptr<Arcade::IEntity> entity);
+    std::shared_ptr<Arcade::IEntity> getEntityAtCell(size_t x, size_t y) const;
     size_t getWidth() const { return _width; }
     size_t getHeight() const { return _height; }
     void setName(const std::string& name) { _name = name; }
@@ -68,7 +70,7 @@ class GridComponent : public Arcade::IComponent {
     bool _gameOver;
     bool _gameWon;
     std::vector<std::vector<CellType>> _grid;
-    std::vector<std::vector<Arcade::Entity>> _entityGrid;
+    std::vector<std::vector<std::shared_ptr<Arcade::IEntity>>> _entityGrid;
     float _cellSize;
     int _level = 1;
 };

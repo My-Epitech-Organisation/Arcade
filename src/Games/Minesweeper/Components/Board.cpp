@@ -17,17 +17,20 @@ namespace Minesweeper {
 Board::Board(size_t width, size_t height, size_t mineCount)
 : _width(width), _height(height), _mineCount(mineCount),
 _gameOver(false), _gameWon(false), _gameInitialized(false) {
-    _cellEntities.resize(height, std::vector<Arcade::Entity>(width, 0));
+    _cellEntities.resize(height,
+        std::vector<std::shared_ptr<Arcade::IEntity>>(width, 0));
 }
 
-void Board::addCellEntity(size_t x, size_t y, Arcade::Entity cellEntity) {
+void Board::addCellEntity(size_t x, size_t y,
+std::shared_ptr<Arcade::IEntity> cellEntity) {
     if (x >= _width || y >= _height) {
         throw std::out_of_range("Cell position out of bounds");
     }
     _cellEntities[y][x] = cellEntity;
 }
 
-Arcade::Entity Board::getCellEntity(size_t x, size_t y) const {
+std::shared_ptr<Arcade::IEntity> Board::getCellEntity(size_t x,
+size_t y) const {
     if (x >= _width || y >= _height) {
         throw std::out_of_range("Cell position out of bounds");
     }

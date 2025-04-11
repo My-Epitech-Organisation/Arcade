@@ -30,7 +30,7 @@ PacmanGame::~PacmanGame() {
     _eventSystem.reset();
 
     if (_entityManager && _componentManager) {
-        auto entities = _entityManager->getEntities();
+        auto entities = _entityManager->getEntitiesMap();
         for (const auto& entity : entities) {
             auto components = _componentManager->getEntityComponents(
                 entity.first);
@@ -104,8 +104,8 @@ void PacmanGame::update() {
 }
 
 void PacmanGame::checkGameStatus() {
-    Arcade::Entity gridEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    std::shared_ptr<IEntity> gridEntity = 0;
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Grid") {
             gridEntity = entity;
             break;
@@ -122,7 +122,7 @@ void PacmanGame::checkGameStatus() {
     _gameOver = gridComp->isGameOver();
     _gameWon = gridComp->isGameWon();
 
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Pacman") {
             auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
                 _componentManager->getComponentByType(entity,
@@ -135,8 +135,8 @@ void PacmanGame::checkGameStatus() {
 }
 
 int PacmanGame::getScore() const {
-    Arcade::Entity pacmanEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    std::shared_ptr<IEntity> pacmanEntity = 0;
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Pacman") {
             pacmanEntity = entity;
             break;
@@ -171,7 +171,6 @@ void PacmanGame::stop() {
     _eventSystem.reset();
 }
 
-// Entry points for dynamic loading
 extern "C" {
     IArcadeModule* entryPoint(void) {
         try {

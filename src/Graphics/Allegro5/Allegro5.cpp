@@ -13,12 +13,13 @@
 #include "Allegro5/Allegro5.hpp"
 #include "Models/ColorType.hpp"
 #include "Models/ModuleInfos.hpp"
+#include "Shared/Interface/Core/IWindowModule.hpp"
 
 Allegro5::~Allegro5() {
     stop();
 }
 
-void Allegro5::init(float x, float y) {
+void Allegro5::init(const Arcade::IWindowModule& windowParam) {
     if (!al_init()) {
         throw std::runtime_error("Failed to initialize Allegro");
     }
@@ -27,7 +28,8 @@ void Allegro5::init(float x, float y) {
     al_install_mouse();
     al_init_image_addon();
 
-    _window.createWindow(static_cast<int>(x), static_cast<int>(y));
+    _window.createWindow(static_cast<int>(windowParam.getWidth()),
+        static_cast<int>(windowParam.getHeight()));
     _event.init();
     _text.init();
 

@@ -31,12 +31,27 @@ std::shared_ptr<Arcade::IEntityManager> entityManager,
 const std::map<std::string, DrawableComponent>& assets)
 : _componentManager(componentManager), _entityManager(entityManager),
 _assets(assets) {
-_lastUpdateTime = std::chrono::high_resolution_clock::now();
+    _lastUpdateTime = std::chrono::high_resolution_clock::now();
+    initializeEntityCache();
 }
 
+void GameLogic::initializeEntityCache() {
+    _cachedPacmanEntity = findPacmanEntity();
+    _cachedGridEntity = findGridEntity();
+    if (_cachedPacmanEntity) {
+        _cachedPacmanComponent = std::dynamic_pointer_cast<PacmanComponent>(
+            _componentManager->getComponentByType(_cachedPacmanEntity,
+                static_cast<ComponentType>(1001)));
+    }
+    if (_cachedGridEntity) {
+        _cachedGridComponent = std::dynamic_pointer_cast<GridComponent>(
+            _componentManager->getComponentByType(_cachedGridEntity,
+                static_cast<ComponentType>(1000)));
+    }
+}
 
 void GameLogic::moveGhost(std::shared_ptr<GhostComponent> ghostComp,
-Arcade::Entity entity, std::shared_ptr<GridComponent> grid,
+std::shared_ptr<Arcade::IEntity> entity, std::shared_ptr<GridComponent> grid,
 std::shared_ptr<PacmanComponent> pacman) {
     if (!ghostComp->canMove() || !grid || !pacman)
         return;
@@ -49,7 +64,8 @@ std::shared_ptr<PacmanComponent> pacman) {
 
     if (ghostComp->getState() == GhostState::SCARED) {
         unsigned int seed = static_cast<unsigned int>(
-            std::time(nullptr) + entity +
+            std::time(nullptr)
+            + reinterpret_cast<std::uintptr_t>(entity.get()) +
             static_cast<unsigned int>(std::chrono::duration_cast
                 <std::chrono::milliseconds>(
                 std::chrono::high_resolution_clock::now
@@ -169,7 +185,7 @@ std::shared_ptr<PacmanComponent> pacman) {
                 case GhostType::BLUE: {
                     std::shared_ptr<GhostComponent> blinkyComp = nullptr;
                     for (const auto& [e, name] :
-                        _entityManager->getEntities()) {
+                        _entityManager->getEntitiesMap()) {
                         auto ghost = std::dynamic_pointer_cast<GhostComponent>(
                             _componentManager->getComponentByType(e,
                                 static_cast<ComponentType>(1002)));
@@ -327,7 +343,7 @@ std::shared_ptr<PacmanComponent> pacman) {
         }
 
         bool ghostCollision = false;
-        for (const auto& [e, name] : _entityManager->getEntities()) {
+        for (const auto& [e, name] : _entityManager->getEntitiesMap()) {
             if (e != entity) {
                 auto otherGhost = std::dynamic_pointer_cast<GhostComponent>(
                     _componentManager->getComponentByType(e,
@@ -379,21 +395,18 @@ std::shared_ptr<PacmanComponent> pacman) {
 void GameLogic::update() {
     updateDeltaTime();
     float deltaTime = _currentDeltaTime;
+    if (!_cachedPacmanComponent || !_cachedGridComponent) {
+        initializeEntityCache();
+    }
 
-    Arcade::Entity pacmanEntity = findPacmanEntity();
-    Arcade::Entity gridEntity = findGridEntity();
-
-    if (!pacmanEntity || (gridEntity != 0))
+    if (!_cachedPacmanEntity || (_cachedGridEntity != 0)) {
         return;
+    }
+    auto pacman = _cachedPacmanComponent;
+    auto grid = _cachedGridComponent;
 
-    auto pacman = std::dynamic_pointer_cast<PacmanComponent>(
-        _componentManager->getComponentByType(pacmanEntity,
-            static_cast<ComponentType>(1001)));
-    auto grid = std::dynamic_pointer_cast<GridComponent>(
-        _componentManager->getComponentByType(gridEntity,
-            static_cast<ComponentType>(1000)));
-
-    if (!pacman || !grid)
+    std::cout << "Pacman lives: " << pacman->getLives() << std::endl;
+    if (!pacman || (grid == nullptr))
         return;
 
     if (grid->isGameOver() || pacman->isDead()) {
@@ -409,7 +422,7 @@ void GameLogic::update() {
     if (pacman->getCurrentDirection() == Direction::NONE)
         pacman->setCurrentDirection(Direction::RIGHT);
 
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
             _componentManager->getComponentByType(entity,
                 static_cast<ComponentType>(1002)));
@@ -431,7 +444,7 @@ void GameLogic::update() {
             if (ghostComp->canMove()) {
                 if (ghostComp->getCurrentDirection() == Direction::NONE) {
                     unsigned int seed = static_cast<unsigned int>(
-                        std::time(nullptr) + entity +
+                        std::time(nullptr) + reinterpret_cast<std::uintptr_t>(entity.get()) +
                         static_cast<unsigned int>(std::chrono::duration_cast
                             <std::chrono::milliseconds>(
                             std::chrono::high_resolution_clock::
@@ -539,30 +552,30 @@ std::shared_ptr<GridComponent> grid) {
     return grid->getCellType(nextX, nextY) != CellType::WALL;
 }
 
-Arcade::Entity GameLogic::findPacmanEntity() {
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+std::shared_ptr<Arcade::IEntity> GameLogic::findPacmanEntity() {
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto pacmanComp = _componentManager->getComponentByType(entity,
             static_cast<ComponentType>(1001));
         if (pacmanComp)
             return entity;
     }
-    return -1;
+    return nullptr;
 }
 
-Arcade::Entity GameLogic::findGridEntity() {
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+std::shared_ptr<Arcade::IEntity> GameLogic::findGridEntity() {
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto gridComp = _componentManager->getComponentByType(entity,
             static_cast<ComponentType>(1000));
         if (gridComp)
             return entity;
     }
-    return -1;
+    return nullptr;
 }
 
 std::pair<std::shared_ptr<PacmanComponent>, std::shared_ptr<GridComponent>>
 GameLogic::getPacmanAndGridComponents() {
-    Arcade::Entity pacmanEntity = findPacmanEntity();
-    Arcade::Entity gridEntity = findGridEntity();
+    std::shared_ptr<Arcade::IEntity> pacmanEntity = findPacmanEntity();
+    std::shared_ptr<Arcade::IEntity> gridEntity = findGridEntity();
 
     std::shared_ptr<PacmanComponent> pacmanComp = nullptr;
     std::shared_ptr<GridComponent> gridComp = nullptr;
@@ -573,7 +586,7 @@ GameLogic::getPacmanAndGridComponents() {
                 static_cast<ComponentType>(1001)));
     }
 
-    if (gridEntity == 0) {
+    if (gridEntity) {
         gridComp = std::dynamic_pointer_cast<GridComponent>(
             _componentManager->getComponentByType(gridEntity,
                 static_cast<ComponentType>(1000)));
@@ -630,7 +643,7 @@ void GameLogic::movePacman() {
 
         pacmanComp->setGridPosition(newX, newY);
 
-        Arcade::Entity pacmanEntity = findPacmanEntity();
+        std::shared_ptr<Arcade::IEntity> pacmanEntity = findPacmanEntity();
         if (pacmanEntity) {
             auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
                 _componentManager->getComponentByType(findGridEntity(),
@@ -665,8 +678,8 @@ size_t calculateDistance(size_t x1, size_t y1, size_t x2, size_t y2) {
 }
 
 void GameLogic::checkCollisions() {
-    Arcade::Entity pacmanEntity = findPacmanEntity();
-    Arcade::Entity gridEntity = findGridEntity();
+    std::shared_ptr<Arcade::IEntity> pacmanEntity = findPacmanEntity();
+    std::shared_ptr<Arcade::IEntity> gridEntity = findGridEntity();
 
     if (!pacmanEntity || gridEntity != 0)
         return;
@@ -694,7 +707,7 @@ std::shared_ptr<GridComponent> grid) {
     size_t pacmanX = pacman->getGridX();
     size_t pacmanY = pacman->getGridY();
 
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name.find("Blinky") == std::string::npos
         || name.find("Pinky") == std::string::npos
         || name.find("Inky") == std::string::npos
@@ -750,7 +763,7 @@ std::shared_ptr<GridComponent> grid) {
     size_t pacmanX = pacman->getGridX();
     size_t pacmanY = pacman->getGridY();
 
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto foodComp = std::dynamic_pointer_cast<FoodComponent>(
             _componentManager->getComponentByType(entity,
                 static_cast<ComponentType>(1003)));
@@ -778,7 +791,7 @@ std::shared_ptr<GridComponent> grid) {
             }
 
             if (foodComp->getFoodType() == FoodType::POWER_PILL) {
-                for (const auto& [e, n] : _entityManager->getEntities()) {
+                for (const auto& [e, n] : _entityManager->getEntitiesMap()) {
                     auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
                         _componentManager->getComponentByType(e,
                             static_cast<ComponentType>(1002)));
@@ -818,7 +831,7 @@ void GameLogic::reloadCurrentMap() {
     if (!grid)
         return;
 
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto foodComp = std::dynamic_pointer_cast<FoodComponent>(
             _componentManager->getComponentByType(entity,
                 static_cast<ComponentType>(1003)));
@@ -897,36 +910,15 @@ void GameLogic::reloadCurrentMap() {
             }
 
             if (grid->getCellType(x, y) == CellType::GHOST_SPAWN) {
-                for (const auto& [entity, name]
-                    : _entityManager->getEntities()) {
+                for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
                     auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
                         _componentManager->getComponentByType(entity,
                             static_cast<ComponentType>(1002)));
-
                     if (ghostComp) {
-                        ghostComp->setGridPosition(x, y);
-                        ghostComp->setState(GhostState::NORMAL);
-                        ghostComp->setCurrentDirection(Direction::NONE);
-                        ghostComp->resetReleaseTimer();
-
-                        auto ghostPosComp
-                            = std::dynamic_pointer_cast<PositionComponent>(
-                            _componentManager->getComponentByType(entity,
-                                ComponentType::POSITION));
-
-                        if (ghostPosComp) {
-                            ghostPosComp->x = startX + (x * cellSize);
-                            ghostPosComp->y = startY + (y * cellSize);
-                        }
-
                         auto ghostDrawable
                             = std::dynamic_pointer_cast<DrawableComponent>(
                             _componentManager->getComponentByType(entity,
                                 ComponentType::DRAWABLE));
-                        if (ghostDrawable) {
-                            ghostDrawable->posX = startX + (x * cellSize);
-                            ghostDrawable->posY = startY + (y * cellSize);
-                        }
                         if (ghostDrawable) {
                             std::string ghostAssetKey;
                             switch (ghostComp->getGhostType()) {
@@ -943,7 +935,8 @@ void GameLogic::reloadCurrentMap() {
                                     ghostAssetKey = "ghosts.orange";
                                     break;
                             }
-                            auto ghostAsset = getDrawableAsset(ghostAssetKey);
+                            auto ghostAsset
+                                = getDrawableAsset(ghostAssetKey);
                             if (ghostAsset) {
                                 *ghostDrawable = *ghostAsset;
                             } else {
@@ -958,28 +951,38 @@ void GameLogic::reloadCurrentMap() {
                                         ghostDrawable->setAsTexture
                                             ("assets/pacman/ghost_pink.png",
                                                 32, 32);
-                                        ghostDrawable->setAsCharacter('p');
+                                        ghostDrawable->setAsCharacter('i');
                                         break;
                                     case GhostType::BLUE:
                                         ghostDrawable->setAsTexture
                                             ("assets/pacman/ghost_cyan.png",
                                                 32, 32);
-                                        ghostDrawable->setAsCharacter('b');
+                                        ghostDrawable->setAsCharacter('c');
                                         break;
                                     case GhostType::ORANGE:
                                         ghostDrawable->setAsTexture
-                                        ("assets/pacman/ghost_orange.png",
-                                            32, 32);
+                                            ("assets/pacman/ghost_orange.png",
+                                                32, 32);
                                         ghostDrawable->setAsCharacter('o');
                                         break;
                                 }
                             }
+
+                            // Ensure visibility
+                            ghostDrawable->isVisible = true;
                         }
                     }
                 }
             }
         }
     }
+    _cachedPacmanEntity = 0;
+    _cachedGridEntity = 0;
+    _cachedPacmanComponent = nullptr;
+    _cachedGridComponent = nullptr;
+
+    // Re-initialize entity cache
+    initializeEntityCache();
 
     grid->setGameOver(false);
     grid->setGameWon(false);
@@ -998,7 +1001,7 @@ void GameLogic::increaseGameSpeed() {
         }
     }
 
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
             _componentManager->getComponentByType(entity,
                 static_cast<ComponentType>(1002)));

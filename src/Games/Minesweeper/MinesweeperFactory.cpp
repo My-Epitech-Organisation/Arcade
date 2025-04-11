@@ -18,9 +18,11 @@
 #include "Shared/JSONParser/JSONParser.hpp"
 
 namespace Arcade {
-Entity Minesweeper::MinesweeperFactory::createBoard(float x, float y,
+std::shared_ptr<IEntity>
+Minesweeper::MinesweeperFactory::createBoard(float x, float y,
 size_t width, size_t height, size_t mineCount) {
-    Entity boardEntity = _entityManager->createEntity("Board");
+    std::shared_ptr<IEntity> boardEntity
+    = _entityManager->createEntity("Board");
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(boardEntity, positionComponent);
     auto boardComponent = std::make_shared<Board>(width, height, mineCount);
@@ -31,11 +33,13 @@ size_t width, size_t height, size_t mineCount) {
     return boardEntity;
 }
 
-Entity Minesweeper::MinesweeperFactory::createCell(float x, float y,
+std::shared_ptr<IEntity>
+Minesweeper::MinesweeperFactory::createCell(float x, float y,
 size_t gridX, size_t gridY, bool hasMine) {
     std::string cellName = "Cell_" + std::to_string(gridX) +
         "_" + std::to_string(gridY);
-    Entity cellEntity = _entityManager->createEntity(cellName);
+    std::shared_ptr<IEntity> cellEntity
+        = _entityManager->createEntity(cellName);
 
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(cellEntity, positionComponent);
@@ -63,7 +67,8 @@ size_t gridX, size_t gridY, bool hasMine) {
 }
 
 void Minesweeper::MinesweeperFactory::initializeGame(
-Arcade::Entity boardEntity, float startX, float startY, float cellSize) {
+std::shared_ptr<IEntity> boardEntity, float startX,
+float startY, float cellSize) {
     auto component = _componentManager->getComponentByType(boardEntity,
         ComponentType::BOARD);
     auto boardComponent = std::dynamic_pointer_cast<Board>(component);
@@ -80,7 +85,8 @@ Arcade::Entity boardEntity, float startX, float startY, float cellSize) {
             float cellY = startY + (y * cellSize);
             bool hasMine = false;
 
-            Arcade::Entity cellEntity = createCell(cellX, cellY, x, y, hasMine);
+            std::shared_ptr<IEntity> cellEntity
+                = createCell(cellX, cellY, x, y, hasMine);
             boardComponent->addCellEntity(x, y, cellEntity);
         }
     }

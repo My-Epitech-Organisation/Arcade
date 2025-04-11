@@ -29,11 +29,11 @@ class MinesweeperFactory {
         std::shared_ptr<Arcade::IComponentManager> componentManager)
         : _entityManager(entityManager), _componentManager(componentManager) {}
 
-    Arcade::Entity createBoard(float x, float y, size_t width,
+    std::shared_ptr<IEntity> createBoard(float x, float y, size_t width,
         size_t height, size_t mineCount);
-    Arcade::Entity createCell(float x, float y, size_t gridX,
+    std::shared_ptr<IEntity> createCell(float x, float y, size_t gridX,
         size_t gridY, bool hasMine);
-    void initializeGame(Arcade::Entity boardEntity, float startX,
+    void initializeGame(std::shared_ptr<IEntity> boardEntity, float startX,
         float startY, float cellSize);
 
  private:

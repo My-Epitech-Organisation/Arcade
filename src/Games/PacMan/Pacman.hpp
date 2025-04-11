@@ -14,6 +14,7 @@
 #include <string>
 #include <map>
 #include "Shared/Interface/Game/IGameModule.hpp"
+#include "Shared/Interface/Game/IScoreProvider.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "Shared/Interface/ECS/IEntityManager.hpp"
 #include "Shared/Interface/ECS/ISystem.hpp"
@@ -41,6 +42,10 @@ class PacmanGame : public IGameModule {
     bool hasWon() const override;
     void stop() override;
     int getScore() const override;
+    void setScoreProvider(
+      std::shared_ptr<IScoreProvider> scoreProvider) override {
+        _scoreProvider = scoreProvider;
+      }
 
  private:
     void createGame();
@@ -53,6 +58,7 @@ class PacmanGame : public IGameModule {
     std::shared_ptr<IComponentManager> _componentManager;
     std::shared_ptr<IEntityManager> _entityManager;
     std::shared_ptr<EventSubSystem> _eventSystem;
+    std::shared_ptr<IScoreProvider> _scoreProvider;
     std::vector<std::shared_ptr<ISystem>> _systems;
     bool _gameOver;
     bool _gameWon;

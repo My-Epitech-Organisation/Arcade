@@ -9,6 +9,7 @@
 #ifndef SRC_SHARED_INTERFACE_CORE_IWINDOWMODULE_HPP_
     #define SRC_SHARED_INTERFACE_CORE_IWINDOWMODULE_HPP_
     #include <string>
+    #include <utility>
 
 namespace Arcade {
 class IWindowModule {
@@ -19,6 +20,11 @@ class IWindowModule {
     virtual void resizeWindow(int width, int height) = 0;
     virtual void closeWindow() = 0;
     virtual bool isWindowOpen() const = 0;
+    virtual void setTitle(const std::string &title) = 0;
+    virtual std::pair<int, int> getWindowSize() const = 0;
+    virtual int getWidth() const = 0;
+    virtual int getHeight() const = 0;
+    virtual const std::string& getTitle() const = 0;
 };
 }  // namespace Arcade
 

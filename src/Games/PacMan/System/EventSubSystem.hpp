@@ -47,7 +47,7 @@ class EventSubSystem : public Arcade::ISystem {
     void handleKeyR();
     Direction validateDirection(Direction requestedDir, size_t x, size_t y,
                                std::shared_ptr<GridComponent> grid);
-    Arcade::Entity findPacmanEntity() const;
+    std::shared_ptr<Arcade::IEntity> findPacmanEntity() const;
     std::pair<std::shared_ptr<PacmanComponent>,
         std::shared_ptr<GridComponent>>
         getPacmanAndGridComponents();

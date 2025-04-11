@@ -34,13 +34,17 @@ class PacmanFactory {
         : _entityManager(entityManager), _componentManager(componentManager),
         _assets(assets) {}
 
-    Arcade::Entity createGrid(size_t width, size_t height);
-    Arcade::Entity createPacman(float x, float y, size_t gridX, size_t gridY);
-    Arcade::Entity createGhost(float x, float y, size_t gridX, size_t gridY,
+    std::shared_ptr<Arcade::IEntity> createGrid(size_t width, size_t height);
+    std::shared_ptr<Arcade::IEntity>
+        createPacman(float x, float y, size_t gridX, size_t gridY);
+    std::shared_ptr<Arcade::IEntity>
+        createGhost(float x, float y, size_t gridX, size_t gridY,
         GhostType type);
-    Arcade::Entity createFood(float x, float y, size_t gridX, size_t gridY,
+    std::shared_ptr<Arcade::IEntity>
+        createFood(float x, float y, size_t gridX, size_t gridY,
         FoodType type);
-    Arcade::Entity createWall(float x, float y, size_t gridX, size_t gridY);
+    std::shared_ptr<Arcade::IEntity>
+        createWall(float x, float y, size_t gridX, size_t gridY);
     void initializeGame(float cellSize);
 
  private:
@@ -50,13 +54,13 @@ class PacmanFactory {
     std::string getGhostSpritePath(GhostType type);
     char getGhostCharacter(GhostType type);
     void createFoodEntities(std::shared_ptr<GridComponent> grid,
-        float cellSize, Arcade::Entity gridEntity);
+        float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity);
     void createWallEntities(std::shared_ptr<GridComponent> grid,
-        float cellSize, Arcade::Entity gridEntity);
+        float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity);
     void createGhostEntities(std::shared_ptr<GridComponent> grid,
-        float cellSize, Arcade::Entity gridEntity);
+        float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity);
     void createPacmanEntity(std::shared_ptr<GridComponent> grid,
-        float cellSize, Arcade::Entity gridEntity);
+        float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity);
     std::shared_ptr<DrawableComponent>
         getDrawableAsset(const std::string& key) const;
 };

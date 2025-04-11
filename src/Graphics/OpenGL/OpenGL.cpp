@@ -19,11 +19,11 @@ OpenGLModule::~OpenGLModule() {
     stop();
 }
 
-void OpenGLModule::init(float width, float height) {
+void OpenGLModule::init(const Arcade::IWindowModule &windowParam) {
     try {
-        _windowWidth = static_cast<int>(width);
-        _windowHeight = static_cast<int>(height);
-        _window.init(width, height, _name);
+        _windowWidth = static_cast<int>(windowParam.getWidth());
+        _windowHeight = static_cast<int>(windowParam.getHeight());
+        _window.init(_windowWidth, _windowHeight, _name);
         _event.setupCallbacks(_window.getWindow());
         _text.init();
         _texture.init();

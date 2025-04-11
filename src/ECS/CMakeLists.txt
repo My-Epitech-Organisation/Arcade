@@ -10,12 +10,14 @@ add_subdirectory(Components/Drawable)
 set(SRC
     ${COMPROOT}/ComponentManager.cpp
     ${ENTROOT}/EntityManager.cpp
+    ${ENTROOT}/Entity.cpp
     ${SYSTEMROOT}/SystemManager.cpp
 )
 
 set(INC
     ${COMPROOT}/ComponentManager.hpp
     ${ENTROOT}/EntityManager.hpp
+    ${ENTROOT}/Entity.hpp
     ${SYSTEMROOT}/SystemManager.hpp
 )
 
