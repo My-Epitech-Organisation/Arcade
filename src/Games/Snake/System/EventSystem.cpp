@@ -13,6 +13,8 @@
 #include "Games/Snake/Components/Snake.hpp"
 #include "Games/Snake/Types.hpp"
 
+#include <iostream>
+
 namespace Arcade {
 
 EventSystem::EventSystem(
@@ -70,10 +72,12 @@ void EventSystem::subscribeToEvents() {
 }
 
 void EventSystem::handleKeyUp() {
+    std::cout << "[DEBUG] EventSystem::handleKeyUp called" << std::endl;
     for (const auto& [entity, _] : _entityManager->getEntities()) {
         auto snakeComponentBase = _componentManager->getComponentBase(entity, "SnakeComponent");
         auto snakeComponent = dynamic_cast<SnakeComponent*>(snakeComponentBase.get());
         if (snakeComponent && snakeComponent->direction != Direction::DOWN) {
+            std::cout << "[DEBUG] Setting snake direction to UP" << std::endl;
             snakeComponent->direction = Direction::UP;
             break;
         }
@@ -81,10 +85,12 @@ void EventSystem::handleKeyUp() {
 }
 
 void EventSystem::handleKeyDown() {
+    std::cout << "[DEBUG] EventSystem::handleKeyDown called" << std::endl;
     for (const auto& [entity, _] : _entityManager->getEntities()) {
         auto snakeComponentBase = _componentManager->getComponentBase(entity, "SnakeComponent");
         auto snakeComponent = dynamic_cast<SnakeComponent*>(snakeComponentBase.get());
         if (snakeComponent && snakeComponent->direction != Direction::UP) {
+            std::cout << "[DEBUG] Setting snake direction to DOWN" << std::endl;
             snakeComponent->direction = Direction::DOWN;
             break;
         }
@@ -92,10 +98,12 @@ void EventSystem::handleKeyDown() {
 }
 
 void EventSystem::handleKeyLeft() {
+    std::cout << "[DEBUG] EventSystem::handleKeyLeft called" << std::endl;
     for (const auto& [entity, _] : _entityManager->getEntities()) {
         auto snakeComponentBase = _componentManager->getComponentBase(entity, "SnakeComponent");
         auto snakeComponent = dynamic_cast<SnakeComponent*>(snakeComponentBase.get());
         if (snakeComponent && snakeComponent->direction != Direction::RIGHT) {
+            std::cout << "[DEBUG] Setting snake direction to LEFT" << std::endl;
             snakeComponent->direction = Direction::LEFT;
             break;
         }
@@ -103,10 +111,12 @@ void EventSystem::handleKeyLeft() {
 }
 
 void EventSystem::handleKeyRight() {
+    std::cout << "[DEBUG] EventSystem::handleKeyRight called" << std::endl;
     for (const auto& [entity, _] : _entityManager->getEntities()) {
         auto snakeComponentBase = _componentManager->getComponentBase(entity, "SnakeComponent");
         auto snakeComponent = dynamic_cast<SnakeComponent*>(snakeComponentBase.get());
         if (snakeComponent && snakeComponent->direction != Direction::LEFT) {
+            std::cout << "[DEBUG] Setting snake direction to RIGHT" << std::endl;
             snakeComponent->direction = Direction::RIGHT;
             break;
         }
@@ -114,10 +124,12 @@ void EventSystem::handleKeyRight() {
 }
 
 void EventSystem::handleKeySpace(bool pressed) {
+    std::cout << "[DEBUG] EventSystem::handleKeySpace called with pressed=" << pressed << std::endl;
     for (const auto& [entity, _] : _entityManager->getEntities()) {
         auto snakeComponentBase = _componentManager->getComponentBase(entity, "SnakeComponent");
         auto snakeComponent = dynamic_cast<SnakeComponent*>(snakeComponentBase.get());
         if (snakeComponent) {
+            std::cout << "[DEBUG] Setting snake speedMultiplier to " << (pressed ? 2.0f : 1.0f) << std::endl;
             snakeComponent->speedMultiplier = pressed ? 2.0f : 1.0f;
             break;
         }
@@ -125,6 +137,7 @@ void EventSystem::handleKeySpace(bool pressed) {
 }
 
 void EventSystem::handleKeyR() {
+    std::cout << "[DEBUG] EventSystem::handleKeyR called" << std::endl;
     // Restart logic would go here
     // For now, do nothing as this is handled at a higher level
 }
