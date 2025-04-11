@@ -14,13 +14,37 @@ namespace GTK {
 GTKRenderer::GTKRenderer() : _surface(nullptr), _cr(nullptr) {}
 
 void GTKRenderer::createRenderer(int width, int height) {
-    _surface = std::shared_ptr<cairo_surface_t>(
-        cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height),
-        cairo_surface_destroy);
+    if (_surface || _cr) {
+        _surface.reset();
+        _cr.reset();
+    }
 
-    _cr = std::shared_ptr<cairo_t>(
-        cairo_create(_surface.get()),
-        cairo_destroy);
+    try {
+        _surface = std::shared_ptr<cairo_surface_t>(
+            cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height),
+            cairo_surface_destroy);
+
+        if (cairo_surface_status(_surface.get()) != CAIRO_STATUS_SUCCESS) {
+            _surface.reset();
+            return;
+        }
+
+        _cr = std::shared_ptr<cairo_t>(
+            cairo_create(_surface.get()),
+            cairo_destroy);
+
+        if (cairo_status(_cr.get()) != CAIRO_STATUS_SUCCESS) {
+            _cr.reset();
+            _surface.reset();
+            return;
+        }
+
+        cairo_set_source_rgb(_cr.get(), 0, 0, 0);
+        cairo_paint(_cr.get());
+    } catch (const std::exception& e) {
+        _surface.reset();
+        _cr.reset();
+    }
 }
 
 void GTKRenderer::clearScreen() {

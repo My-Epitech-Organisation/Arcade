@@ -6,6 +6,7 @@
 ** GTKEvent implementation
 */
 #include <utility>
+#include <vector>
 #include <memory>
 #include <iostream>
 #include "GTKUtils/GTKEvent.hpp"
@@ -67,22 +68,36 @@ double x, double y, gpointer data) {
 }
 
 void GTKEvent::disconnectSignals() {
-    if (_window) {
-        for (gulong id : _signalHandlerIds) {
-            if (id > 0) {
-                if (GTK_IS_WIDGET(_window) &&
-                    g_signal_handler_is_connected(_window, id)) {
-                    g_signal_handler_disconnect(_window, id);
-                } else {
-                    std::cerr << "Handler " << id <<
-                        " is not connected to window " <<
-                        static_cast<void*>(_window) << std::endl;
-                }
-            }
+    if (!_window) return;
+
+    for (gulong handlerId : _signalHandlerIds) {
+        if (handlerId > 0) {
+            g_signal_handler_disconnect(_window, handlerId);
         }
-        _signalHandlerIds.clear();
-        _window = nullptr;
     }
+    _signalHandlerIds.clear();
+
+    if (GTK_IS_WIDGET(_window)) {
+        GListModel* controllerModel =
+            gtk_widget_observe_controllers(GTK_WIDGET(_window));
+        if (controllerModel) {
+            guint n = g_list_model_get_n_items(controllerModel);
+            for (guint i = 0; i < n; i++) {
+                GtkEventController* controller =
+                    GTK_EVENT_CONTROLLER(g_list_model_get_item(
+                        controllerModel, i));
+                if (controller)
+                    gtk_widget_remove_controller(
+                        GTK_WIDGET(_window), controller);
+            }
+            g_object_unref(controllerModel);
+        }
+    }
+
+    _keyStates.clear();
+    _mouseButtonStates.clear();
+    _callbackHandler.reset();
+    _window = nullptr;
 }
 
 void GTKEvent::connectSignals() {
@@ -106,6 +121,7 @@ void GTKEvent::connectSignals() {
     _signalHandlerIds.push_back(id2);
 
     GtkGesture *clickController = gtk_gesture_click_new();
+    gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(clickController), 0);
     gtk_widget_add_controller(_window, GTK_EVENT_CONTROLLER(clickController));
 
     gulong id3 = g_signal_connect(clickController, "pressed",
