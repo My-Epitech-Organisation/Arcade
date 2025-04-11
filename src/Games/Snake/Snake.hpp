@@ -17,14 +17,12 @@
 #include "Shared/Interface/ECS/IEntityManager.hpp"
 #include "Shared/Interface/ECS/ISystem.hpp"
 #include "Shared/Interface/Core/IEventManager.hpp"
-#include "Games/Snake/System/EventSystem.hpp"
-#include "Games/Snake/System/MovementSystem.hpp"
-#include "Games/Snake/System/CollisionSystem.hpp"
-#include "Games/Snake/System/RenderSystem.hpp"
-#include "Games/Snake/Components/Snake.hpp"
-#include "Games/Snake/Components/Food.hpp"
-#include "Games/Snake/Components/GridComponent.hpp"
+#include "Games/Snake/System/EventSubSystem.hpp"
+#include "Games/Snake/Components/Board.hpp"
 #include "Games/Snake/SnakeFactory.hpp"
+#include "Games/Snake/System/UISystem.hpp"
+#include "Games/Snake/Components/GameStats.hpp"
+#include "Games/Snake/System/MovementSystem.hpp"
 
 namespace Arcade {
 
@@ -33,9 +31,7 @@ class SnakeGame : public IGameModule {
     SnakeGame() :
         _gameOver(false),
         _gameWon(false),
-        _score(0),
-        _moveTimer(0.0f),
-        _moveInterval(0.2f) {}
+        _score(0) {}
 
     ~SnakeGame() override;
 
@@ -50,25 +46,19 @@ class SnakeGame : public IGameModule {
     std::string getSpecialCompSprite(size_t id) const override;
 
  private:
-    void initGame();
+    void createBoard();
+    void createSnake();
     void spawnFood();
+    void updateSnakeVisuals();
 
     std::shared_ptr<IEventManager> _eventManager;
     std::shared_ptr<IComponentManager> _componentManager;
     std::shared_ptr<IEntityManager> _entityManager;
-    std::shared_ptr<EventSystem> _eventSystem;
-    std::shared_ptr<MovementSystem> _movementSystem;
-    std::shared_ptr<CollisionSystem> _collisionSystem;
-    std::shared_ptr<RenderSystem> _renderSystem;
+    std::shared_ptr<EventSubSystem> _eventSystem;
     std::vector<std::shared_ptr<ISystem>> _systems;
     bool _gameOver;
     bool _gameWon;
     int _score;
-    float _moveTimer;
-    float _moveInterval;
-    Arcade::Entity _snakeEntity;
-    Arcade::Entity _foodEntity;
-    Arcade::Entity _gridEntity;
 };
 
 }  // namespace Arcade

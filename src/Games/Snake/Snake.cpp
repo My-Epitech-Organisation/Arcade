@@ -6,151 +6,75 @@
 ** Snake game module implementation
 */
 
-#include <string>
 #include <memory>
-#include <iostream>
+#include <random>
 #include "Games/Snake/Snake.hpp"
-#include "ECS/Components/Position/PositionComponent.hpp"
-#include "ECS/Components/Sprite/SpriteComponent.hpp"
-#include "Shared/Interface/ECS/IEntity.hpp"
-#include "Games/Snake/SnakeFactory.hpp"
+#include "Games/Snake/System/RenderSystem.hpp"
+#include "Games/Snake/System/GameLogic.hpp"
+#include "Games/Snake/Components/Cell.hpp"
 #include "Games/Snake/Components/Snake.hpp"
 #include "Games/Snake/Components/Food.hpp"
-#include "Shared/Models/ModuleInfos.hpp"
+#include "ECS/Components/Position.hpp"
+#include "ECS/Components/Sprite.hpp"
+#include "ECS/Components/Text.hpp"
 
 namespace Arcade {
 
-SnakeGame::~SnakeGame() {
-    stop();
-}
+SnakeGame::~SnakeGame() {}
 
 void SnakeGame::init(std::shared_ptr<IEventManager> eventManager,
-std::shared_ptr<IComponentManager> componentManager,
-std::shared_ptr<IEntityManager> entityManager) {
+    std::shared_ptr<IComponentManager> componentManager,
+    std::shared_ptr<IEntityManager> entityManager) {
     _eventManager = eventManager;
     _componentManager = componentManager;
     _entityManager = entityManager;
 
-    _eventSystem = std::make_shared<EventSystem>(
-        _eventManager, _componentManager, _entityManager);
-    _movementSystem = std::make_shared<MovementSystem>(
-        _componentManager, _entityManager);
-    _collisionSystem = std::make_shared<CollisionSystem>(
-        _componentManager, _entityManager);
-    _renderSystem = std::make_shared<RenderSystem>(
-        _componentManager, _entityManager);
+    // Register components
+    _componentManager->registerComponent<Board>();
+    _componentManager->registerComponent<Cell>();
+    _componentManager->registerComponent<Snake>();
+    _componentManager->registerComponent<Food>();
+    _componentManager->registerComponent<GameStats>();
+
+    // Create systems
+    _eventSystem = std::make_shared<EventSubSystem>(_eventManager, _componentManager,
+                                                   _entityManager);
+    auto renderSystem = std::make_shared<RenderSystem>(_componentManager,
+                                                     _entityManager);
+    auto uiSystem = std::make_shared<UISystem>(_componentManager, _entityManager);
+    auto gameLogic = std::make_shared<GameLogic>(_componentManager, _entityManager);
+    auto movementSystem = std::make_shared<MovementSystem>(_componentManager,
+                                                         _entityManager, this);
 
     _systems.push_back(_eventSystem);
-    _systems.push_back(_movementSystem);
-    _systems.push_back(_collisionSystem);
-    _systems.push_back(_renderSystem);
+    _systems.push_back(renderSystem);
+    _systems.push_back(uiSystem);
+    _systems.push_back(gameLogic);
+    _systems.push_back(movementSystem);
 
-    _gameOver = false;
-    _gameWon = false;
-    _score = 0;
-    _moveTimer = 0.0f;
-
-    initGame();
-}
-
-void SnakeGame::initGame() {
-    SnakeFactory factory(_entityManager, _componentManager);
-
-    size_t gridWidth = 30;
-    size_t gridHeight = 20;
-    float cellSize = 20.0f;
-    _gridEntity = factory.createGrid(gridWidth, gridHeight, cellSize);
-
-    size_t snakeStartX = gridWidth / 2;
-    size_t snakeStartY = gridHeight / 2;
-    _snakeEntity = factory.createSnake(snakeStartX * cellSize, snakeStartY * cellSize, Direction::RIGHT);
-
+    createBoard();
+    createSnake();
     spawnFood();
 }
 
-void SnakeGame::spawnFood() {
-    SnakeFactory factory(_entityManager, _componentManager);
-
-    auto gridComp = std::dynamic_pointer_cast<GridComponent>(
-        _componentManager->getComponentByType(_gridEntity, static_cast<ComponentType>(1000)));
-
-    if (!gridComp) {
-        std::cerr << "Error: Grid component not found" << std::endl;
-        return;
-    }
-
-    size_t gridWidth = gridComp->getWidth();
-    size_t gridHeight = gridComp->getHeight();
-    float cellSize = gridComp->getCellSize();
-
-    size_t foodX, foodY;
-    bool validPosition;
-
-    do {
-        validPosition = true;
-
-        foodX = 1 + (rand() % (gridWidth - 2));
-        foodY = 1 + (rand() % (gridHeight - 2));
-
-        if (gridComp->getCellType(foodX, foodY) != SnakeCellType::EMPTY) {
-            validPosition = false;
-        }
-    } while (!validPosition);
-
-    _foodEntity = factory.createFood(foodX * cellSize, foodY * cellSize);
-}
-
 void SnakeGame::update() {
-    if (_gameOver || _gameWon)
-        return;
-
     for (auto& system : _systems) {
         system->update();
     }
 
-    std::shared_ptr<SnakeComponent> snakeComponent = nullptr;
-    std::shared_ptr<FoodComponent> foodComponent = nullptr;
-
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
-        if (name == "snake" && entity == _snakeEntity) {
-            auto components = _componentManager->getEntityComponents(entity);
-            for (const auto& component : components) {
-                auto castComponent = std::dynamic_pointer_cast<SnakeComponent>(component);
-                if (castComponent) {
-                    snakeComponent = castComponent;
-                    break;
-                }
-            }
-            break;
-        }
-    }
-
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
-        if (name == "food" && entity == _foodEntity) {
-            auto components = _componentManager->getEntityComponents(entity);
-            for (const auto& component : components) {
-                auto castComponent = std::dynamic_pointer_cast<FoodComponent>(component);
-                if (castComponent) {
-                    foodComponent = castComponent;
-                    break;
-                }
-            }
-            break;
-        }
-    }
-
-    if (snakeComponent && foodComponent && foodComponent->eaten) {
-        _score += 10;
-
-        _entityManager->destroyEntity(_foodEntity);
-        spawnFood();
-
-        if (_moveInterval > 0.05f) {
-            _moveInterval -= 0.005f;
-        }
-    }
-    if (_collisionSystem->hasCollision()) {
+    // Check if game over
+    auto entities = _entityManager->getEntitiesWithComponent<Snake>();
+    if (entities.empty()) {
         _gameOver = true;
+        return;
+    }
+
+    // Update score from stats
+    auto statsEntities = _entityManager->getEntitiesWithComponent<GameStats>();
+    if (!statsEntities.empty()) {
+        Entity statsEntity = statsEntities[0];
+        auto stats = _componentManager->getComponent<GameStats>(statsEntity);
+        _score = stats->score;
     }
 }
 
@@ -163,14 +87,7 @@ bool SnakeGame::hasWon() const {
 }
 
 void SnakeGame::stop() {
-    _gameOver = true;
-    _componentManager.reset();
-    _entityManager.reset();
     _systems.clear();
-    _eventSystem.reset();
-    _movementSystem.reset();
-    _collisionSystem.reset();
-    _renderSystem.reset();
 }
 
 int SnakeGame::getScore() const {
@@ -178,94 +95,235 @@ int SnakeGame::getScore() const {
 }
 
 std::string SnakeGame::getSpecialCompSprite(size_t id) const {
-    auto snakeCompBase = _componentManager->getComponentBase(id, "SnakeComponent");
-    auto snakeComp = dynamic_cast<SnakeComponent*>(snakeCompBase.get());
-    if (snakeComp) {
-        switch (snakeComp->direction) {
-            case Direction::UP:
-                return "assets/snake/head_up.png";
-            case Direction::DOWN:
-                return "assets/snake/head_down.png";
-            case Direction::LEFT:
-                return "assets/snake/head_left.png";
-            case Direction::RIGHT:
-                return "assets/snake/head_right.png";
+    if (id == Snake::HEAD_UP) return "head_up";
+    if (id == Snake::HEAD_DOWN) return "head_down";
+    if (id == Snake::HEAD_LEFT) return "head_left";
+    if (id == Snake::HEAD_RIGHT) return "head_right";
+    if (id == Snake::BODY_VERTICAL) return "body_vertical";
+    if (id == Snake::BODY_HORIZONTAL) return "body_horizontal";
+    if (id == Snake::BODY_TOPLEFT) return "body_topleft";
+    if (id == Snake::BODY_TOPRIGHT) return "body_topright";
+    if (id == Snake::BODY_BOTTOMLEFT) return "body_bottomleft";
+    if (id == Snake::BODY_BOTTOMRIGHT) return "body_bottomright";
+    if (id == Snake::TAIL_UP) return "tail_up";
+    if (id == Snake::TAIL_DOWN) return "tail_down";
+    if (id == Snake::TAIL_LEFT) return "tail_left";
+    if (id == Snake::TAIL_RIGHT) return "tail_right";
+    if (id == Food::APPLE) return "apple";
+    return "background";
+}
+
+void SnakeGame::createBoard() {
+    // Create board entity
+    Entity boardEntity = _entityManager->createEntity();
+    Board board(20, 20);  // 20x20 grid
+    _componentManager->addComponent(boardEntity, board);
+
+    // Create game stats entity
+    Entity statsEntity = _entityManager->createEntity();
+    GameStats stats;
+    stats.score = 0;
+    stats.time = 0;
+    _componentManager->addComponent(statsEntity, stats);
+
+    // Create cells
+    for (int i = 0; i < board.width; i++) {
+        for (int j = 0; j < board.height; j++) {
+            Entity cellEntity = _entityManager->createEntity();
+            Cell cell;
+            cell.type = Cell::EMPTY;
+            cell.x = i;
+            cell.y = j;
+
+            Position pos;
+            pos.x = i * 32;  // Cell size is 32x32 pixels
+            pos.y = j * 32;
+
+            Sprite sprite;
+            sprite.texturePath = "assets/snake/background.png";
+            sprite.width = 32;
+            sprite.height = 32;
+
+            _componentManager->addComponent(cellEntity, cell);
+            _componentManager->addComponent(cellEntity, pos);
+            _componentManager->addComponent(cellEntity, sprite);
         }
     }
+}
 
-    auto foodCompBase = _componentManager->getComponentBase(id, "FoodComponent");
-    auto foodComp = dynamic_cast<FoodComponent*>(foodCompBase.get());
-    if (foodComp) {
-        return "assets/snake/apple.png";
-    }
+void SnakeGame::createSnake() {
+    // Create snake entity
+    Entity snakeEntity = _entityManager->createEntity();
 
-    for (const auto& [entity, _] : _entityManager->getEntities()) {
-        auto snakeComponentBase = _componentManager->getComponentBase(entity, "SnakeComponent");
-        auto snakeComponent = dynamic_cast<SnakeComponent*>(snakeComponentBase.get());
-        if (snakeComponent) {
-            for (size_t i = 0; i < snakeComponent->segments.size(); ++i) {
-                if (snakeComponent->segments[i] == id) {
-                    if (i == 0) {
-                        switch (snakeComponent->direction) {
-                            case Direction::UP:
-                                return "assets/snake/head_up.png";
-                            case Direction::DOWN:
-                                return "assets/snake/head_down.png";
-                            case Direction::LEFT:
-                                return "assets/snake/head_left.png";
-                            case Direction::RIGHT:
-                                return "assets/snake/head_right.png";
-                        }
-                    } else if (i == snakeComponent->segments.size() - 1) {
-                        auto tailPosBase = _componentManager->getComponentBase(id, "PositionComponent");
-                        auto tailPos = dynamic_cast<PositionComponent*>(tailPosBase.get());
+    // Starting position in the middle of the board
+    int startX = 10;
+    int startY = 10;
 
-                        auto prevSegmentPosBase = _componentManager->getComponentBase(
-                            snakeComponent->segments[i - 1], "PositionComponent");
-                        auto prevPos = dynamic_cast<PositionComponent*>(prevSegmentPosBase.get());
+    // Initial snake with 3 segments
+    Snake snake;
+    snake.segments = {
+        {startX, startY},       // Head
+        {startX - 1, startY},   // Body
+        {startX - 2, startY}    // Tail
+    };
+    snake.direction = Snake::RIGHT;
+    snake.growNextUpdate = false;
 
-                        if (tailPos && prevPos) {
-                            if (tailPos->x < prevPos->x) {
-                                return "assets/snake/tail_left.png";
-                            } else if (tailPos->x > prevPos->x) {
-                                return "assets/snake/tail_right.png";
-                            } else if (tailPos->y < prevPos->y) {
-                                return "assets/snake/tail_up.png";
-                            } else {
-                                return "assets/snake/tail_down.png";
-                            }
-                        }
-                    } else {
-                        return "assets/snake/body_horizontal.png";
-                    }
-                    break;
-                }
+    _componentManager->addComponent(snakeEntity, snake);
+
+    // Create visual representation for each snake segment
+    updateSnakeVisuals();
+}
+
+void SnakeGame::spawnFood() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    auto boardEntities = _entityManager->getEntitiesWithComponent<Board>();
+    if (boardEntities.empty()) return;
+
+    Entity boardEntity = boardEntities[0];
+    auto board = _componentManager->getComponent<Board>(boardEntity);
+
+    // Get snake to avoid spawning food on it
+    auto snakeEntities = _entityManager->getEntitiesWithComponent<Snake>();
+    if (snakeEntities.empty()) return;
+
+    Entity snakeEntity = snakeEntities[0];
+    auto snake = _componentManager->getComponent<Snake>(snakeEntity);
+
+    // Find empty cell for food
+    std::uniform_int_distribution<> disX(0, board->width - 1);
+    std::uniform_int_distribution<> disY(0, board->height - 1);
+
+    int x, y;
+    bool validPosition;
+
+    do {
+        x = disX(gen);
+        y = disY(gen);
+
+        validPosition = true;
+        for (const auto& segment : snake->segments) {
+            if (segment.first == x && segment.second == y) {
+                validPosition = false;
+                break;
+            }
+        }
+    } while (!validPosition);
+
+    // Create food entity
+    Entity foodEntity = _entityManager->createEntity();
+
+    Food food;
+    food.x = x;
+    food.y = y;
+    food.type = Food::APPLE;
+
+    Position pos;
+    pos.x = x * 32;  // Cell size is 32x32 pixels
+    pos.y = y * 32;
+
+    Sprite sprite;
+    sprite.texturePath = "assets/snake/apple.png";
+    sprite.width = 32;
+    sprite.height = 32;
+    sprite.specialCompId = Food::APPLE;
+
+    _componentManager->addComponent(foodEntity, food);
+    _componentManager->addComponent(foodEntity, pos);
+    _componentManager->addComponent(foodEntity, sprite);
+}
+
+// Helper method to update snake visuals based on segments
+void SnakeGame::updateSnakeVisuals() {
+    auto snakeEntities = _entityManager->getEntitiesWithComponent<Snake>();
+    if (snakeEntities.empty()) return;
+
+    Entity snakeEntity = snakeEntities[0];
+    auto snake = _componentManager->getComponent<Snake>(snakeEntity);
+
+    // First, remove old visual representation
+    auto cellEntities = _entityManager->getEntitiesWithComponent<Cell>();
+    for (auto entity : cellEntities) {
+        auto cell = _componentManager->getComponent<Cell>(entity);
+        if (cell->type == Cell::SNAKE_HEAD || cell->type == Cell::SNAKE_BODY || cell->type == Cell::SNAKE_TAIL) {
+            cell->type = Cell::EMPTY;
+            auto sprite = _componentManager->getComponent<Sprite>(entity);
+            if (sprite) {
+                sprite->texturePath = "assets/snake/background.png";
+                sprite->specialCompId = 0;
             }
         }
     }
 
-    return "";
-}
+    // Then create new visual representation
+    for (size_t i = 0; i < snake->segments.size(); i++) {
+        const auto& segment = snake->segments[i];
+        int x = segment.first;
+        int y = segment.second;
 
-extern "C" {
-    Arcade::IArcadeModule* entryPoint(void) {
-        try {
-            return new Arcade::SnakeGame();
-        } catch (const std::exception& e) {
-            std::cerr << "Error creating Snake instance: "
-                << e.what() << std::endl;
-            return nullptr;
+        // Find cell entity at this position
+        for (auto entity : cellEntities) {
+            auto cell = _componentManager->getComponent<Cell>(entity);
+            if (cell->x == x && cell->y == y) {
+                auto sprite = _componentManager->getComponent<Sprite>(entity);
+
+                if (i == 0) {  // Head
+                    cell->type = Cell::SNAKE_HEAD;
+                    if (snake->direction == Snake::UP) {
+                        sprite->specialCompId = Snake::HEAD_UP;
+                    } else if (snake->direction == Snake::DOWN) {
+                        sprite->specialCompId = Snake::HEAD_DOWN;
+                    } else if (snake->direction == Snake::LEFT) {
+                        sprite->specialCompId = Snake::HEAD_LEFT;
+                    } else {
+                        sprite->specialCompId = Snake::HEAD_RIGHT;
+                    }
+                } else if (i == snake->segments.size() - 1) {  // Tail
+                    cell->type = Cell::SNAKE_TAIL;
+                    // Determine tail orientation based on preceding segment
+                    const auto& prevSegment = snake->segments[i - 1];
+                    if (prevSegment.first == x && prevSegment.second < y) {
+                        sprite->specialCompId = Snake::TAIL_UP;
+                    } else if (prevSegment.first == x && prevSegment.second > y) {
+                        sprite->specialCompId = Snake::TAIL_DOWN;
+                    } else if (prevSegment.first < x && prevSegment.second == y) {
+                        sprite->specialCompId = Snake::TAIL_LEFT;
+                    } else {
+                        sprite->specialCompId = Snake::TAIL_RIGHT;
+                    }
+                } else {  // Body
+                    cell->type = Cell::SNAKE_BODY;
+                    // Determine body segment orientation
+                    const auto& prevSegment = snake->segments[i - 1];
+                    const auto& nextSegment = snake->segments[i + 1];
+
+                    // Straight segments
+                    if (prevSegment.first == nextSegment.first) {
+                        sprite->specialCompId = Snake::BODY_VERTICAL;
+                    } else if (prevSegment.second == nextSegment.second) {
+                        sprite->specialCompId = Snake::BODY_HORIZONTAL;
+                    } else {
+                        // Corner segments
+                        if ((prevSegment.second < y && nextSegment.first > x) || 
+                            (prevSegment.first > x && nextSegment.second < y)) {
+                            sprite->specialCompId = Snake::BODY_TOPLEFT;
+                        } else if ((prevSegment.second < y && nextSegment.first < x) || 
+                                   (prevSegment.first < x && nextSegment.second < y)) {
+                            sprite->specialCompId = Snake::BODY_TOPRIGHT;
+                        } else if ((prevSegment.second > y && nextSegment.first > x) || 
+                                   (prevSegment.first > x && nextSegment.second > y)) {
+                            sprite->specialCompId = Snake::BODY_BOTTOMLEFT;
+                        } else {
+                            sprite->specialCompId = Snake::BODY_BOTTOMRIGHT;
+                        }
+                    }
+                }
+
+                break;
+            }
         }
-    }
-
-    void destroy(IGameModule* instance) {
-        delete instance;
-    }
-
-    Arcade::ModuleInfos module_infos() {
-        return {"Snake", "Arcade Snake Game",
-            "Classic Snake game implementation",
-            "./lib/arcade_snake.so", Arcade::ModuleType::GAME};
     }
 }
 

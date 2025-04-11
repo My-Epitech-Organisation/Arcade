@@ -3,11 +3,11 @@
 ** EPITECH PROJECT, 2025
 ** B-OOP-400 Arcade
 ** File description:
-** Render system for Snake game
+** Game logic system for Snake game
 */
 
-#ifndef SRC_GAMES_SNAKE_SYSTEM_RENDERSYSTEM_HPP_
-#define SRC_GAMES_SNAKE_SYSTEM_RENDERSYSTEM_HPP_
+#ifndef SRC_GAMES_SNAKE_SYSTEM_GAMELOGIC_HPP_
+#define SRC_GAMES_SNAKE_SYSTEM_GAMELOGIC_HPP_
 
 #include <memory>
 #include "Shared/Interface/ECS/ISystem.hpp"
@@ -16,19 +16,21 @@
 
 namespace Arcade {
 
-class RenderSystem : public ISystem {
+class GameLogic : public ISystem {
  public:
-    RenderSystem(std::shared_ptr<IComponentManager> componentManager,
-                std::shared_ptr<IEntityManager> entityManager);
-    ~RenderSystem() override = default;
+    GameLogic(std::shared_ptr<IComponentManager> componentManager,
+             std::shared_ptr<IEntityManager> entityManager);
+    ~GameLogic() override = default;
 
     void update() override;
 
  private:
+    void checkVictoryCondition();
+
     std::shared_ptr<IComponentManager> _componentManager;
     std::shared_ptr<IEntityManager> _entityManager;
 };
 
 }  // namespace Arcade
 
-#endif  // SRC_GAMES_SNAKE_SYSTEM_RENDERSYSTEM_HPP_
+#endif  // SRC_GAMES_SNAKE_SYSTEM_GAMELOGIC_HPP_

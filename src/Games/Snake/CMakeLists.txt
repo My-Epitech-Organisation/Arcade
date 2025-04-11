@@ -3,12 +3,11 @@ set(NAME "arcade_snake")
 set(SRC
     Snake.cpp
     SnakeFactory.cpp
-    Components/Snake.cpp
-    Components/GridComponent.cpp
-    System/EventSystem.cpp
-    System/MovementSystem.cpp
-    System/CollisionSystem.cpp
+    System/EventSubSystem.cpp
+    System/GameLogic.cpp
     System/RenderSystem.cpp
+    System/UISystem.cpp
+    System/MovementSystem.cpp
 )
 
 add_library(${NAME} SHARED ${SRC})
