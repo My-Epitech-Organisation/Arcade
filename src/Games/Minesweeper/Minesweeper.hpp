@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <map>
 #include "Shared/Interface/Game/IGameModule.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "Shared/Interface/ECS/IEntityManager.hpp"
@@ -22,16 +23,16 @@
 #include "Games/Minesweeper/MinesweeperFactory.hpp"
 #include "Games/Minesweeper/System/UISystem.hpp"
 #include "Games/Minesweeper/Components/GameStats.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
+
 
 namespace Arcade {
-
 class MinesweeperGame : public IGameModule {
  public:
     MinesweeperGame() :
         _gameOver(false),
         _gameWon(false) {}
-
-    ~MinesweeperGame() override;
+    ~MinesweeperGame() noexcept override;
 
     void init(std::shared_ptr<IEventManager> eventManager,
         std::shared_ptr<IComponentManager> componentManager,
@@ -41,17 +42,19 @@ class MinesweeperGame : public IGameModule {
     bool hasWon() const override;
     void stop() override;
     int getScore() const override;
-    std::string getSpecialCompSprite(size_t id) const override;
 
  private:
     void createBoard();
     bool checkVictory(Arcade::Entity boardEntity);
-
+    void loadDrawableAssets();
+    std::shared_ptr<DrawableComponent>
+        getDrawableAsset(const std::string& key) const;
     std::shared_ptr<IEventManager> _eventManager;
     std::shared_ptr<IComponentManager> _componentManager;
     std::shared_ptr<IEntityManager> _entityManager;
     std::shared_ptr<EventSubSystem> _eventSystem;
     std::vector<std::shared_ptr<ISystem>> _systems;
+    std::map<std::string, DrawableComponent> _drawableAssets;
     bool _gameOver;
     bool _gameWon;
 };

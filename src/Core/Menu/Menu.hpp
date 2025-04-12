@@ -72,7 +72,7 @@ class Menu : public IMenu {
 
     void displayTitle(const std::string &title);
     void displayMenuOption(const std::string &option,
-        int x, int y, Color color);
+        int x, int y, Color color, bool isSelected = false);
     void displayStatus(const std::string &label,
         const std::string &value, int y, Color color);
     void displaySelectionMenu(const std::string &title,

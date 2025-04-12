@@ -48,6 +48,22 @@ void OpenGLModule::refreshScreen() {
     _window.refreshScreen();
 }
 
+void OpenGLModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
+    if (!drawable.isVisible)
+        return;
+
+    if (drawable.shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.path);
+    } else if (drawable.shouldRenderAsText()) {
+        drawText(drawable.text, static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.color);
+    } else if (drawable.shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.character);
+    }
+}
+
 void OpenGLModule::drawEntity(int x, int y, char symbol) {
     std::string text(1, symbol);
     _text.draw(text, x, y, Arcade::Color::WHITE);

@@ -20,12 +20,14 @@ class MouseEvent : public IEvent {
         : _button(button), _eventType(type), _x(x), _y(y) {}
     EventType getType() const override { return _eventType; }
     Keys getKey() const override { return Keys::NONE; }
-    MouseButton getButton() const { return _button; }
+    MouseButton getMouseButton() const override { return _button; }
     size_t getX() const { return _x; }
     size_t getY() const { return _y; }
     bool isType(EventType type) const {
         return _eventType == type;
     }
+    bool hasKeyInfo() const override { return false; }
+    bool hasMouseInfo() const override { return _button != MouseButton::NONE; }
  private:
     MouseButton _button;
     EventType _eventType;

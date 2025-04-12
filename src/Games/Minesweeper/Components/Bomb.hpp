@@ -9,26 +9,36 @@
 #ifndef SRC_GAMES_MINESWEEPER_COMPONENTS_BOMB_HPP_
     #define SRC_GAMES_MINESWEEPER_COMPONENTS_BOMB_HPP_
     #include <memory>
+    #include <string>
     #include "Shared/Interface/ECS/IComponent.hpp"
     #include "Shared/Models/ComponentType.hpp"
-    #include "ECS/Components/Sprite/SpriteComponent.hpp"
+    #include "ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {
 namespace Minesweeper {
 
 class BombComponent : public Arcade::IComponent {
  public:
-    BombComponent(std::shared_ptr<SpriteComponent> hiddenSprite,
-                 std::shared_ptr<SpriteComponent> revealedSprite)
+    BombComponent(std::shared_ptr<DrawableComponent> hiddenSprite,
+                 std::shared_ptr<DrawableComponent> revealedSprite)
         : _hiddenSprite(hiddenSprite),
           _revealedSprite(revealedSprite),
           _isRevealed(false) {}
+
+    BombComponent(const std::string& hiddenPath,
+        const std::string& revealedPath) {
+        _hiddenSprite = std::make_shared<DrawableComponent>();
+        _hiddenSprite->setAsTexture(hiddenPath, 100.0f, 100.0f);
+        _revealedSprite = std::make_shared<DrawableComponent>();
+        _revealedSprite->setAsTexture(revealedPath, 100.0f, 100.0f);
+        _isRevealed = false;
+    }
 
     ComponentType getType() const {
         return ComponentType::BOMB;
     }
 
-    std::shared_ptr<SpriteComponent> getActiveSprite() const {
+    std::shared_ptr<DrawableComponent> getActiveSprite() const {
         return _isRevealed ? _revealedSprite : _hiddenSprite;
     }
 
@@ -41,8 +51,8 @@ class BombComponent : public Arcade::IComponent {
     }
 
  private:
-    std::shared_ptr<SpriteComponent> _hiddenSprite;
-    std::shared_ptr<SpriteComponent> _revealedSprite;
+    std::shared_ptr<DrawableComponent> _hiddenSprite;
+    std::shared_ptr<DrawableComponent> _revealedSprite;
     bool _isRevealed;
 };
 

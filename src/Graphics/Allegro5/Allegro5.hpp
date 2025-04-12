@@ -30,6 +30,10 @@
         Allegro::Allegro5Event _event;
         Allegro::Allegro5Text _text;
         Allegro::Allegro5Texture _texture;
+        void drawEntity(int x, int y, char symbol);
+        void drawTexture(int x, int y, const std::string &textureId);
+        void drawText(const std::string &text, int x, int y,
+            Arcade::Color color);
 
      public:
         Allegro5() : _name("Allegro5") {}
@@ -38,10 +42,7 @@
         void stop() override;
         void clearScreen() override;
         void refreshScreen() override;
-        void drawEntity(int x, int y, char symbol) override;
-        void drawTexture(int x, int y, const std::string &textureId) override;
-        void drawText(const std::string &text, int x, int y,
-            Arcade::Color color) override;
+        void drawDrawable(const Arcade::DrawableComponent& drawable) override;
         void pollEvents() override;
         bool isOpen() const override;
         const std::string& getName() const override;

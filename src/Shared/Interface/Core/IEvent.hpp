@@ -18,6 +18,7 @@
     #include <string>
     #include "Models/EventType.hpp"
     #include "Models/KeysType.hpp"
+    #include "Models/MouseButtonType.hpp"
 
 namespace Arcade {
 
@@ -47,6 +48,24 @@ class IEvent {
      * @return True if the event matches the specified type, false otherwise.
      */
     virtual bool isType(EventType type) const = 0;
+
+    /**
+     * @brief Get the mouse button associated with the event.
+     * @return The mouse button associated with the event.
+     */
+    virtual MouseButton getMouseButton() const = 0;
+
+    /**
+     * @brief Check if the event has key information.
+     * @return True if the event has key information, false otherwise.
+     */
+    virtual bool hasKeyInfo() const = 0;
+
+    /**
+     * @brief Check if the event has mouse information.
+     * @return True if the event has mouse information, false otherwise.
+     */
+    virtual bool hasMouseInfo() const = 0;
 };
 
 }  // namespace Arcade

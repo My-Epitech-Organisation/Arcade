@@ -23,6 +23,7 @@
     #include "Interface/Core/IEventManager.hpp"
     #include "Models/ColorType.hpp"
     #include "Interface/IArcadeModule.hpp"
+    #include "../ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {
 
@@ -41,10 +42,7 @@ class IDisplayModule : public IArcadeModule {
     virtual void stop() = 0;
     virtual void clearScreen() = 0;
     virtual void refreshScreen() = 0;
-    virtual void drawEntity(int x, int y, char symbol) = 0;
-    virtual void drawTexture(int x, int y, const std::string &textureId) = 0;
-    virtual void drawText(const std::string &text, int x, int y,
-        Color color) = 0;
+    virtual void drawDrawable(const DrawableComponent& drawable) = 0;
     virtual void pollEvents() = 0;
     virtual bool isOpen() const = 0;
     virtual bool isKeyPressed(int keyCode) = 0;

@@ -12,7 +12,10 @@
 #include <vector>
 #include <memory>
 #include <iostream>
+#include <utility>
 #include "Games/Minesweeper/MinesweeperFactory.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
+#include "Shared/JSONParser/JSONParser.hpp"
 
 namespace Arcade {
 Entity Minesweeper::MinesweeperFactory::createBoard(float x, float y,
@@ -43,18 +46,17 @@ size_t gridX, size_t gridY, bool hasMine) {
     cellComponent->_gridY = gridY;
     _componentManager->registerComponent(cellEntity, cellComponent);
 
-    auto hiddenSprite = std::make_shared<SpriteComponent>
-        ("assets/minesweeper/hidden.png");
-
-    auto revealedSprite = hasMine ?
-        std::make_shared<SpriteComponent>("assets/minesweeper/mine.png") :
-        std::make_shared<SpriteComponent>("assets/minesweeper/empty.png");
-    _componentManager->registerComponent(cellEntity, hiddenSprite);
+    auto drawable = std::make_shared<DrawableComponent>();
+    drawable->setAsTexture("assets/minesweeper/hidden.png", 100.0f, 100.0f);
+    drawable->posX = x;
+    drawable->posY = y;
+    drawable->isVisible = true;
+    _componentManager->registerComponent(cellEntity, drawable);
 
     if (hasMine) {
         auto bombComponent = std::make_shared<BombComponent>(
-            hiddenSprite,
-            revealedSprite);
+            "assets/minesweeper/hidden.png",
+            "assets/minesweeper/mine.png");
         _componentManager->registerComponent(cellEntity, bombComponent);
     }
     return cellEntity;
@@ -69,6 +71,9 @@ Arcade::Entity boardEntity, float startX, float startY, float cellSize) {
     size_t width = boardComponent->getWidth();
     size_t height = boardComponent->getHeight();
     size_t mineCount = boardComponent->getMineCount();
+    JSONParser parser;
+    auto assets = parser.convertAssetsToGraphicalElements(
+        "./config/minesweeper.json");
     for (size_t y = 0; y < height; y++) {
         for (size_t x = 0; x < width; x++) {
             float cellX = startX + (x * cellSize);
@@ -89,25 +94,28 @@ Arcade::Entity boardEntity, float startX, float startY, float cellSize) {
         std::default_random_engine(std::random_device {}()));
 
     for (size_t i = 0; i < mineCount && i < positions.size(); i++) {
-        auto [mineX, mineY] = positions[i];
-        auto cellEntity = boardComponent->getCellEntity(mineX, mineY);
+        auto [x, y] = positions[i];
+        auto cellEntity = boardComponent->getCellEntity(x, y);
         auto component = _componentManager->getComponentByType(cellEntity,
             ComponentType::CELL);
         auto cellComponent = std::dynamic_pointer_cast<Cell>(component);
         if (cellComponent) {
             cellComponent->setHasMine(true);
 
-            auto spriteComp = _componentManager->getComponentByType(cellEntity,
-                ComponentType::SPRITE);
-            auto hiddenSprite = std::dynamic_pointer_cast<SpriteComponent>
-                (spriteComp);
+            auto drawableComp = _componentManager->getComponentByType
+                (cellEntity, ComponentType::DRAWABLE);
+            auto hiddenDrawable = std::dynamic_pointer_cast<DrawableComponent>
+                (drawableComp);
 
-            if (hiddenSprite) {
-                auto revealedSprite = std::make_shared<SpriteComponent>
-                    ("assets/minesweeper/mine.png");
+            if (hiddenDrawable) {
+                auto revealedDrawable = std::make_shared<DrawableComponent>();
+                revealedDrawable->setAsTexture("assets/minesweeper/mine.png",
+                    100.0f, 100.0f);
+                revealedDrawable->posX = hiddenDrawable->posX;
+                revealedDrawable->posY = hiddenDrawable->posY;
 
                 auto bombComponent = std::make_shared<BombComponent>
-                    (hiddenSprite, revealedSprite);
+                    (hiddenDrawable, revealedDrawable);
                 _componentManager->registerComponent(cellEntity, bombComponent);
             }
         }
