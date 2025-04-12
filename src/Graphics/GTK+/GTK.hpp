@@ -11,9 +11,14 @@
     #include <gtk/gtk.h>
     #include <memory>
     #include <string>
+    #include <queue>
     #include <utility>
     #include <unordered_map>
     #include <functional>
+    #include <thread>
+    #include <mutex>
+    #include <condition_variable>
+    #include <atomic>
     #include "Interface/Display/IDisplayModule.hpp"
     #include "GTKUtils/GTKWindow.hpp"
     #include "GTKUtils/GTKRenderer.hpp"
@@ -29,7 +34,6 @@
         std::shared_ptr<GtkApplication> _app;
         int _windowWidth = 0;
         int _windowHeight = 0;
-        bool _running = true;
         GTK::GTKWindow _window;
         GTK::GTKRenderer _renderer;
         GTK::GTKTexture _textureManager;
@@ -52,10 +56,21 @@
         static void on_activate(GtkApplication *app, gpointer user_data);
 
         void draw(std::shared_ptr<GtkDrawingArea> area,
-            std::shared_ptr<cairo_t> cr, int width, int height);
+        std::shared_ptr<cairo_t> cr, int width, int height);
+        std::thread _gtkThread;
+        std::mutex _commandMutex;
+        std::condition_variable _commandCV;
+        std::queue<std::function<void()>> _commandQueue;
+        std::atomic<bool> _threadRunning{false};
+        std::atomic<bool> _initialized{false};
+
+        void threadMain();
+        void executeCommand(std::function<void()> command);
+        void executeCommandAndWait(std::function<void()> command);
 
      public:
-        GTKModule();
+        GTKModule() : _running(false), _initialized(false),
+            _threadRunning(false) {}
         ~GTKModule() override;
         void init(const Arcade::IWindowModule& windowParam) override;
         void stop() override;
@@ -70,6 +85,7 @@
         bool isKeyPressed(int keyCode) override;
         bool isMouseButtonPressed(int button) const override;
         std::pair<size_t, size_t> getMousePosition() const override;
+        std::atomic<bool> _running{false};
     };
 
 #endif  // SRC_GRAPHICS_GTK__GTK_HPP_

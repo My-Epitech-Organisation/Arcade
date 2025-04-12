@@ -67,9 +67,6 @@ bool Allegro5Event::isMouseButtonPressed(int buttonCode) const {
 }
 
 std::pair<size_t, size_t> Allegro5Event::getMousePosition() const {
-    // int x = 0;
-    // int y = 0;
-    // al_get_mouse_cursor_position(&x, &y);
     ALLEGRO_MOUSE_STATE mouseState;
     al_get_mouse_state(&mouseState);
 

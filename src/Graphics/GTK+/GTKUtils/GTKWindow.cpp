@@ -24,14 +24,22 @@ int height) {
 void GTKWindow::setupDrawingArea(int width, int height,
 void (*drawCallback)(GtkDrawingArea*, cairo_t*, int, int, gpointer),
 gpointer userData) {
-    _drawingArea = nonOwningPtr(gtk_drawing_area_new());
+    if (!_window) return;
 
-    gtk_widget_set_size_request(_drawingArea.get(), width, height);
+    auto drawingArea = gtk_drawing_area_new();
+    _drawingArea = std::shared_ptr<GtkWidget>(
+        GTK_WIDGET(drawingArea),
+        g_object_unref);
 
-    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(_drawingArea.get()),
+    GtkWidget *widget = _drawingArea.get();
+    gtk_widget_set_can_target(widget, FALSE);
+
+    gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(widget), width);
+    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(widget), height);
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(widget),
         drawCallback, userData, nullptr);
 
-    gtk_window_set_child(GTK_WINDOW(_window.get()), _drawingArea.get());
+    gtk_window_set_child(GTK_WINDOW(_window.get()), widget);
 }
 
 void GTKWindow::showWindow() {
