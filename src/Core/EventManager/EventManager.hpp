@@ -102,19 +102,14 @@ class EventManager : public IEventManager {
     void publish(const IEvent& eventType) override;
 
    /**
-    * @brief Updates the input state based on raw input data.
+    * @brief Retrieves the current position of the mouse.
     *
-    * @param state The raw input state containing the current state of keys and mouse buttons.
+    * @return A pair containing the x and y coordinates of the mouse position.
     */
-    void updateInputState(const RawInputState& state) override;
+    std::pair<std::size_t, std::size_t> getMousePosition() const override;
 
-   /**
-    * @brief Sets the pressed state of a specific key.
-    *
-    * @param key The key to update.
-    * @param pressed True if the key is pressed, false otherwise.
-    */
-    void setKeyPressed(Keys key, bool pressed);
+
+    void unsubscribeAll() override;
 
    /**
     * @brief Checks if a specific key is currently pressed.
@@ -131,15 +126,27 @@ class EventManager : public IEventManager {
     * @param y The y-coordinate of the mouse position.
     */
     void setMousePosition(std::size_t x, std::size_t y) override;
-
    /**
-    * @brief Retrieves the current position of the mouse.
+    * @brief Updates the input state based on raw input data.
     *
-    * @return A pair containing the x and y coordinates of the mouse position.
+    * @param state The raw input state containing the current state of keys and mouse buttons.
     */
-    std::pair<std::size_t, std::size_t> getMousePosition() const override;
+    void updateInputState(const RawInputState& state) override;
 
-    void unsubscribeAll() override;
+    void resetKeys() override;
+    void setKeyState(Keys key) override;
+    void unsubscribe(const IEvent& eventType, Callback callback) override;
+    void unsubscribeAll(const IEvent& eventType) override;
+   /**
+    * @brief Sets the pressed state of a specific key.
+    *
+    * @param key The key to update.
+    * @param pressed True if the key is pressed, false otherwise.
+    */
+    void setKeyPressed(Keys key, bool pressed);
+
+
+
 
  private:
    /**
@@ -204,8 +211,6 @@ class EventManager : public IEventManager {
             }
         }
     }
-    void resetKeys() override {};
-    void setKeyState(Keys key) override {};
 };
 
 }  // namespace Arcade

@@ -126,7 +126,54 @@ std::pair<std::size_t, std::size_t> EventManager::getMousePosition() const {
     return std::make_pair(_mouseX, _mouseY);
 }
 
+void EventManager::unsubscribe(const IEvent& eventType, Callback callback) {
+    (void)eventType;
+    (void)callback;
+    try {
+        _subscribers.clear();
+        _mouseSubscribers.clear();
+    } catch (const std::exception& e) {
+        throw InputException("Error unsubscribing events: " +
+            std::string(e.what()));
+    }
+}
+
+void EventManager::resetKeys() {
+    try {
+        for (auto& [key, _] : _keyStates) {
+            _keyStates[key] = false;
+        }
+        for (auto& [button, _] : _mouseButtonStates) {
+            _mouseButtonStates[button] = false;
+        }
+    } catch (const std::exception& e) {
+        throw InputException("Error resetting keys: " +
+            std::string(e.what()));
+    }
+}
+
+void EventManager::setKeyState(Keys key) {
+    try {
+        _keyStates[key] = true;
+    } catch (const std::exception& e) {
+        throw InputException("Error setting key state: " +
+            std::string(e.what()));
+    }
+}
+
 void EventManager::unsubscribeAll() {
+    try {
+        _subscribers.clear();
+        _mouseSubscribers.clear();
+    } catch (const std::exception& e) {
+        throw InputException("Error unsubscribing events: " +
+            std::string(e.what()));
+    }
+}
+
+
+void EventManager::unsubscribeAll(const IEvent& eventType) {
+    (void)eventType;
     try {
         _subscribers.clear();
         _mouseSubscribers.clear();

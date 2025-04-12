@@ -37,6 +37,8 @@ class ComponentManager : public IComponentManager {
         ComponentType type) override;
     std::vector<std::shared_ptr<IComponent>> getAllComponentsByType
         (ComponentType type) override;
+    bool hasComponent(std::shared_ptr<IEntity> entity,
+        ComponentType type) const override;
     void unregisterComponent(std::shared_ptr<IEntity> entity, const std::string&
         componentName) override;
     std::vector<std::shared_ptr<IComponent>>
@@ -44,8 +46,6 @@ class ComponentManager : public IComponentManager {
         entity) override;
     std::vector<std::shared_ptr<IComponent>> getAllComponents() override;
     void clearComponents() override;
-    std::shared_ptr<IComponent> hasComponent(std::shared_ptr<IEntity> entity,
-        ComponentType type) override;
 };
 
 }  // namespace Arcade

@@ -39,7 +39,7 @@ class MinesweeperGame : public IGameModule {
         std::shared_ptr<IComponentManager> componentManager,
         std::shared_ptr<IEntityManager> entityManager,
         std::shared_ptr<IScoreProvider> scoreProvider) override;
-    void update() override;
+    void update(float deltaTime) override;
     bool isGameOver() const override;
     bool hasWon() const override;
     void stop() override;

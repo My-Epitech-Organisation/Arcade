@@ -204,7 +204,7 @@ void GameLoop::displayGraphicsSelection() {
 }
 void GameLoop::updateGame() {
     if (_currentGame) {
-        _currentGame->update();
+        _currentGame->update(0);
         auto entities = _entityManager->getEntitiesMap();
         std::vector<std::shared_ptr<IDrawableComponent>> textComponents;
         std::vector<std::shared_ptr<IDrawableComponent>> textureComponents;

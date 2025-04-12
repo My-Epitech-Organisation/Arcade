@@ -41,7 +41,7 @@ class IGameModule : public IArcadeModule {
         std::shared_ptr<IComponentManager> componentManager,
         std::shared_ptr<IEntityManager> entityManager,
         std::shared_ptr<IScoreProvider> scoreProvider) = 0;
-    virtual void update() = 0;
+    virtual void update(float deltaTime) = 0;
     virtual void stop() = 0;
     virtual bool isGameOver() const = 0;
     virtual bool hasWon() const = 0;

@@ -96,10 +96,12 @@ void ComponentManager::clearComponents() {
     _typeNameMap.clear();
 }
 
-std::shared_ptr<IComponent>
+bool
 ComponentManager::hasComponent(std::shared_ptr<IEntity> entity,
-ComponentType type) {
-    return getComponentByType(entity, type);
+ComponentType type) const {
+    return _componentsByType.find(entity) != _componentsByType.end() &&
+        _componentsByType.at(entity).find(type) !=
+        _componentsByType.at(entity).end();
 }
 
 }  // namespace Arcade

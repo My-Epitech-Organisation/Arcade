@@ -18,7 +18,7 @@ namespace Arcade {
 class IEntityManager {
  public:
     virtual ~IEntityManager() = default;
-    virtual std::shared_ptr<IEntity> createEntity(std::string) = 0;
+    virtual std::shared_ptr<IEntity> createEntity(std::string name) = 0;
     virtual void destroyEntity(std::shared_ptr<IEntity> entity) = 0;
     virtual const std::vector<std::shared_ptr<IEntity>>
         getEntitiesVector() const = 0;

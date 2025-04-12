@@ -29,9 +29,9 @@ class IComponentManager {
     // Get all components of a specific type
     virtual std::vector<std::shared_ptr<IComponent>> getAllComponentsByType(
         ComponentType type) = 0;
-    virtual std::shared_ptr<IComponent>
+    virtual bool
         hasComponent(std::shared_ptr<IEntity> entity,
-        ComponentType type) = 0;
+        ComponentType type) const = 0;
     // Unregister a component
     virtual void unregisterComponent(std::shared_ptr<IEntity> entity,
         const std::string& componentName) = 0;

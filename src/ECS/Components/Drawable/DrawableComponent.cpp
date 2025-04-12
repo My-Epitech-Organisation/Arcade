@@ -6,9 +6,9 @@
 ** DrawableComponent implementation
 */
 
+#include <string>
 #include "ECS/Components/Drawable/DrawableComponent.hpp"
 #include "Shared/Models/ModuleInfos.hpp"
-#include <string>
 
 namespace Arcade {
 

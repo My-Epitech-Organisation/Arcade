@@ -41,7 +41,7 @@ class EntityManager : public IEntityManager {
      *
      * @return The newly created entity identifier.
      */
-    std::shared_ptr<IEntity> createEntity(std::string name);
+    std::shared_ptr<IEntity> createEntity(std::string name) override;
 
     /**
      * @brief Destroys an existing entity.
@@ -50,16 +50,17 @@ class EntityManager : public IEntityManager {
      *
      * @param entity The entity identifier to be destroyed.
      */
-    void destroyEntity(std::shared_ptr<IEntity> entity);
+    void destroyEntity(std::shared_ptr<IEntity> entity) override;
 
     /**
      * @brief Retrieves the list of active entities.
      *
      * @return A constant reference to a vector containing all active entity identifiers.
      */
-    const std::vector<std::shared_ptr<IEntity>> getEntitiesVector() const;
+    const std::vector<std::shared_ptr<IEntity>> getEntitiesVector()
+        const override;
     const std::unordered_map<std::shared_ptr<IEntity>, std::string>
-        getEntitiesMap() const;
+        getEntitiesMap() const override;
     void resetEntities() override;
     void addEntity(std::shared_ptr<IEntity> entity) override;
     std::shared_ptr<IEntity> getEntity(int id) override;

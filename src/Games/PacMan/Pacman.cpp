@@ -97,7 +97,8 @@ const std::string& key) const {
 }
 
 
-void PacmanGame::update() {
+void PacmanGame::update(float deltaTime) {
+    (void)deltaTime;
     checkGameStatus();
 
     for (const auto& system : _systems) {

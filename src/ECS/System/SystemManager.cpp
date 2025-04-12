@@ -14,12 +14,13 @@ void SystemManager::registerSystem(std::shared_ptr<Arcade::ISystem> system) {
     _systems.push_back(system);
 }
 
-void SystemManager::removeSystem(std::shared_ptr<Arcade::ISystem> system) {
+void SystemManager::unregisterSystem(std::shared_ptr<Arcade::ISystem> system) {
     _systems.erase(std::remove(_systems.begin(),
         _systems.end(), system), _systems.end());
 }
 
-void SystemManager::updateSystems() {
+void SystemManager::updateSystems(float deltaTime) {
+    (void)deltaTime;
     for (std::shared_ptr<Arcade::ISystem> system : _systems) {
         system->update();
     }

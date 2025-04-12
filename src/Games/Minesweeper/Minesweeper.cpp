@@ -100,7 +100,8 @@ const std::string& key) const {
     return nullptr;
 }
 
-void MinesweeperGame::update() {
+void MinesweeperGame::update(float deltaTime) {
+    (void)deltaTime;
     std::shared_ptr<IEntity> boardEntity = 0;
     for (const auto &entities : _entityManager->getEntitiesMap()) {
         if (entities.second.c_str() == "Board") {

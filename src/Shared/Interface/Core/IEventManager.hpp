@@ -98,6 +98,8 @@ class IEventManager {
     virtual void updateInputState(const RawInputState& state) = 0;
     virtual void resetKeys() = 0;
     virtual void setKeyState(Keys key) = 0;
+    virtual void unsubscribe(const IEvent& eventType, Callback callback) = 0;
+    virtual void unsubscribeAll(const IEvent& eventType) = 0;
 };
 }  // namespace Arcade
 
