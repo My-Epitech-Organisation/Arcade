@@ -37,16 +37,15 @@ class MinesweeperGame : public IGameModule {
 
     void init(std::shared_ptr<IEventManager> eventManager,
         std::shared_ptr<IComponentManager> componentManager,
-        std::shared_ptr<IEntityManager> entityManager) override;
+        std::shared_ptr<IEntityManager> entityManager,
+        std::shared_ptr<IScoreProvider> scoreProvider) override;
     void update() override;
     bool isGameOver() const override;
     bool hasWon() const override;
     void stop() override;
     int getScore() const override;
     void setScoreProvider(
-        std::shared_ptr<IScoreProvider> scoreProvider) override {
-          _scoreProvider = scoreProvider;
-        }
+        std::shared_ptr<IScoreProvider> scoreProvider) override {}
 
  private:
     void createBoard();

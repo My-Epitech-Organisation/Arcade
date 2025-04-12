@@ -14,23 +14,3 @@ ComponentType VelocityComponent::getType() const {
     return ComponentType::VELOCITY;
 }
 
-extern "C" {
-    __attribute__((constructor))
-    const char *init_velocity(void) {
-        return "Lib";
-    }
-
-    __attribute__((destructor))
-    void fini_ncurses(void) {
-    }
-
-    Arcade::IArcadeModule* entryPoint(void) {
-        return new VelocityComponent(0, 0);
-    }
-
-    Arcade::ModuleInfos module_infos() {
-        return {"VelocityComponent", "IDK",
-            "IDK",
-            "./lib/arcade_velocity.so", Arcade::ModuleType::GAME_COMPONENT};
-    }
-}

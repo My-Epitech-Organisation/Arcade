@@ -34,13 +34,41 @@ void EntityManager::destroyEntity(std::shared_ptr<IEntity> entity) {
         _activeEntities.erase(it);
 }
 
-const std::vector<std::shared_ptr<IEntity>>
-EntityManager::getEntitiesVector() const {
-    std::vector<std::shared_ptr<IEntity>> entities;
-    for (const auto& [entity, _] : _activeEntities) {
-        entities.push_back(entity);
+const std::vector<std::shared_ptr<IEntity>> EntityManager::getEntitiesVector() const {
+    try {
+        std::cout << "EntityManager::getEntitiesVector: _activeEntities size = " << _activeEntities.size() << std::endl;
+        // Pre-allocate memory to avoid reallocation
+        std::vector<std::shared_ptr<IEntity>> entities;
+        entities.reserve(_activeEntities.size());
+        
+        // Add entities to vector
+        for (const auto& pair : _activeEntities) {
+            const auto& entity = pair.first;
+            if (entity) {
+                entities.push_back(entity);
+            }
+        }
+        return entities;
+    } catch (const std::bad_alloc&) {
+        // Fallback to a smaller allocation if the full reservation fails
+        std::cerr << "Warning: Memory allocation issue in getEntitiesVector, using smaller capacity" << std::endl;
+        std::vector<std::shared_ptr<IEntity>> entities;
+        
+        // Process entities in smaller batches if needed
+        for (const auto& pair : _activeEntities) {
+            const auto& entity = pair.first;
+            if (entity) {
+                try {
+                    entities.push_back(entity);
+                } catch (const std::bad_alloc&) {
+                    std::cerr << "Critical: Unable to add entity to vector" << std::endl;
+                    // Return what we have so far
+                    break;
+                }
+            }
+        }
+        return entities;
     }
-    return entities;
 }
 
 const std::unordered_map<std::shared_ptr<IEntity>, std::string>

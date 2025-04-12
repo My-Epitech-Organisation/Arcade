@@ -177,6 +177,7 @@ class GameLoop : public IStateManager {
     std::shared_ptr<IComponentManager> _componentManager;
         /** The component manager for managing game components. */
     DLLoader<IMenu> _menuLoader;
+    std::shared_ptr<IScoreProvider> _scoreProvider;
 
     std::string _inputPlayerName; /** Current input buffer for player name. */
 

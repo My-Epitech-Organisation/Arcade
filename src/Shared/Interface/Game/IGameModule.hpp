@@ -39,7 +39,8 @@ class IGameModule : public IArcadeModule {
     virtual ~IGameModule() = default;
     virtual void init(std::shared_ptr<IEventManager> eventManager,
         std::shared_ptr<IComponentManager> componentManager,
-        std::shared_ptr<IEntityManager> entityManager) = 0;
+        std::shared_ptr<IEntityManager> entityManager,
+        std::shared_ptr<IScoreProvider> scoreProvider) = 0;
     virtual void update() = 0;
     virtual void stop() = 0;
     virtual bool isGameOver() const = 0;

@@ -437,7 +437,7 @@ void GameLoop::switchGameInGame() {
             _window->clearScreen();
 
             _currentGame->init(_eventManager, _componentManager,
-                _entityManager);
+                _entityManager, _scoreProvider);
 
             _state = GAME_PLAYING;
 

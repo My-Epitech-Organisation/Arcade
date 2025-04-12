@@ -7,6 +7,7 @@
 */
 
 #include "ECS/Components/Drawable/DrawableComponent.hpp"
+#include "Shared/Models/ModuleInfos.hpp"
 #include <string>
 
 namespace Arcade {
@@ -148,20 +149,5 @@ void DrawableComponent::setVisibility(bool visible) {
 void DrawableComponent::setDimensions(float w, float h) {
     width = w;
     height = h;
-}
-
-extern "C" {
-    __attribute__((constructor))
-    const char *init_position(void) {
-        return "Lib";
-    }
-
-    __attribute__((destructor))
-    void fini_ncurses(void) {
-    }
-
-    Arcade::IArcadeModule* entryPoint(void) {
-        return new DrawableComponent();
-    }
 }
 }  // namespace Arcade

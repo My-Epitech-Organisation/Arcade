@@ -30,6 +30,8 @@
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 #include "ECS/Components/Text/TextComponent.hpp"
 #include "Shared/Exceptions/Exceptions.hpp"
+#include "Shared/Models/KeysType.hpp"
+#include "Shared/ScoreProvider/ScoreProvider.hpp"
 
 namespace Arcade {
 GameLoop::GameLoop(const std::string& initialLib)
@@ -45,6 +47,7 @@ _gameSwitch(false) {
     _eventManager = std::make_shared<EventManager>();
     _entityManager = std::make_shared<EntityManager>();
     _componentManager = std::make_shared<ComponentManager>();
+    _scoreProvider = std::make_shared<ScoreProvider>();
     subscribeEvents();
     subscribeNavEvents();
     subscribeMouseEvents();
@@ -207,8 +210,13 @@ void GameLoop::updateGame() {
         std::vector<std::shared_ptr<IDrawableComponent>> textureComponents;
         std::vector<std::shared_ptr<IDrawableComponent>> characterComponents;
         for (const auto& [entityId, entityName] : entities) {
+            std::cout << "[DEBUG] Entity ID: " << entityId
+                << ", Name: " << entityName << std::endl;
             auto components = _componentManager->getAllComponentsByType(
                 ComponentType::DRAWABLE);
+            std::cout << "[DEBUG] Found " << components.size()
+                << " drawable components for entity " << entityId
+                << std::endl;
             for (const auto& component : components) {
                 auto drawableComp
                 = std::dynamic_pointer_cast<IDrawableComponent>(
@@ -399,7 +407,7 @@ void GameLoop::loadAndStartGame() {
             });
         if (_currentGame) {
             _currentGame->init(_eventManager,
-                _componentManager, _entityManager);
+                _componentManager, _entityManager, _scoreProvider);
             _state = GAME_PLAYING;
         }
     } catch (const std::exception& e) {

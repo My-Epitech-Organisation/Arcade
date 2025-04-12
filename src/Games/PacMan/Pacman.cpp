@@ -50,12 +50,14 @@ PacmanGame::~PacmanGame() {
 
 void PacmanGame::init(std::shared_ptr<IEventManager> eventManager,
 std::shared_ptr<IComponentManager> componentManager,
-std::shared_ptr<IEntityManager> entityManager) {
+std::shared_ptr<IEntityManager> entityManager,
+std::shared_ptr<IScoreProvider> scoreProvider) {
     _gameOver = false;
     _gameWon = false;
     _eventManager = eventManager;
     _componentManager = componentManager;
     _entityManager = entityManager;
+    _scoreProvider = scoreProvider;
     loadDrawableAssets();
     createGame();
 

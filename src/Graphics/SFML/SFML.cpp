@@ -49,10 +49,11 @@ void SFML::refreshScreen() {
     }
 }
 
-void SFML::drawEntity(int x, int y, char symbol) {
+void SFML::drawEntity(int x, int y, char symbol, float scale) {
 }
 
-void SFML::drawTexture(int x, int y, const std::string& texturePath) {
+void SFML::drawTexture(int x, int y,
+const std::string& texturePath, float scale) {
     auto texture = loadTexture(texturePath);
     if (!texture) {
         return;
@@ -61,33 +62,43 @@ void SFML::drawTexture(int x, int y, const std::string& texturePath) {
     sf::Sprite sprite;
     sprite.setTexture(*texture);
     sprite.setPosition(static_cast<float>(x), static_cast<float>(y));
-
+    sprite.setScale(scale, scale);
     _window->draw(sprite);
 }
 
-void SFML::drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
-drawable) {
+void SFML::drawDrawable(std::shared_ptr<Arcade::IDrawableComponent> drawable) {
     if (!drawable->isRenderable())
         return;
-
+    float scale;
+    if (drawable->getScale() != 1.0f) {
+        scale = drawable->getScale();
+    } else {
+        // Remplacer 0.1f par 1.0f pour correspondre à votre implémentation
+        scale = 1.0f;
+    }
+    // Ajuster les dimensions dans leurs fonctions de rendu pour compenser
+    // le changement d'échelle (multiplier par 10)
     if (drawable->shouldRenderAsTexture()) {
+        // Multiplier la taille des textures par 10 pour compenser l'échelle
         drawTexture(static_cast<int>(drawable->getPositionX()),
             static_cast<int>(drawable->getPositionY()),
-            drawable->getPath());
+            drawable->getPath(), scale);
     } else if (drawable->shouldRenderAsText()) {
+        // Ajuster la taille du texte en conséquence
         drawText(drawable->getText(),
             static_cast<int>(drawable->getPositionX()),
             static_cast<int>(drawable->getPositionY()),
-            drawable->getColor());
+            drawable->getColor(), scale);
     } else if (drawable->shouldRenderAsCharacter()) {
+        // Ajuster la taille du caractère en conséquence
         drawEntity(static_cast<int>(drawable->getPositionX()),
             static_cast<int>(drawable->getPositionY()),
-            drawable->getCharacter());
+            drawable->getCharacter(), scale);
     }
 }
 
 void SFML::drawText(const std::string& text, int x, int y,
-    Arcade::Color color) {
+    Arcade::Color color, float scale) {
     auto font = loadFont("assets/fonts/arial.ttf");
     if (!font)
         return;
@@ -95,7 +106,7 @@ void SFML::drawText(const std::string& text, int x, int y,
     sf::Text sfText;
     sfText.setFont(*font);
     sfText.setString(text);
-    sfText.setCharacterSize(24);
+    sfText.setCharacterSize(scale);
     sfText.setFillColor(SFMLColor::convertColor(color));
     sfText.setPosition(static_cast<float>(x), static_cast<float>(y));
     _window->draw(sfText);

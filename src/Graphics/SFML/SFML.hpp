@@ -29,10 +29,10 @@ class SFML : public Arcade::IDisplayModule {
     sf::Texture* loadTexture(const std::string& texturePath);
     std::unordered_map<std::string, std::unique_ptr<sf::Font>> _fonts;
     std::unordered_map<std::string, std::unique_ptr<sf::Texture>> _textures;
-    void drawEntity(int x, int y, char symbol);
-    void drawTexture(int x, int y, const std::string &textureId);
+    void drawEntity(int x, int y, char symbol, float scale);
+    void drawTexture(int x, int y, const std::string &textureId, float scale);
     void drawText(const std::string &text, int x, int y,
-        Arcade::Color);
+        Arcade::Color, float scale);
 
  public:
     SFML() : _name("SFML") {}

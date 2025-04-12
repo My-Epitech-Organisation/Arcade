@@ -50,7 +50,8 @@ class SDLModule : public Arcade::IDisplayModule {
     void stop() override;
     void clearScreen() override;
     void refreshScreen() override;
-    void drawDrawable(std::shared_ptr<Arcade::IDrawableComponent> drawable) override;
+    void drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
+        drawable) override;
     void pollEvents() override;
     bool isOpen() const override;
     const std::string& getName() const override;
