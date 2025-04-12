@@ -31,8 +31,6 @@ class Cell : public Arcade::IComponent {
     size_t _gridY;
     void setName(const std::string& name) { _name = name; }
     std::string getName() const { return _name; }
-    bool isMine() const { return _hasMine; }
-    void setMine(bool hasMine) { _hasMine = hasMine; }
     ComponentType getType() const override {
         return ComponentType::CELL;
     }

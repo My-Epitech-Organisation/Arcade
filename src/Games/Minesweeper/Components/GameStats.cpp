@@ -12,7 +12,7 @@
 namespace Arcade {
 namespace Minesweeper {
 
-GameStats::GameStats(int totalMines, int timeLimit = 600) :
+GameStats::GameStats(int totalMines, int timeLimit) :
 _totalMines(totalMines),
 _flagsPlaced(0),
 _safeCellsRevealed(0),

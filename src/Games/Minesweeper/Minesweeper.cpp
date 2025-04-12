@@ -102,13 +102,14 @@ const std::string& key) const {
 
 void MinesweeperGame::update(float deltaTime) {
     (void)deltaTime;
-    std::shared_ptr<IEntity> boardEntity = 0;
+    std::shared_ptr<IEntity> boardEntity = nullptr;
     for (const auto &entities : _entityManager->getEntitiesMap()) {
-        if (entities.second.c_str() == "Board") {
+        if (entities.second == "Board") {
             boardEntity = entities.first;
             break;
         }
     }
+    if (!boardEntity) return;  // Added safety check
     auto comp = _componentManager->getComponentByType(boardEntity,
         ComponentType::BOARD);
     auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>
@@ -196,7 +197,7 @@ void MinesweeperGame::createBoard() {
     float screenHeight = 600.0f;
     size_t width = 8;
     size_t height = 6;
-    float cellSize = 100.0f;  //! Change depending on sprite size
+    float cellSize = 100.0f;
     float boardWidth = width * cellSize;
     float boardHeight = height * cellSize;
 
@@ -229,9 +230,9 @@ bool MinesweeperGame::checkVictory(std::shared_ptr<IEntity> boardEntity) {
             auto cell = std::dynamic_pointer_cast<Arcade::Minesweeper::Cell>
                 (comp2);
             if (!cell) continue;
-            if (!cell->isMine() && cell->getState() !=
-                Arcade::Minesweeper::Cell::REVEALED)
+            if (!cell->hasMine() && !cell->isRevealed()) {
                 return false;
+            }
         }
     }
     return true;

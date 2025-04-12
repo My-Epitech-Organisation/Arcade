@@ -66,14 +66,13 @@ void UISystem::createUIEntities() {
 }
 
 void UISystem::update() {
-    std::shared_ptr<IEntity> boardEntity = 0;
+    std::shared_ptr<IEntity> boardEntity = nullptr;
     for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;
         }
     }
-
     auto statsComp = _componentManager->getComponentByType(
         boardEntity, ComponentType::CUSTOM_BASE);
     auto gameStats = std::dynamic_pointer_cast
@@ -95,6 +94,7 @@ void UISystem::update() {
             + std::to_string(gameStats->getRemainingMines()),
             minesText->getFont(), minesText->getScale());
 
+    // Update timer display
     auto timeTextComp = _componentManager->getComponentByType(
         _timeTextEntity, ComponentType::DRAWABLE);
     auto timeText = std::dynamic_pointer_cast<IDrawableComponent>(timeTextComp);
