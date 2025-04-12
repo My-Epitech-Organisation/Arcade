@@ -52,7 +52,7 @@ class MinesweeperGame : public IGameModule {
     void createBoard();
     bool checkVictory(std::shared_ptr<IEntity> boardEntity);
     void loadDrawableAssets();
-    std::shared_ptr<DrawableComponent>
+    std::shared_ptr<IDrawableComponent>
         getDrawableAsset(const std::string& key) const;
     std::shared_ptr<IEventManager> _eventManager;
     std::shared_ptr<IComponentManager> _componentManager;

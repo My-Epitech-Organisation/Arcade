@@ -16,6 +16,7 @@
 #include "NCurses/NCursesColor.hpp"
 #include "Interface/IArcadeModule.hpp"
 #include "Models/ModuleInfos.hpp"
+#include "Interface/Display/IDrawableComponent.hpp"
 
 NCursesModule::~NCursesModule() {
     stop();
@@ -140,11 +141,14 @@ void NCursesModule::drawEntity(int x, int y, char symbol) {
     _entity.drawEntity(win, charX, charY, symbol, colorPair);
 }
 
-void NCursesModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
-    if (!drawable.isVisible)
+void NCursesModule::drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
+drawable) {
+    if (!drawable->isRenderable())
         return;
-    if (drawable.text.size() == 1) {
-        drawEntity(drawable.posX, drawable.posY, drawable.character);
+    if (drawable->getText().size() == 1) {
+        drawEntity(drawable->getPositionX(),
+            drawable->getPositionY(),
+            drawable->getCharacter());
     }
 }
 

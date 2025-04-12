@@ -43,7 +43,8 @@ class SFML : public Arcade::IDisplayModule {
     void refreshScreen() override;
     void pollEvents() override;
     bool isOpen() const override;
-    void drawDrawable(const Arcade::DrawableComponent& drawable) override;
+    void drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
+        drawable) override;
     const std::string& getName() const override;
     int getWidth() const override;
     int getHeight() const override;

@@ -28,6 +28,7 @@
     #include <functional>
     #include <atomic>
     #include "Interface/Display/IDisplayModule.hpp"
+    #include "Interface/Display/IDrawableComponent.hpp"
     #include "Models/ColorType.hpp"
 
 class ArcadeWidget : public QWidget {
@@ -173,6 +174,10 @@ class Qt5Module : public Arcade::IDisplayModule {
     void threadMain();
     void executeCommand(std::function<void()> command);
     void executeCommandAndWait(std::function<void()> command);
+    void drawEntity(int x, int y, char symbol);
+    void drawTexture(int x, int y, const std::string &textureId);
+    void drawText(const std::string &text, int x, int y,
+        Arcade::Color color);
 
  public:
     Qt5Module() : _name("Qt5"), _running(false),
@@ -182,12 +187,10 @@ class Qt5Module : public Arcade::IDisplayModule {
     void stop() override;
     void clearScreen() override;
     void refreshScreen() override;
-    void drawEntity(int x, int y, char symbol) override;
-    void drawTexture(int x, int y, const std::string &textureId) override;
-    void drawText(const std::string &text, int x, int y,
-        Arcade::Color color) override;
     void pollEvents() override;
     bool isOpen() const override;
+    void drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
+        drawable) override;
     const std::string& getName() const override;
     int getWidth() const override;
     int getHeight() const override;

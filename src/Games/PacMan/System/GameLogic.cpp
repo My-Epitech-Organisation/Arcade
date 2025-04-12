@@ -83,7 +83,7 @@ std::shared_ptr<PacmanComponent> pacman) {
                 }
             }
         }
-        auto ghostSpriteTemp = std::dynamic_pointer_cast<DrawableComponent>(
+        auto ghostSpriteTemp = std::dynamic_pointer_cast<IDrawableComponent>(
             _componentManager->getComponentByType(entity,
                 ComponentType::DRAWABLE));
         auto eyesAsset = _assets.find("ghosts.eyes");
@@ -99,7 +99,7 @@ std::shared_ptr<PacmanComponent> pacman) {
             ghostComp->setState(GhostState::NORMAL);
             ghostComp->setCurrentDirection(Direction::NONE);
 
-            auto ghostSprite = std::dynamic_pointer_cast<DrawableComponent>(
+            auto ghostSprite = std::dynamic_pointer_cast<IDrawableComponent>(
                 _componentManager->getComponentByType(entity,
                     ComponentType::DRAWABLE));
             if (ghostSprite) {
@@ -374,12 +374,13 @@ std::shared_ptr<PacmanComponent> pacman) {
                 posComp->y = startY + (newY * cellSize);
                 // Add this code to update the DrawableComponent
                 auto ghostDrawable
-                    = std::dynamic_pointer_cast<DrawableComponent>(
+                    = std::dynamic_pointer_cast<IDrawableComponent>(
                     _componentManager->getComponentByType(entity,
                         ComponentType::DRAWABLE));
                 if (ghostDrawable) {
-                    ghostDrawable->posX = startX + (newX * cellSize);
-                    ghostDrawable->posY = startY + (newY * cellSize);
+                    ghostDrawable->setPosition(
+                        startX + (newX * cellSize),
+                        startY + (newY * cellSize));
                 }
             }
             ghostComp->setCanMove(false);
@@ -458,35 +459,36 @@ void GameLogic::update() {
             }
             if (previousState == GhostState::SCARED &&
                 ghostComp->getState() == GhostState::NORMAL) {
-                auto ghostSprite = std::dynamic_pointer_cast<DrawableComponent>(
+                auto ghostSprite
+                    = std::dynamic_pointer_cast<IDrawableComponent>(
                     _componentManager->getComponentByType(entity,
                         ComponentType::DRAWABLE));
                 if (ghostSprite) {
                     switch (ghostComp->getGhostType()) {
                         case GhostType::RED:
-                            ghostSprite->path =
-                                "assets/pacman/ghost_red.png";
+                            ghostSprite->setPath(
+                                "assets/pacman/ghost_red.png");
                             ghostSprite->setAsTexture(
                                 "assets/pacman/ghost_red.png", 32, 32);
                             ghostSprite->setAsCharacter('r');
                             break;
                         case GhostType::PINK:
-                            ghostSprite->path =
-                                "assets/pacman/ghost_pink.png";
+                            ghostSprite->setPath(
+                                "assets/pacman/ghost_pink.png");
                             ghostSprite->setAsTexture(
                                 "assets/pacman/ghost_pink.png", 32, 32);
                             ghostSprite->setAsCharacter('i');
                             break;
                         case GhostType::BLUE:
-                            ghostSprite->path =
-                                "assets/pacman/ghost_cyan.png";
+                            ghostSprite->setPath(
+                                "assets/pacman/ghost_cyan.png");
                             ghostSprite->setAsTexture(
                                 "assets/pacman/ghost_cyan.png", 32, 32);
                             ghostSprite->setAsCharacter('c');
                             break;
                         case GhostType::ORANGE:
-                            ghostSprite->path =
-                                "assets/pacman/ghost_orange.png";
+                            ghostSprite->setPath(
+                                "assets/pacman/ghost_orange.png");
                             ghostSprite->setAsTexture(
                                 "assets/pacman/ghost_orange.png", 32, 32);
                             ghostSprite->setAsCharacter('o');
@@ -659,12 +661,12 @@ void GameLogic::movePacman() {
                 pacmanPosComp->x = startX + (newX * cellSize);
                 pacmanPosComp->y = startY + (newY * cellSize);
             }
-            auto pacmanDrawable = std::dynamic_pointer_cast<DrawableComponent>(
+            auto pacmanDrawable = std::dynamic_pointer_cast<IDrawableComponent>(
                 _componentManager->getComponentByType(pacmanEntity,
                     ComponentType::DRAWABLE));
             if (pacmanDrawable) {
-                pacmanDrawable->posX = startX + (newX * cellSize);
-                pacmanDrawable->posY = startY + (newY * cellSize);
+                pacmanDrawable->setPosition(startX + (newX * cellSize),
+                    startY + (newY * cellSize));
             }
         }
 
@@ -722,7 +724,7 @@ std::shared_ptr<GridComponent> grid) {
                     ghostComp->setState(GhostState::RETURNING);
                     pacman->addScore(200);
                     auto ghostSprite
-                        = std::dynamic_pointer_cast<DrawableComponent>(
+                        = std::dynamic_pointer_cast<IDrawableComponent>(
                         _componentManager->getComponentByType(entity,
                             ComponentType::DRAWABLE));
                     auto eyesAsset = getDrawableAsset("ghosts.eyes");
@@ -776,7 +778,7 @@ std::shared_ptr<GridComponent> grid) {
             pacman->addScore(foodComp->getPoints());
             grid->decrementFoodCount();
 
-            auto spriteComp = std::dynamic_pointer_cast<DrawableComponent>(
+            auto spriteComp = std::dynamic_pointer_cast<IDrawableComponent>(
                 _componentManager->getComponentByType(entity,
                     ComponentType::DRAWABLE));
 
@@ -802,7 +804,7 @@ std::shared_ptr<GridComponent> grid) {
                         ghostComp->resetStateTimer();
 
                         auto ghostSprite
-                            = std::dynamic_pointer_cast<DrawableComponent>(
+                            = std::dynamic_pointer_cast<IDrawableComponent>(
                             _componentManager->getComponentByType(e,
                                 ComponentType::DRAWABLE));
                         if (ghostSprite) {
@@ -840,7 +842,7 @@ void GameLogic::reloadCurrentMap() {
         if (foodComp) {
             foodComp->setEaten(false);
 
-            auto spriteComp = std::dynamic_pointer_cast<DrawableComponent>(
+            auto spriteComp = std::dynamic_pointer_cast<IDrawableComponent>(
                 _componentManager->getComponentByType(entity,
                     ComponentType::DRAWABLE));
 
@@ -901,12 +903,12 @@ void GameLogic::reloadCurrentMap() {
                     pacmanPosComp->y = startY + (y * cellSize);
                 }
                 auto pacmanDrawable
-                = std::dynamic_pointer_cast<DrawableComponent>(
+                = std::dynamic_pointer_cast<IDrawableComponent>(
                     _componentManager->getComponentByType(pacmanEntity,
                         ComponentType::DRAWABLE));
                 if (pacmanDrawable) {
-                    pacmanDrawable->posX = startX + (x * cellSize);
-                    pacmanDrawable->posY = startY + (y * cellSize);
+                    pacmanDrawable->setPosition(startX + (x * cellSize),
+                        startY + (y * cellSize));
                 }
             }
 
@@ -918,7 +920,7 @@ void GameLogic::reloadCurrentMap() {
                             static_cast<ComponentType>(1002)));
                     if (ghostComp) {
                         auto ghostDrawable
-                            = std::dynamic_pointer_cast<DrawableComponent>(
+                            = std::dynamic_pointer_cast<IDrawableComponent>(
                             _componentManager->getComponentByType(entity,
                                 ComponentType::DRAWABLE));
                         if (ghostDrawable) {
@@ -971,7 +973,7 @@ void GameLogic::reloadCurrentMap() {
                             }
 
                             // Ensure visibility
-                            ghostDrawable->isVisible = true;
+                            ghostDrawable->setVisibility(true);
                         }
                     }
                 }
@@ -1025,7 +1027,7 @@ void GameLogic::checkWinCondition(std::shared_ptr<GridComponent> grid) {
     }
 }
 
-std::shared_ptr<DrawableComponent>
+std::shared_ptr<IDrawableComponent>
 GameLogic::getDrawableAsset(const std::string& key) const {
     auto it = _assets.find(key);
     if (it != _assets.end()) {

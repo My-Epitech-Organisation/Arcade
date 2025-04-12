@@ -21,53 +21,47 @@ void UISystem::createUIEntities() {
     _minesTextEntity = _entityManager->createEntity("UI_MinesText");
     auto minesText = std::make_shared<DrawableComponent>();
     minesText->setAsText("Mines: 0", "./assets/fonts/Arial.ttf", 16.0f);
-    minesText->posX = 10;
-    minesText->posY = 10;
-    minesText->color = Color::BLACK;
+    minesText->setPosition(10, 10);
+    minesText->setColor(Color::BLACK);
     _componentManager->registerComponent(_minesTextEntity, minesText);
 
     _timeTextEntity = _entityManager->createEntity("UI_TimeText");
     auto timeText = std::make_shared<DrawableComponent>();
     timeText->setAsText("Time: 00:00", "./assets/fonts/Arial.ttf", 16.0f);
-    timeText->posX = 10;
-    timeText->posY = 40;
-    timeText->color = Color::BLACK;
+    timeText->setPosition(10, 40);
+    timeText->setColor(Color::BLACK);
     _componentManager->registerComponent(_timeTextEntity, timeText);
 
     _scoreTextEntity = _entityManager->createEntity("UI_ScoreText");
     auto scoreText = std::make_shared<DrawableComponent>();
     scoreText->setAsText("Score: 0", "./assets/fonts/Arial.ttf", 16.0f);
-    scoreText->posX = 10;
-    scoreText->posY = 70;
-    scoreText->color = Color::BLACK;
+    scoreText->setPosition(10, 70);
+    scoreText->setColor(Color::BLACK);
     _componentManager->registerComponent(_scoreTextEntity, scoreText);
 
     _gameOverTextEntity = _entityManager->createEntity("UI_GameOverText");
     auto gameOverText = std::make_shared<DrawableComponent>();
     gameOverText->setAsText("GAME OVER", "./assets/fonts/Arial.ttf", 24.0f);
-    gameOverText->posX = 350;
-    gameOverText->posY = 300;
-    gameOverText->color = Color::RED;
-    gameOverText->isVisible = false;
+    gameOverText->setPosition(350, 300);
+    gameOverText->setColor(Color::RED);
+    gameOverText->setVisibility(false);
     _componentManager->registerComponent(_gameOverTextEntity, gameOverText);
 
     _gameResultTextEntity = _entityManager->createEntity("UI_GameResultText");
     auto resultText = std::make_shared<DrawableComponent>();
     resultText->setAsText("", "./assets/fonts/Arial.ttf", 18.0f);
-    resultText->posX = 330;
-    resultText->posY = 330;
-    resultText->color = Color::GREEN;
-    resultText->isVisible = false;
+    resultText->setPosition(330, 330);
+    resultText->setColor(Color::GREEN);
+    resultText->setVisibility(false);
     _componentManager->registerComponent(_gameResultTextEntity, resultText);
 
     _restartTextEntity = _entityManager->createEntity("UI_RestartText");
     auto restartText = std::make_shared<DrawableComponent>();
     restartText->setAsText("Press 'R' to restart or ESC for menu",
         "./assets/fonts/Arial.ttf", 16.0f);
-    restartText->posX = 250;
-    restartText->posY = 360;
-    restartText->color = Color::WHITE;
-    restartText->isVisible = false;
+    restartText->setPosition(250, 360);
+    restartText->setColor(Color::WHITE);
+    restartText->setVisibility(false);
     _componentManager->registerComponent(_restartTextEntity, restartText);
 }
 
@@ -95,15 +89,15 @@ void UISystem::update() {
     auto minesTextComp = _componentManager->getComponentByType(
         _minesTextEntity, ComponentType::DRAWABLE);
     auto minesText
-        = std::dynamic_pointer_cast<DrawableComponent>(minesTextComp);
+        = std::dynamic_pointer_cast<IDrawableComponent>(minesTextComp);
     if (minesText)
         minesText->setAsText("Mines: "
             + std::to_string(gameStats->getRemainingMines()),
-            minesText->font, minesText->scale);
+            minesText->getFont(), minesText->getScale());
 
     auto timeTextComp = _componentManager->getComponentByType(
         _timeTextEntity, ComponentType::DRAWABLE);
-    auto timeText = std::dynamic_pointer_cast<DrawableComponent>(timeTextComp);
+    auto timeText = std::dynamic_pointer_cast<IDrawableComponent>(timeTextComp);
     if (timeText) {
         int seconds = gameStats->getTimeRemaining();
         int minutes = seconds / 60;
@@ -112,64 +106,65 @@ void UISystem::update() {
         std::stringstream timeStream;
         timeStream << "Time: " << std::setfill('0') << std::setw(2) << minutes
                    << ":" << std::setfill('0') << std::setw(2) << seconds;
-        timeText->setAsText(timeStream.str(), timeText->font, timeText->scale);
+        timeText->setAsText(timeStream.str(),
+            timeText->getFont(), timeText->getScale());
     }
 
     auto scoreTextComp = _componentManager->getComponentByType(
         _scoreTextEntity, ComponentType::DRAWABLE);
     auto scoreText
-        = std::dynamic_pointer_cast<DrawableComponent>(scoreTextComp);
+        = std::dynamic_pointer_cast<IDrawableComponent>(scoreTextComp);
     if (scoreText)
         scoreText->setAsText("Score: " + std::to_string(gameStats->getScore()),
-            scoreText->font, scoreText->scale);
+            scoreText->getFont(), scoreText->getScale());
 
     auto gameOverTextComp = _componentManager->getComponentByType(
         _gameOverTextEntity, ComponentType::DRAWABLE);
-    auto gameOverText = std::dynamic_pointer_cast<DrawableComponent>(
+    auto gameOverText = std::dynamic_pointer_cast<IDrawableComponent>(
         gameOverTextComp);
 
     auto resultTextComp = _componentManager->getComponentByType(
         _gameResultTextEntity, ComponentType::DRAWABLE);
     auto resultText
-        = std::dynamic_pointer_cast<DrawableComponent>(resultTextComp);
+        = std::dynamic_pointer_cast<IDrawableComponent>(resultTextComp);
 
     auto restartTextComp = _componentManager->getComponentByType(
         _restartTextEntity, ComponentType::DRAWABLE);
-    auto restartText = std::dynamic_pointer_cast<DrawableComponent>(
+    auto restartText = std::dynamic_pointer_cast<IDrawableComponent>(
         restartTextComp);
 
     if (board->isGameOver()) {
         if (gameOverText) {
             if (board->isGameWon()) {
                 gameOverText->setAsText("YOU WIN!!!",
-                    gameOverText->font, gameOverText->scale);
-                gameOverText->color = Color::GREEN;
+                    gameOverText->getFont(), gameOverText->getScale());
+                gameOverText->setColor(Color::GREEN);
             } else {
                 gameOverText->setAsText("GAME OVER",
-                    gameOverText->font, gameOverText->scale);
-                gameOverText->color = Color::RED;
+                    gameOverText->getFont(), gameOverText->getScale());
+                gameOverText->setColor(Color::RED);
             }
-            gameOverText->isVisible = true;
+            gameOverText->setVisibility(true);
         }
 
         if (resultText) {
             if (board->isGameWon()) {
                 resultText->setAsText("Final Score: "
                     + std::to_string(gameStats->getScore()),
-                    resultText->font, resultText->scale);
-                resultText->isVisible = true;
+                    resultText->getFont(), resultText->getScale());
+                resultText->setVisibility(true);
             } else {
-                resultText->isVisible = false;
+                resultText->setVisibility(false);
             }
         }
 
         if (restartText) {
-            restartText->isVisible = true;
+            restartText->setVisibility(true);
         }
     } else {
-        if (gameOverText) gameOverText->isVisible = false;
-        if (resultText) resultText->isVisible = false;
-        if (restartText) restartText->isVisible = false;
+        if (gameOverText) gameOverText->setVisibility(false);
+        if (resultText) resultText->setVisibility(false);
+        if (restartText) restartText->setVisibility(false);
     }
 }
 

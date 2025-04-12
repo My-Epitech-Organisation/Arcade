@@ -203,11 +203,11 @@ void EventSubSystem::handleKeyR() {
                 pacmanComp->setNextDirection(Direction::NONE);
             }
             // Make sure Pacman sprite is visible
-            auto pacmanDrawable = std::dynamic_pointer_cast<DrawableComponent>(
+            auto pacmanDrawable = std::dynamic_pointer_cast<IDrawableComponent>(
                 _componentManager->getComponentByType(entity,
                     ComponentType::DRAWABLE));
             if (pacmanDrawable) {
-                pacmanDrawable->isVisible = true;
+                pacmanDrawable->setVisibility(true);
                 // Reset to default sprite
                 auto pacmanAsset = _drawableAssets.find("pacman.default");
                 if (pacmanAsset != _drawableAssets.end()) {

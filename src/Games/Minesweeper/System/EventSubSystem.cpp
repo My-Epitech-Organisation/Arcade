@@ -140,11 +140,10 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
                             std::make_shared<Arcade::DrawableComponent>();
                         neighborRevealedSprite->setAsTexture
                             (neighborNumberSpritePath, 100.0f, 100.0f);
-                        neighborRevealedSprite->isVisible = true;
-                        neighborRevealedSprite->posX
-                            = static_cast<float>(neighborX * 100);
-                        neighborRevealedSprite->posY
-                            = static_cast<float>(neighborY * 100);
+                        neighborRevealedSprite->setPosition
+                            (static_cast<float>(neighborX * 100),
+                                static_cast<float>(neighborY * 100));
+                        neighborRevealedSprite->setVisibility(true);
                         _componentManager->registerComponent(neighborEntity,
                             neighborRevealedSprite);
                     } else {
@@ -152,9 +151,10 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
                             = std::make_shared<Arcade::DrawableComponent>();
                         emptySprite->setAsTexture
                             ("assets/minesweeper/revealed.png", 100.0f, 100.0f);
-                        emptySprite->isVisible = true;
-                        emptySprite->posX = static_cast<float>(neighborX * 100);
-                        emptySprite->posY = static_cast<float>(neighborY * 100);
+                        emptySprite->setPosition(
+                            static_cast<float>(neighborX * 100),
+                                static_cast<float>(neighborY * 100));
+                        emptySprite->setVisibility(true);
                         _componentManager->registerComponent(neighborEntity,
                             emptySprite);
                     }
@@ -247,14 +247,12 @@ int cellX, int cellY, std::shared_ptr<Arcade::Minesweeper::Board> board) {
                                     = std::make_shared
                                     <Arcade::DrawableComponent>
                                     (mineAsset->second);
-                                hiddenDrawable->posX
-                                    = static_cast<float>(sx * 100);
-                                hiddenDrawable->posY
-                                    = static_cast<float>(sy * 100);
-                                revealedDrawable->posX
-                                    = static_cast<float>(sx * 100);
-                                revealedDrawable->posY
-                                    = static_cast<float>(sy * 100);
+                                hiddenDrawable->setPosition
+                                    (static_cast<float>(sx * 100),
+                                        static_cast<float>(sy * 100));
+                                revealedDrawable->setPosition
+                                    (static_cast<float>(sx * 100),
+                                        static_cast<float>(sy * 100));
                                 auto bombComponent
                                     = std::make_shared
                                     <Minesweeper::BombComponent>(
@@ -371,9 +369,9 @@ void EventSubSystem::handleLeftClick() {
             if (bombSpriteAsset != _drawableAssets.end()) {
                 auto bombSprite = std::make_shared<Arcade::DrawableComponent>
                     (bombSpriteAsset->second);
-                bombSprite->isVisible = true;
-                bombSprite->posX = static_cast<float>(cellX * 100);
-                bombSprite->posY = static_cast<float>(cellY * 100);
+                bombSprite->setVisibility(true);
+                bombSprite->setPosition(static_cast<float>(cellX * 100),
+                    static_cast<float>(cellY * 100));
                 _componentManager->registerComponent(cellEntity, bombSprite);
                 bombComponent->reveal();
                 board->setGameOver(true);
@@ -393,9 +391,9 @@ void EventSubSystem::handleLeftClick() {
                 if (numberSpriteAsset != _drawableAssets.end()) {
                     auto revealedSprite = std::make_shared
                         <Arcade::DrawableComponent>(numberSpriteAsset->second);
-                    revealedSprite->isVisible = true;
-                    revealedSprite->posX = static_cast<float>(cellX * 100);
-                    revealedSprite->posY = static_cast<float>(cellY * 100);
+                    revealedSprite->setVisibility(true);
+                    revealedSprite->setPosition(static_cast<float>(cellX * 100),
+                        static_cast<float>(cellY * 100));
                     _componentManager->registerComponent
                         (cellEntity, revealedSprite);
                 }
@@ -404,9 +402,9 @@ void EventSubSystem::handleLeftClick() {
                 if (emptySpriteAsset != _drawableAssets.end()) {
                     auto emptySprite = std::make_shared
                         <Arcade::DrawableComponent>(emptySpriteAsset->second);
-                    emptySprite->isVisible = true;
-                    emptySprite->posX = static_cast<float>(cellX * 100);
-                    emptySprite->posY = static_cast<float>(cellY * 100);
+                    emptySprite->setVisibility(true);
+                    emptySprite->setPosition(static_cast<float>(cellX * 100),
+                        static_cast<float>(cellY * 100));
                     _componentManager->registerComponent
                         (cellEntity, emptySprite);
                 }
@@ -473,9 +471,9 @@ void EventSubSystem::handleRightClick() {
             if (flagSpriteAsset != _drawableAssets.end()) {
                 auto flagSprite = std::make_shared
                     <Arcade::DrawableComponent>(flagSpriteAsset->second);
-                flagSprite->isVisible = true;
-                flagSprite->posX = static_cast<float>(cellX * 100);
-                flagSprite->posY = static_cast<float>(cellY * 100);
+                flagSprite->setVisibility(true);
+                flagSprite->setPosition(static_cast<float>(cellX * 100),
+                    static_cast<float>(cellY * 100));
                 _componentManager->registerComponent(cellEntity, flagSprite);
                 if (gameStats)
                     gameStats->addFlag();
@@ -486,9 +484,9 @@ void EventSubSystem::handleRightClick() {
             if (hiddenSpriteAsset != _drawableAssets.end()) {
                 auto hiddenSprite = std::make_shared
                     <Arcade::DrawableComponent>(hiddenSpriteAsset->second);
-                hiddenSprite->isVisible = true;
-                hiddenSprite->posX = static_cast<float>(cellX * 100);
-                hiddenSprite->posY = static_cast<float>(cellY * 100);
+                hiddenSprite->setVisibility(true);
+                hiddenSprite->setPosition(static_cast<float>(cellX * 100),
+                    static_cast<float>(cellY * 100));
                 _componentManager->registerComponent(cellEntity, hiddenSprite);
                 if (gameStats)
                     gameStats->removeFlag();

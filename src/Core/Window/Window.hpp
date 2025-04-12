@@ -14,6 +14,7 @@
 #include <utility>
 #include "Shared/Interface/Core/IWindowModule.hpp"
 #include "Shared/Interface/Display/IDisplayModule.hpp"
+#include "Shared/Interface/Display/IDrawableComponent.hpp"
 #include "Shared/Models/KeysType.hpp"
 #include "Shared/Models/ColorType.hpp"
 #include "Shared/EventManager/KeyEvent/RawInputState.hpp"
@@ -136,7 +137,7 @@ class Window : public IWindowModule {
      * @return A shared pointer to the event manager.
      */
     std::shared_ptr<IEventManager> getEventManager() const;
-    void drawDrawable(const DrawableComponent& drawable);
+    void drawDrawable(std::shared_ptr<IDrawableComponent> drawable);
     void setTitle(const std::string &title) override {
         _title = title;
     };

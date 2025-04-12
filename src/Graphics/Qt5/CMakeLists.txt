@@ -13,6 +13,7 @@ set_target_properties(arcade_qt5 PROPERTIES PREFIX "" OUTPUT_NAME "arcade_qt5")
 target_include_directories(arcade_qt5 PUBLIC
     ${Qt5Widgets_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../..
     ${CMAKE_SOURCE_DIR}/src/Shared
 )
 

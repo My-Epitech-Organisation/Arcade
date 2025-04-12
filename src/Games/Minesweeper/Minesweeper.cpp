@@ -88,7 +88,7 @@ void MinesweeperGame::loadDrawableAssets() {
     }
 }
 
-std::shared_ptr<DrawableComponent> MinesweeperGame::getDrawableAsset(
+std::shared_ptr<IDrawableComponent> MinesweeperGame::getDrawableAsset(
 const std::string& key) const {
     auto it = _drawableAssets.find(key);
     if (it != _drawableAssets.end()) {
@@ -183,7 +183,7 @@ extern "C" {
 
     Arcade::ModuleInfos module_infos() {
         return {"Minesweeper", "IDK",
-            "IDK",
+            "./assets/textures/module_pictures/sfml.png",
             "./lib/arcade_minesweeper.so", Arcade::ModuleType::GAME};
     }
 }

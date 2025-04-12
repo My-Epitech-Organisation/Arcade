@@ -45,7 +45,7 @@ class GameLogic : public Arcade::ISystem {
       std::shared_ptr<Arcade::IEntityManager> _entityManager;
       std::chrono::high_resolution_clock::time_point _lastUpdateTime;
       const std::map<std::string, DrawableComponent>& _assets;
-      std::shared_ptr<DrawableComponent>
+      std::shared_ptr<IDrawableComponent>
          getDrawableAsset(const std::string& key) const;
 
       void movePacman();

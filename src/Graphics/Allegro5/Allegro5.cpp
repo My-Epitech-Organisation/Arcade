@@ -47,19 +47,21 @@ void Allegro5::refreshScreen() {
     al_flip_display();
 }
 
-void Allegro5::drawDrawable(const Arcade::DrawableComponent& drawable) {
-    if (!drawable.isVisible)
+void Allegro5::drawDrawable
+(std::shared_ptr<Arcade::IDrawableComponent> drawable) {
+    if (!drawable->isRenderable())
         return;
-
-    if (drawable.shouldRenderAsText()) {
-        drawText(drawable.text, static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.color);
-    } else if (drawable.shouldRenderAsTexture()) {
-        drawTexture(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.path);
-    } else if (drawable.shouldRenderAsCharacter()) {
-        drawEntity(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.character);
+    if (drawable->shouldRenderAsText()) {
+        drawText(drawable->getText(),
+            static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getColor());
+    } else if (drawable->shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getPath());
+    } else if (drawable->shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()),
+            drawable->getCharacter());
     }
 }
 

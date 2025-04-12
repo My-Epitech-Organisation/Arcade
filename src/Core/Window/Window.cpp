@@ -13,6 +13,7 @@
 #include "Core/Window/Window.hpp"
 #include "EventManager/KeyEvent/RawInputState.hpp"
 #include "Core/EventManager/EventManager.hpp"
+#include "Shared/Interface/Display/IDrawableComponent.hpp"
 
 namespace Arcade {
 
@@ -98,7 +99,7 @@ void Window::refreshScreen() {
     _displayModule->refreshScreen();
 }
 
-void Window::drawDrawable(const DrawableComponent& drawable) {
+void Window::drawDrawable(std::shared_ptr<IDrawableComponent> drawable) {
     if (_isShuttingDown || !_displayModule) return;
     _displayModule->drawDrawable(drawable);
 }

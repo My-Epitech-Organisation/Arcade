@@ -84,7 +84,7 @@ void PacmanGame::loadDrawableAssets() {
     }
 }
 
-std::shared_ptr<DrawableComponent> PacmanGame::getDrawableAsset(
+std::shared_ptr<IDrawableComponent> PacmanGame::getDrawableAsset(
 const std::string& key) const {
     auto it = _drawableAssets.find(key);
     if (it != _drawableAssets.end()) {

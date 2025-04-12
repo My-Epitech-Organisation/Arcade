@@ -17,6 +17,7 @@
     #include <string>
     #include <unordered_map>
     #include "Interface/Display/IDisplayModule.hpp"
+    #include "Interface/Display/IDrawableComponent.hpp"
     #include "Interface/Core/IWindowModule.hpp"
     #include "Allegro5Utils/Allegro5Window.hpp"
     #include "Allegro5Utils/Allegro5Event.hpp"
@@ -43,7 +44,8 @@
         void stop() override;
         void clearScreen() override;
         void refreshScreen() override;
-        void drawDrawable(const Arcade::DrawableComponent& drawable) override;
+        void drawDrawable(std::shared_ptr<Arcade::IDrawableComponent> drawable)
+            override;
         void pollEvents() override;
         bool isOpen() const override;
         const std::string& getName() const override;

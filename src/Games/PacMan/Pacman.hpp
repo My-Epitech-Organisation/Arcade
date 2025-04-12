@@ -51,7 +51,7 @@ class PacmanGame : public IGameModule {
     void createGame();
     void checkGameStatus();
     void loadDrawableAssets();
-    std::shared_ptr<DrawableComponent>
+    std::shared_ptr<IDrawableComponent>
       getDrawableAsset(const std::string& key) const;
     std::map<std::string, DrawableComponent> _drawableAssets;
     std::shared_ptr<IEventManager> _eventManager;

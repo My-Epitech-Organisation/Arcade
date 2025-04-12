@@ -61,7 +61,7 @@ class PacmanFactory {
         float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity);
     void createPacmanEntity(std::shared_ptr<GridComponent> grid,
         float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity);
-    std::shared_ptr<DrawableComponent>
+    std::shared_ptr<IDrawableComponent>
         getDrawableAsset(const std::string& key) const;
 };
 

@@ -57,8 +57,7 @@ size_t gridX, size_t gridY) {
         spriteComponent = std::make_shared<DrawableComponent>();
         spriteComponent->setAsTexture("assets/pacman/pacman.png", 32, 32);
     }
-    spriteComponent->posX = x;
-    spriteComponent->posY = y;
+    spriteComponent->setPosition(x, y);
     _componentManager->registerComponent(pacmanEntity, spriteComponent);
     auto pacmanComponent = std::make_shared<PacmanComponent>();
     pacmanComponent->setName("Pacman");
@@ -100,9 +99,8 @@ float y, size_t gridX, size_t gridY, GhostType type) {
         spriteComponent->setAsTexture(getGhostSpritePath(type), 32, 32);
         spriteComponent->setAsCharacter(getGhostCharacter(type));
     }
-    spriteComponent->posX = x;
-    spriteComponent->posY = y;
-    spriteComponent->isVisible = true;
+    spriteComponent->setPosition(x, y);
+    spriteComponent->setVisibility(true);
     _componentManager->registerComponent(ghostEntity, spriteComponent);
 
     auto ghostComponent = std::make_shared<GhostComponent>(type);
@@ -137,9 +135,8 @@ size_t gridX, size_t gridY, FoodType type) {
         spriteComponent->setAsCharacter
             (type == FoodType::POWER_PILL ? 'O' : '.');
     }
-    spriteComponent->posX = x;
-    spriteComponent->posY = y;
-    spriteComponent->isVisible = true;
+    spriteComponent->setPosition(x, y);
+    spriteComponent->setVisibility(true);
     _componentManager->registerComponent(foodEntity, spriteComponent);
     auto foodComponent = std::make_shared<FoodComponent>(type);
     foodComponent->setName(foodName);
@@ -162,9 +159,8 @@ size_t gridX, size_t gridY) {
         spriteComponent->setAsTexture("assets/pacman/wall.png", 32, 32);
         spriteComponent->setAsCharacter('#');
     }
-    spriteComponent->posX = x;
-    spriteComponent->posY = y;
-    spriteComponent->isVisible = true;
+    spriteComponent->setPosition(x, y);
+    spriteComponent->setVisibility(true);
     _componentManager->registerComponent(wallEntity, spriteComponent);
     return wallEntity;
 }
@@ -332,7 +328,7 @@ grid, float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity) {
     grid->setEntityAtCell(centerX, centerY, pacmanEntity);
 }
 
-std::shared_ptr<DrawableComponent>
+std::shared_ptr<IDrawableComponent>
 PacmanFactory::getDrawableAsset(const std::string& key) const {
     auto it = _assets.find(key);
     if (it != _assets.end()) {

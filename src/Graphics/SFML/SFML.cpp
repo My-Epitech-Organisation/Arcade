@@ -65,19 +65,24 @@ void SFML::drawTexture(int x, int y, const std::string& texturePath) {
     _window->draw(sprite);
 }
 
-void SFML::drawDrawable(const Arcade::DrawableComponent& drawable) {
-    if (!drawable.isVisible)
+void SFML::drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
+drawable) {
+    if (!drawable->isRenderable())
         return;
 
-    if (drawable.shouldRenderAsTexture()) {
-        drawTexture(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.path);
-    } else if (drawable.shouldRenderAsText()) {
-        drawText(drawable.text, static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.color);
-    } else if (drawable.shouldRenderAsCharacter()) {
-        drawEntity(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.character);
+    if (drawable->shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()),
+            drawable->getPath());
+    } else if (drawable->shouldRenderAsText()) {
+        drawText(drawable->getText(),
+            static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()),
+            drawable->getColor());
+    } else if (drawable->shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()),
+            drawable->getCharacter());
     }
 }
 

@@ -52,9 +52,8 @@ size_t gridX, size_t gridY, bool hasMine) {
 
     auto drawable = std::make_shared<DrawableComponent>();
     drawable->setAsTexture("assets/minesweeper/hidden.png", 100.0f, 100.0f);
-    drawable->posX = x;
-    drawable->posY = y;
-    drawable->isVisible = true;
+    drawable->setPosition(x, y);
+    drawable->setVisibility(true);
     _componentManager->registerComponent(cellEntity, drawable);
 
     if (hasMine) {
@@ -110,15 +109,15 @@ float startY, float cellSize) {
 
             auto drawableComp = _componentManager->getComponentByType
                 (cellEntity, ComponentType::DRAWABLE);
-            auto hiddenDrawable = std::dynamic_pointer_cast<DrawableComponent>
+            auto hiddenDrawable = std::dynamic_pointer_cast<IDrawableComponent>
                 (drawableComp);
 
             if (hiddenDrawable) {
                 auto revealedDrawable = std::make_shared<DrawableComponent>();
                 revealedDrawable->setAsTexture("assets/minesweeper/mine.png",
                     100.0f, 100.0f);
-                revealedDrawable->posX = hiddenDrawable->posX;
-                revealedDrawable->posY = hiddenDrawable->posY;
+                revealedDrawable->setPosition(hiddenDrawable->getPositionX(),
+                    hiddenDrawable->getPositionY());
 
                 auto bombComponent = std::make_shared<BombComponent>
                     (hiddenDrawable, revealedDrawable);

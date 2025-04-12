@@ -203,17 +203,17 @@ void GameLoop::updateGame() {
     if (_currentGame) {
         _currentGame->update();
         auto entities = _entityManager->getEntitiesMap();
-        std::vector<std::shared_ptr<DrawableComponent>> textComponents;
-        std::vector<std::shared_ptr<DrawableComponent>> textureComponents;
-        std::vector<std::shared_ptr<DrawableComponent>> characterComponents;
+        std::vector<std::shared_ptr<IDrawableComponent>> textComponents;
+        std::vector<std::shared_ptr<IDrawableComponent>> textureComponents;
+        std::vector<std::shared_ptr<IDrawableComponent>> characterComponents;
         for (const auto& [entityId, entityName] : entities) {
             auto components = _componentManager->getAllComponentsByType(
                 ComponentType::DRAWABLE);
             for (const auto& component : components) {
                 auto drawableComp
-                = std::dynamic_pointer_cast<DrawableComponent>(
+                = std::dynamic_pointer_cast<IDrawableComponent>(
                     component);
-                if (drawableComp.get() && drawableComp->isVisible) {
+                if (drawableComp.get() && drawableComp->isRenderable()) {
                     if (drawableComp->shouldRenderAsText()) {
                         if (drawableComp)
                             textComponents.push_back(drawableComp);
@@ -231,11 +231,11 @@ void GameLoop::updateGame() {
             }
         }
         for (auto& texture : textureComponents)
-            _currentGraphics->drawDrawable(*texture);
+            _currentGraphics->drawDrawable(texture);
         for (auto& character : characterComponents)
-            _currentGraphics->drawDrawable(*character);
+            _currentGraphics->drawDrawable(character);
         for (auto& text : textComponents)
-            _currentGraphics->drawDrawable(*text);
+            _currentGraphics->drawDrawable(text);
     } else {
         std::cout << "[DEBUG] No current game to update" << std::endl;
     }
@@ -490,7 +490,6 @@ void GameLoop::loadCommonComponents() {
             << e.what() << std::endl;
     }
 }
-
 void GameLoop::displayNameInput() {
     int centerX = _window->getWidth() / 2;
     int centerY = _window->getHeight() / 2;
@@ -498,33 +497,30 @@ void GameLoop::displayNameInput() {
     auto titleText = std::make_shared<DrawableComponent>();
     titleText->setAsText("ENTER YOUR NAME",
         "assets/fonts/arial.ttf", 30);
-    titleText->posX = centerX - 80;
-    titleText->posY = TITLE_Y;
-    titleText->color = Color::WHITE;
-    titleText->isVisible = true;
-    _currentGraphics->drawDrawable(*titleText);
+    titleText->setPosition(centerX - 80, TITLE_Y);
+    titleText->setColor(Color::WHITE);
+    titleText->setVisibility(true);
+    _currentGraphics->drawDrawable(titleText);
 
     auto inputText = std::make_shared<DrawableComponent>();
     inputText->setAsText(_inputPlayerName + "_",
         "assets/fonts/arial.ttf", 30);
-    inputText->posX = centerX - (inputText->text.length() * 5);
-    inputText->posY = centerY;
-    inputText->isVisible = true;
-    inputText->text = _inputPlayerName + "_";
-    inputText->color = Color::GREEN;
-    _currentGraphics->drawDrawable(*inputText);
+    // Calculate position based on text length
+    inputText->setPosition(centerX - (_inputPlayerName.length() * 5), centerY);
+    inputText->setVisibility(true);
+    inputText->setText(_inputPlayerName + "_");
+    inputText->setColor(Color::GREEN);
+    _currentGraphics->drawDrawable(inputText);
 
     auto instructionsText = std::make_shared<DrawableComponent>();
     instructionsText->setAsText("Press ENTER to confirm, ESC to cancel",
         "assets/fonts/arial.ttf", 20);
-    instructionsText->posX = centerX - 150;
-    instructionsText->posY = centerY + 60;
-    instructionsText->isVisible = true;
-    instructionsText->text = "Press ENTER to confirm, ESC to cancel";
-    instructionsText->color = Color::WHITE;
-    _currentGraphics->drawDrawable(*instructionsText);
+    instructionsText->setPosition(centerX - 150, centerY + 60);
+    instructionsText->setVisibility(true);
+    instructionsText->setText("Press ENTER to confirm, ESC to cancel");
+    instructionsText->setColor(Color::WHITE);
+    _currentGraphics->drawDrawable(instructionsText);
 }
-
 void GameLoop::changeState(std::shared_ptr<IGameState> newState) {
     // Implementation of state management
     // This would be used for more complex state transitions

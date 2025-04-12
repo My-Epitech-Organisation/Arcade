@@ -67,35 +67,43 @@ void SDLModule::refreshScreen() {
     _renderer.refreshScreen();
 }
 
-void SDLModule::drawDrawable(const Arcade::DrawableComponent& drawable) {
-    if (!drawable.isVisible)
+void SDLModule::drawDrawable
+(std::shared_ptr<Arcade::IDrawableComponent> drawable) {
+    if (!drawable->isRenderable())
         return;
 
-    if (drawable.shouldRenderAsText()) {
+    if (drawable->shouldRenderAsText()) {
         auto renderer = _renderer.getRenderer();
-        int fontSize = static_cast<int>(drawable.scale);
+        int fontSize = static_cast<int>(drawable->getScale());
         if (fontSize <= 0) fontSize = 24;
-        _text.drawText(renderer.get(), drawable.text,
-                      static_cast<int>(drawable.posX),
-                      static_cast<int>(drawable.posY),
-                      fontSize, drawable.color);
-    } else if (drawable.shouldRenderAsTexture()) {
+        _text.drawText(renderer.get(),
+                      drawable->getText(),
+                      static_cast<int>(drawable->getPositionX()),
+                      static_cast<int>(drawable->getPositionY()),
+                      fontSize,
+                      drawable->getColor());
+    } else if (drawable->shouldRenderAsTexture()) {
         auto renderer = _renderer.getRenderer();
 
-        auto surface = _surface.loadSurface(drawable.path);
+        auto surface = _surface.loadSurface(drawable->getPath());
         if (!surface)
             return;
         auto texture = _texture.createTexture(renderer.get(),
-            surface.get(), drawable.path);
+            surface.get(), drawable->getPath());
         if (!texture)
             return;
         _texture.renderTexture(renderer.get(), texture.get(),
-            drawable.posX,
-            drawable.posY);
-    } else if (drawable.shouldRenderAsCharacter()) {
+            drawable->getPositionX(),
+            drawable->getPositionY());
+    } else if (drawable->shouldRenderAsCharacter()) {
         auto renderer = _renderer.getRenderer();
-        _text.drawText(renderer.get(), drawable.text, drawable.posX,
-            drawable.posY, 24, drawable.color);
+        std::string charAsString(1, drawable->getCharacter());
+        _text.drawText(renderer.get(),
+                      charAsString,
+                      drawable->getPositionX(),
+                      drawable->getPositionY(),
+                      24,
+                      drawable->getColor());
     }
 }
 
