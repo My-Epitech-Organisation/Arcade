@@ -80,7 +80,8 @@ void UISystem::createUIEntities() {
     float y = 110.0f;
 
     for (int i = 0; i < 3; i++) {
-        Arcade::Entity lifeIcon = _entityManager->createEntity("UI_LifeIcon_"
+        std::shared_ptr<Arcade::IEntity> lifeIcon
+            = _entityManager->createEntity("UI_LifeIcon_"
             + std::to_string(i));
 
         auto posComp = std::make_shared<PositionComponent>(startX +
@@ -142,8 +143,8 @@ void UISystem::createUIEntities() {
 }
 
 void UISystem::update() {
-    Arcade::Entity pacmanEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> pacmanEntity = 0;
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Pacman") {
             pacmanEntity = entity;
             break;
@@ -164,8 +165,8 @@ void UISystem::update() {
 }
 
 void UISystem::updateUITexts() {
-    Arcade::Entity pacmanEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> pacmanEntity = 0;
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Pacman") {
             pacmanEntity = entity;
             break;
@@ -191,8 +192,8 @@ void UISystem::updateUITexts() {
         _componentManager->getComponentByType(_levelTextEntity,
             ComponentType::DRAWABLE));
     if (levelTextComp) {
-        Arcade::Entity gridEntity = 0;
-        for (const auto& [entity, name] : _entityManager->getEntities()) {
+        std::shared_ptr<Arcade::IEntity> gridEntity = 0;
+        for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
             if (name == "Grid") {
                 gridEntity = entity;
                 break;
@@ -207,8 +208,8 @@ void UISystem::updateUITexts() {
 }
 
 void UISystem::updateLivesIcons() {
-    Arcade::Entity pacmanEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> pacmanEntity = 0;
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Pacman") {
             pacmanEntity = entity;
             break;
@@ -252,8 +253,8 @@ void UISystem::updateLivesIcons() {
 }
 
 void UISystem::updateGameOverState() {
-    Arcade::Entity gridEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> gridEntity = 0;
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Grid") {
             gridEntity = entity;
             break;

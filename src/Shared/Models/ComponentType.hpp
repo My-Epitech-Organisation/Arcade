@@ -12,12 +12,26 @@
 enum class ComponentType {
     POSITION,
     VELOCITY,
-    SPRITE,
     BOMB,
     CELL,
     BOARD,
     TEXT,
     DRAWABLE,
+    COLLIDER,
+    ANIMATION,
+    CONSUMABLE,
+    INPUT,
+    TEXTURE,
+    BUTTON,
+    SNAKE,
+    SNAKE_HEAD,
+    SNAKE_SEGMENT,
+    SHIP,
+    ENEMIES,
+    WALL,
+    FIREBALL,
+    SHIP_MISSILES,
+    CUBES,
     CUSTOM_BASE = 1000
 };
 

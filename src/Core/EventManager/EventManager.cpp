@@ -149,7 +149,7 @@ void EventManager::publish(const IEvent& eventType) {
             }
             for (const auto& callback : callbacksToInvoke) {
                 if (callback) {
-                    callback();
+                    callback(eventType);
                 }
             }
         } else if (dynamic_cast<const KeyEvent*>(&eventType) != nullptr) {
@@ -162,7 +162,7 @@ void EventManager::publish(const IEvent& eventType) {
             }
             for (const auto& callback : callbacksToInvoke) {
                 if (callback) {
-                    callback();
+                    callback(eventType);
                 }
             }
         } else {

@@ -53,7 +53,7 @@ class NCursesModule : public Arcade::IDisplayModule {
  public:
     NCursesModule() : _name("NCurses") {}
     ~NCursesModule() override;
-    void init(float width, float height) override;
+    void init(const Arcade::IWindowModule& windowParam) override;
     void stop() override;
     void clearScreen() override;
     void refreshScreen() override;

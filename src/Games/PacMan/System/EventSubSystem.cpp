@@ -11,6 +11,8 @@
 #include <memory>
 #include <map>
 #include <string>
+#include "Shared/Interface/ECS/IEntity.hpp"
+#include "ECS/Entity/Entity.hpp"
 #include "Games/PacMan/System/EventSubSystem.hpp"
 #include "Games/PacMan/System/GameLogic.hpp"
 #include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
@@ -43,55 +45,61 @@ EventSubSystem::~EventSubSystem() {
 
 void EventSubSystem::subscribeToEvents() {
     Arcade::KeyEvent upKey(Arcade::Keys::UP, Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(upKey, [this]() {
+    _eventManager->subscribe(upKey, [this](const IEvent& event) {
+        (void)event;
         handleKeyUp();
     });
 
     Arcade::KeyEvent downKey(Arcade::Keys::DOWN,
         Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(downKey, [this]() {
+    _eventManager->subscribe(downKey, [this](const IEvent& event) {
+        (void)event;
         handleKeyDown();
     });
 
     Arcade::KeyEvent leftKey(Arcade::Keys::LEFT,
         Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(leftKey, [this]() {
+    _eventManager->subscribe(leftKey, [this](const IEvent& event) {
+        (void)event;
         handleKeyLeft();
     });
 
     Arcade::KeyEvent rightKey(Arcade::Keys::RIGHT,
         Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(rightKey, [this]() {
+    _eventManager->subscribe(rightKey, [this](const IEvent& event) {
+        (void)event;
         handleKeyRight();
     });
 
     Arcade::KeyEvent rKey(Arcade::Keys::R,
         Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(rKey, [this]() {
+    _eventManager->subscribe(rKey, [this](const IEvent& event) {
+        (void)event;
         handleKeyR();
     });
 }
 
-Arcade::Entity EventSubSystem::findPacmanEntity() const {
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+std::shared_ptr<Arcade::IEntity>
+EventSubSystem::findPacmanEntity() const {
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto component = _componentManager->getComponentByType(entity,
             static_cast<ComponentType>(1001));
         if (component)
             return entity;
     }
-    return 0;
+    return nullptr;
 }
 
 std::pair<std::shared_ptr<PacmanComponent>, std::shared_ptr<GridComponent>>
 EventSubSystem::getPacmanAndGridComponents() {
-    Arcade::Entity pacmanEntity = findPacmanEntity();
+    std::shared_ptr<IEntity> pacmanEntity = findPacmanEntity();
 
     auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
         _componentManager->getComponentByType(pacmanEntity,
             static_cast<ComponentType>(1001)));
 
-    Arcade::Entity gridEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    std::shared_ptr<IEntity> gridEntity = 0;
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto component = _componentManager->getComponentByType(entity,
             static_cast<ComponentType>(1000));
         if (component) {
@@ -162,25 +170,27 @@ void EventSubSystem::handleKeyRight() {
 }
 
 void EventSubSystem::handleKeyR() {
-    Arcade::Entity gridEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    std::shared_ptr<IEntity> gridEntity;
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Grid") {
             gridEntity = entity;
             break;
         }
     }
 
-    if (gridEntity != 0)
+    if (gridEntity->getId() == 0)
         return;
 
     auto gridComp = std::dynamic_pointer_cast<GridComponent>(
         _componentManager->getComponentByType(gridEntity,
             static_cast<ComponentType>(1000)));
 
+    if (!gridComp) return;
+
     gridComp->setGameOver(false);
     gridComp->setGameWon(false);
-
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    // Reset Pacman state
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Pacman") {
             auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
                 _componentManager->getComponentByType(entity,
@@ -192,6 +202,22 @@ void EventSubSystem::handleKeyR() {
                 pacmanComp->setCurrentDirection(Direction::NONE);
                 pacmanComp->setNextDirection(Direction::NONE);
             }
+            // Make sure Pacman sprite is visible
+            auto pacmanDrawable = std::dynamic_pointer_cast<DrawableComponent>(
+                _componentManager->getComponentByType(entity,
+                    ComponentType::DRAWABLE));
+            if (pacmanDrawable) {
+                pacmanDrawable->isVisible = true;
+                // Reset to default sprite
+                auto pacmanAsset = _drawableAssets.find("pacman.default");
+                if (pacmanAsset != _drawableAssets.end()) {
+                    *pacmanDrawable = pacmanAsset->second;
+                } else {
+                    pacmanDrawable->
+                        setAsTexture("assets/pacman/pacman.png", 32, 32);
+                    pacmanDrawable->setAsCharacter('C');
+                }
+            }
             break;
         }
     }
@@ -199,6 +225,12 @@ void EventSubSystem::handleKeyR() {
     auto gameLogic = std::make_shared<GameLogic>(_componentManager,
         _entityManager, _drawableAssets);
     gameLogic->reloadCurrentMap();
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
+        if (name == "Grid") {
+            gridComp->setFoodCount(gridComp->getTotalFoodCount());
+            break;
+        }
+    }
 }
 
 void EventSubSystem::update() {

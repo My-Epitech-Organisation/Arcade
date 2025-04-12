@@ -14,6 +14,7 @@
     #include <unordered_map>
     #include <SFML/Graphics.hpp>
     #include "Interface/Display/IDisplayModule.hpp"
+    #include "Interface/Core/IWindowModule.hpp"
     #include "Models/ColorType.hpp"
 
 class SFML : public Arcade::IDisplayModule {
@@ -36,7 +37,7 @@ class SFML : public Arcade::IDisplayModule {
  public:
     SFML() : _name("SFML") {}
     ~SFML() override;
-    void init(float width = 800.f, float height = 600.f) override;
+    void init(const Arcade::IWindowModule& windowParam) override;
     void stop() override;
     void clearScreen() override;
     void refreshScreen() override;

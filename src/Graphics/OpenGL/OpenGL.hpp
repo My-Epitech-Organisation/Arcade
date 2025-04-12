@@ -12,6 +12,7 @@
     #include <utility>
     #include <string>
     #include "Interface/Display/IDisplayModule.hpp"
+    #include "Interface/Core/IWindowModule.hpp"
     #include "OpenGLUtils/OpenGLWindow.hpp"
     #include "OpenGLUtils/OpenGLEvent.hpp"
     #include "OpenGLUtils/OpenGLText.hpp"
@@ -36,7 +37,7 @@ class OpenGLModule : public Arcade::IDisplayModule {
  public:
     OpenGLModule();
     ~OpenGLModule() override;
-    void init(float width = 800.f, float height = 600.f) override;
+    void init(const Arcade::IWindowModule& windowParam) override;
     void stop() override;
     void clearScreen() override;
     void refreshScreen() override;

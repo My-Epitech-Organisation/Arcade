@@ -18,6 +18,7 @@
 #include "Games/Minesweeper/System/EventSubSystem.hpp"
 #include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
 #include "Shared/EventManager/KeyEvent/MouseEvent.hpp"
+#include "Shared/Interface/Core/IEvent.hpp"
 #include "Shared/Models/EventType.hpp"
 #include "Shared/Models/KeysType.hpp"
 #include "Shared/Models/MouseButtonType.hpp"
@@ -51,18 +52,21 @@ EventSubSystem::~EventSubSystem() {
 void EventSubSystem::subscribeToEvents() {
     Arcade::MouseEvent leftClick(Arcade::MouseButton::LEFT,
         Arcade::EventType::MOUSE_BUTTON_PRESSED, 0, 0);
-    _eventManager->subscribe(leftClick, [this]() {
+    _eventManager->subscribe(leftClick, [this](const IEvent& event) {
+        (void)event;
         handleLeftClick();
     });
 
     Arcade::MouseEvent rightClick(Arcade::MouseButton::RIGHT,
         Arcade::EventType::MOUSE_BUTTON_PRESSED, 0, 0);
-    _eventManager->subscribe(rightClick, [this]() {
+    _eventManager->subscribe(rightClick, [this](const IEvent& event) {
+        (void)event;
         handleRightClick();
     });
 
     Arcade::KeyEvent rKey(Arcade::Keys::R, Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(rKey, [this]() {
+    _eventManager->subscribe(rKey, [this](const IEvent& event) {
+        (void)event;
         handleKeyR();
     });
 }
@@ -77,8 +81,8 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
     cellsToReveal.push({cellX, cellY});
     processedCells.insert({cellX, cellY});
 
-    Arcade::Entity boardEntity = 0;
-    for (const auto& entity : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> boardEntity = 0;
+    for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;
@@ -108,7 +112,7 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
                     if (processedCells.count({neighborX,
                         neighborY}) > 0) continue;
 
-                    Arcade::Entity neighborEntity =
+                    std::shared_ptr<Arcade::IEntity> neighborEntity =
                         board->getCellEntity(neighborX, neighborY);
                     if (neighborEntity == 0) continue;
 
@@ -306,8 +310,8 @@ int cellX, int cellY, std::shared_ptr<Arcade::Minesweeper::Board> board) {
 
 void EventSubSystem::handleLeftClick() {
     auto [mouseX, mouseY] = _eventManager->getMousePosition();
-    Arcade::Entity boardEntity = 0;
-    for (const auto& entity : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> boardEntity = 0;
+    for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;
@@ -335,7 +339,8 @@ void EventSubSystem::handleLeftClick() {
 
     if (cellX >= 0 && cellX < static_cast<int>(boardWidth) &&
         cellY >= 0 && cellY < static_cast<int>(boardHeight)) {
-        Arcade::Entity cellEntity = board->getCellEntity(cellX, cellY);
+        std::shared_ptr<Arcade::IEntity> cellEntity
+            = board->getCellEntity(cellX, cellY);
         if (cellEntity == 0) return;
 
         auto cellComp = _componentManager->getComponentByType(cellEntity,
@@ -417,8 +422,8 @@ void EventSubSystem::handleLeftClick() {
 void EventSubSystem::handleRightClick() {
     auto [mouseX, mouseY] = _eventManager->getMousePosition();
 
-    Arcade::Entity boardEntity = 0;
-    for (const auto& entity : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> boardEntity = 0;
+    for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;
@@ -446,7 +451,8 @@ void EventSubSystem::handleRightClick() {
     int cellY = (mouseY - boardStartY) / cellSize;
     if (cellX >= 0 && cellX < static_cast<int>(boardWidth) &&
         cellY >= 0 && cellY < static_cast<int>(boardHeight)) {
-        Arcade::Entity cellEntity = board->getCellEntity(cellX, cellY);
+        std::shared_ptr<Arcade::IEntity> cellEntity
+            = board->getCellEntity(cellX, cellY);
         if (cellEntity == 0) return;
 
         auto cellComp = _componentManager->getComponentByType(cellEntity,
@@ -493,8 +499,8 @@ void EventSubSystem::handleRightClick() {
 
 void EventSubSystem::handleKeyR() {
     _firstClick = true;
-    Arcade::Entity boardEntity = -1;
-    for (const auto& entity : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> boardEntity = nullptr;
+    for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;
@@ -532,7 +538,8 @@ void EventSubSystem::handleKeyR() {
 
     for (size_t y = 0; y < height; y++) {
         for (size_t x = 0; x < width; x++) {
-            Arcade::Entity cellEntity = board->getCellEntity(x, y);
+            std::shared_ptr<Arcade::IEntity> cellEntity
+                = board->getCellEntity(x, y);
             if (cellEntity == 0) continue;
 
             auto components = _componentManager->getEntityComponents

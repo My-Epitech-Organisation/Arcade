@@ -204,7 +204,7 @@ void GameLoop::displayGraphicsSelection() {
 void GameLoop::updateGame() {
     if (_currentGame) {
         _currentGame->update();
-        auto entities = _entityManager->getEntities();
+        auto entities = _entityManager->getEntitiesMap();
         std::vector<std::shared_ptr<DrawableComponent>> textComponents;
         std::vector<std::shared_ptr<DrawableComponent>> textureComponents;
         std::vector<std::shared_ptr<DrawableComponent>> characterComponents;
@@ -419,7 +419,7 @@ void GameLoop::loadGraphicsLibraries() {
         }
 
         if (_entityManager) {
-            auto entities = _entityManager->getEntities();
+            auto entities = _entityManager->getEntitiesMap();
             for (const auto& entity : entities) {
                 _entityManager->destroyEntity(entity.first);
             }

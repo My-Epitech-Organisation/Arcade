@@ -17,6 +17,7 @@
     #include <string>
     #include <vector>
     #include "Interface/Display/IDisplayModule.hpp"
+    #include "Interface/Core/IWindowModule.hpp"
     #include "Models/ColorType.hpp"
     #include "Models/MouseButtonType.hpp"
     #include "SDLUtils/SDLWindow.hpp"
@@ -44,7 +45,7 @@ class SDLModule : public Arcade::IDisplayModule {
  public:
     SDLModule() : _name("SDL2") {}
     ~SDLModule() override;
-    void init(float width = 800.f, float height = 600.f) override;
+    void init(const Arcade::IWindowModule& windowParam) override;
     void stop() override;
     void clearScreen() override;
     void refreshScreen() override;

@@ -78,9 +78,9 @@ int NCursesModule::charToPixelY(int y) const {
     return y * 20;
 }
 
-void NCursesModule::init(float width, float height) {
-    _windowWidth = static_cast<int>(width);
-    _windowHeight = static_cast<int>(height);
+void NCursesModule::init(const Arcade::IWindowModule& windowParam) {
+    _windowWidth = static_cast<int>(windowParam.getWidth());
+    _windowHeight = static_cast<int>(windowParam.getHeight());
 
     try {
         _window.createWindow(_windowWidth, _windowHeight);

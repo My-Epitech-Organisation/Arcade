@@ -10,6 +10,7 @@
 #define SRC_GAMES_PACMAN_COMPONENTS_GHOSTCOMPONENT_HPP_
 
 #include <string>
+#include <memory>
 #include <vector>
 #include "Shared/Interface/ECS/IComponent.hpp"
 #include "Shared/Models/ComponentType.hpp"

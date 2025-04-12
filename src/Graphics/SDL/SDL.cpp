@@ -21,7 +21,7 @@ SDLModule::~SDLModule() {
     stop();
 }
 
-void SDLModule::init(float x, float y) {
+void SDLModule::init(const Arcade::IWindowModule& windowParam) {
     if (_initialized)
         return;
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -39,12 +39,12 @@ void SDLModule::init(float x, float y) {
         throw std::runtime_error("SDL_ttf could not initialize! SDL_ttf Error: "
             + std::string(TTF_GetError()));
     }
-    int width = static_cast<int>(x);
-    int height = static_cast<int>(y);
+    int width = static_cast<int>(windowParam.getWidth());
+    int height = static_cast<int>(windowParam.getHeight());
     _window.createWindow(width, height);
     _renderer.createRenderer(_window.getWindow());
-    _windowWidth = static_cast<int>(x);
-    _windowHeight = static_cast<int>(y);
+    _windowWidth = static_cast<int>(width);
+    _windowHeight = static_cast<int>(height);
     _initialized = true;
 }
 

@@ -25,7 +25,7 @@ _height(600),
 _title("Arcade"),
 _isShuttingDown(false) {
     if (_displayModule)
-        _displayModule->init(_width, _height);
+        _displayModule->init(*this);
 }
 
 Window::~Window() {
@@ -65,7 +65,7 @@ void Window::createWindow(int width, int height, const std::string &title) {
     _height = height;
     _title = title;
     if (_displayModule)
-        _displayModule->init(width, height);
+        _displayModule->init(*this);
 }
 
 void Window::resizeWindow(int width, int height) {
@@ -74,7 +74,7 @@ void Window::resizeWindow(int width, int height) {
     _height = height;
     if (_displayModule) {
         _displayModule->stop();
-        _displayModule->init(width, height);
+        _displayModule->init(*this);
     }
 }
 
@@ -152,7 +152,7 @@ void Window::initializeNewDisplayModule(
 std::shared_ptr<IDisplayModule> displayModule) {
     _displayModule = std::move(displayModule);
     try {
-        _displayModule->init(_width, _height);
+        _displayModule->init(*this);
     } catch (const std::exception& e) {
         std::cerr << "Exception during display module initialization: "
                   << e.what() << std::endl;

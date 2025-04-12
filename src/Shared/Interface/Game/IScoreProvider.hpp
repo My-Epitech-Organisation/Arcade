@@ -18,6 +18,11 @@ class IScoreProvider {
     virtual void resetScore() = 0;
     virtual void setScore(int score) = 0;
     virtual std::string getFormattedScore() const = 0;
+    virtual void addToScore(int add) = 0;
+    virtual void setName(const std::string& name) = 0;
+    virtual std::string getName() const = 0;
+    virtual void saveToFile(const std::string& filename,
+        const std::string& gamename) const = 0;
 };
 }  // namespace Arcade
 #endif  // SRC_SHARED_INTERFACE_GAME_ISCOREPROVIDER_HPP_

@@ -57,7 +57,7 @@
      public:
         GTKModule();
         ~GTKModule() override;
-        void init(float width = 800.f, float height = 600.f) override;
+        void init(const Arcade::IWindowModule& windowParam) override;
         void stop() override;
         void clearScreen() override;
         void refreshScreen() override;

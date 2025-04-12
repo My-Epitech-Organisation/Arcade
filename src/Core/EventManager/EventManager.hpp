@@ -196,13 +196,16 @@ class EventManager : public IEventManager {
     * @throws InputException if there's an error during mouse position update
     */
     void updateMousePosition(const RawInputState& state);
-    void safeInvokeCallbacks(const std::vector<Callback>& callbacks) {
+    void safeInvokeCallbacks(const std::vector<Callback>& callbacks,
+    const IEvent& event) {
         for (const auto& callback : callbacks) {
             if (callback) {
-                callback();
+                callback(event);
             }
         }
     }
+    void resetKeys() override {};
+    void setKeyState(Keys key) override {};
 };
 
 }  // namespace Arcade

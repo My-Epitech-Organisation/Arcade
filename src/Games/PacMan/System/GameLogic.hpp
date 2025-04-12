@@ -34,8 +34,8 @@ class GameLogic : public Arcade::ISystem {
       void reloadCurrentMap();
 
  private:
-      Arcade::Entity findPacmanEntity();
-      Arcade::Entity findGridEntity();
+      std::shared_ptr<IEntity> findPacmanEntity();
+      std::shared_ptr<IEntity> findGridEntity();
       std::pair<std::shared_ptr<PacmanComponent>,
          std::shared_ptr<GridComponent>>
       getPacmanAndGridComponents();
@@ -64,9 +64,16 @@ class GameLogic : public Arcade::ISystem {
       float _currentDeltaTime = 0.0f;
       void updateDeltaTime();
       void moveGhost(std::shared_ptr<GhostComponent> ghostComp,
-         Arcade::Entity entity,
+         std::shared_ptr<IEntity> entity,
          std::shared_ptr<GridComponent> grid,
          std::shared_ptr<PacmanComponent> pacman);
+
+      std::shared_ptr<IEntity> _cachedPacmanEntity = 0;
+      std::shared_ptr<IEntity> _cachedGridEntity = 0;
+      std::shared_ptr<PacmanComponent> _cachedPacmanComponent = nullptr;
+      std::shared_ptr<GridComponent> _cachedGridComponent = nullptr;
+      // Function to initialize the cached entities
+      void initializeEntityCache();
 };
 
 }  // namespace PacMan

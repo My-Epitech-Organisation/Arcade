@@ -16,6 +16,7 @@
 #include "Shared/Interface/Game/IGameModule.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "Shared/Interface/ECS/IEntityManager.hpp"
+#include "Shared/Interface/ECS/IEntity.hpp"
 #include "Shared/Interface/ECS/ISystem.hpp"
 #include "Shared/Interface/Core/IEventManager.hpp"
 #include "Games/Minesweeper/System/EventSubSystem.hpp"
@@ -42,10 +43,14 @@ class MinesweeperGame : public IGameModule {
     bool hasWon() const override;
     void stop() override;
     int getScore() const override;
+    void setScoreProvider(
+        std::shared_ptr<IScoreProvider> scoreProvider) override {
+          _scoreProvider = scoreProvider;
+        }
 
  private:
     void createBoard();
-    bool checkVictory(Arcade::Entity boardEntity);
+    bool checkVictory(std::shared_ptr<IEntity> boardEntity);
     void loadDrawableAssets();
     std::shared_ptr<DrawableComponent>
         getDrawableAsset(const std::string& key) const;
@@ -54,6 +59,7 @@ class MinesweeperGame : public IGameModule {
     std::shared_ptr<IEntityManager> _entityManager;
     std::shared_ptr<EventSubSystem> _eventSystem;
     std::vector<std::shared_ptr<ISystem>> _systems;
+    std::shared_ptr<IScoreProvider> _scoreProvider;
     std::map<std::string, DrawableComponent> _drawableAssets;
     bool _gameOver;
     bool _gameWon;

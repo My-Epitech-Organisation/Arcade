@@ -173,7 +173,6 @@
           },
           "lives": {
             "text": "Lives: ",
-            "path": "assets/pacman/pacman.png",
             "char": "L",
             "width": 32,
             "height": 32

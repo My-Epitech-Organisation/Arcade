@@ -204,7 +204,7 @@ class YourGraphicsLibModule : public Arcade::IDisplayModule {
     ~YourGraphicsLibModule() override;
 
     // Required interface methods
-    void init(float width = 800.f, float height = 600.f) override;
+    void init(const Arcade::IWindowModule& windowParam) override;
     void stop() override;
     void clearScreen() override;
     void refreshScreen() override;

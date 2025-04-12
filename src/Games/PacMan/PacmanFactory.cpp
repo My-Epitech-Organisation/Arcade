@@ -19,8 +19,10 @@
 namespace Arcade {
 namespace PacMan {
 
-Arcade::Entity PacmanFactory::createGrid(size_t width, size_t height) {
-Arcade::Entity gridEntity = _entityManager->createEntity("Grid");
+std::shared_ptr<Arcade::IEntity>
+PacmanFactory::createGrid(size_t width, size_t height) {
+    std::shared_ptr<Arcade::IEntity> gridEntity
+    = _entityManager->createEntity("Grid");
 
     float screenWidth = 800.0f;
     float screenHeight = 600.0f;
@@ -44,9 +46,10 @@ Arcade::Entity gridEntity = _entityManager->createEntity("Grid");
     return gridEntity;
 }
 
-Arcade::Entity PacmanFactory::createPacman(float x, float y,
+std::shared_ptr<Arcade::IEntity> PacmanFactory::createPacman(float x, float y,
 size_t gridX, size_t gridY) {
-    Arcade::Entity pacmanEntity = _entityManager->createEntity("Pacman");
+    std::shared_ptr<Arcade::IEntity> pacmanEntity
+        = _entityManager->createEntity("Pacman");
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(pacmanEntity, positionComponent);
     auto spriteComponent = getDrawableAsset("pacman.default");
@@ -65,7 +68,7 @@ size_t gridX, size_t gridY) {
     return pacmanEntity;
 }
 
-Arcade::Entity PacmanFactory::createGhost(float x,
+std::shared_ptr<Arcade::IEntity> PacmanFactory::createGhost(float x,
 float y, size_t gridX, size_t gridY, GhostType type) {
     std::string ghostName;
     std::string assetKey;
@@ -87,7 +90,8 @@ float y, size_t gridX, size_t gridY, GhostType type) {
             assetKey = "ghosts.orange";
             break;
     }
-    Arcade::Entity ghostEntity = _entityManager->createEntity(ghostName);
+    std::shared_ptr<Arcade::IEntity> ghostEntity
+        = _entityManager->createEntity(ghostName);
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(ghostEntity, positionComponent);
     auto spriteComponent = getDrawableAsset(assetKey);
@@ -110,14 +114,15 @@ float y, size_t gridX, size_t gridY, GhostType type) {
     return ghostEntity;
 }
 
-Arcade::Entity PacmanFactory::createFood(float x, float y,
+std::shared_ptr<Arcade::IEntity> PacmanFactory::createFood(float x, float y,
 size_t gridX, size_t gridY, FoodType type) {
     std::string foodName = type == FoodType::POWER_PILL ? "PowerPill" : "Food";
     std::string assetKey = type == FoodType::POWER_PILL
         ? "map.power_pellet" : "map.food";
     foodName += "_" + std::to_string(gridX) + "_" + std::to_string(gridY);
 
-    Arcade::Entity foodEntity = _entityManager->createEntity(foodName);
+    std::shared_ptr<Arcade::IEntity> foodEntity
+        = _entityManager->createEntity(foodName);
 
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(foodEntity, positionComponent);
@@ -143,11 +148,12 @@ size_t gridX, size_t gridY, FoodType type) {
     return foodEntity;
 }
 
-Arcade::Entity PacmanFactory::createWall(float x, float y,
+std::shared_ptr<Arcade::IEntity> PacmanFactory::createWall(float x, float y,
 size_t gridX, size_t gridY) {
     std::string wallName = "Wall_" + std::to_string(gridX)
     + "_" + std::to_string(gridY);
-    Arcade::Entity wallEntity = _entityManager->createEntity(wallName);
+    std::shared_ptr<Arcade::IEntity> wallEntity
+        = _entityManager->createEntity(wallName);
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(wallEntity, positionComponent);
     auto spriteComponent = getDrawableAsset("map.wall");
@@ -194,7 +200,7 @@ char PacmanFactory::getGhostCharacter(GhostType type) {
 }
 
 void PacmanFactory::initializeGame(float cellSize) {
-    Arcade::Entity gridEntity = createGrid(28, 31);
+    std::shared_ptr<Arcade::IEntity> gridEntity = createGrid(28, 31);
     auto gridComp = std::dynamic_pointer_cast<GridComponent>(
         _componentManager->getComponentByType(gridEntity,
             static_cast<ComponentType>(1000)));
@@ -212,7 +218,7 @@ void PacmanFactory::initializeGame(float cellSize) {
 }
 
 void PacmanFactory::createFoodEntities(std::shared_ptr<GridComponent>
-grid, float cellSize, Arcade::Entity gridEntity) {
+grid, float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity) {
     auto posComp = std::dynamic_pointer_cast<PositionComponent>(
         _componentManager->getComponentByType(gridEntity,
             ComponentType::POSITION));
@@ -226,13 +232,14 @@ grid, float cellSize, Arcade::Entity gridEntity) {
             if (cellType == CellType::FOOD) {
                 float foodX = startX + (x * cellSize);
                 float foodY = startY + (y * cellSize);
-                Arcade::Entity foodEntity = createFood(foodX,
+                std::shared_ptr<Arcade::IEntity> foodEntity = createFood(foodX,
                     foodY, x, y, FoodType::NORMAL_DOT);
                 grid->setEntityAtCell(x, y, foodEntity);
             } else if (cellType == CellType::POWER_PILL) {
                 float foodX = startX + (x * cellSize);
                 float foodY = startY + (y * cellSize);
-                Arcade::Entity foodEntity = createFood(foodX, foodY,
+                std::shared_ptr<Arcade::IEntity> foodEntity
+                    = createFood(foodX, foodY,
                     x, y, FoodType::POWER_PILL);
                 grid->setEntityAtCell(x, y, foodEntity);
             }
@@ -241,7 +248,7 @@ grid, float cellSize, Arcade::Entity gridEntity) {
 }
 
 void PacmanFactory::createWallEntities(std::shared_ptr<GridComponent> grid,
-float cellSize, Arcade::Entity gridEntity) {
+float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity) {
     auto posComp = std::dynamic_pointer_cast<PositionComponent>(
         _componentManager->getComponentByType(gridEntity,
             ComponentType::POSITION));
@@ -254,7 +261,8 @@ float cellSize, Arcade::Entity gridEntity) {
             if (grid->getCellType(x, y) == CellType::WALL) {
                 float wallX = startX + (x * cellSize);
                 float wallY = startY + (y * cellSize);
-                Arcade::Entity wallEntity = createWall(wallX, wallY, x, y);
+                std::shared_ptr<Arcade::IEntity> wallEntity
+                    = createWall(wallX, wallY, x, y);
                 grid->setEntityAtCell(x, y, wallEntity);
             }
         }
@@ -262,7 +270,7 @@ float cellSize, Arcade::Entity gridEntity) {
 }
 
 void PacmanFactory::createGhostEntities(std::shared_ptr<GridComponent>
-grid, float cellSize, Arcade::Entity gridEntity) {
+grid, float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity) {
     auto posComp = std::dynamic_pointer_cast<PositionComponent>(
         _componentManager->getComponentByType(gridEntity,
             ComponentType::POSITION));
@@ -285,14 +293,15 @@ grid, float cellSize, Arcade::Entity gridEntity) {
         auto [x, y] = ghostSpawns[i];
         float ghostX = startX + (x * cellSize);
         float ghostY = startY + (y * cellSize);
-        Arcade::Entity ghostEntity = createGhost(ghostX, ghostY,
+        std::shared_ptr<Arcade::IEntity> ghostEntity
+            = createGhost(ghostX, ghostY,
             x, y, types[i]);
         grid->setEntityAtCell(x, y, ghostEntity);
     }
 }
 
 void PacmanFactory::createPacmanEntity(std::shared_ptr<GridComponent>
-grid, float cellSize, Arcade::Entity gridEntity) {
+grid, float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity) {
     auto posComp = std::dynamic_pointer_cast<PositionComponent>(
         _componentManager->getComponentByType(gridEntity,
             ComponentType::POSITION));
@@ -305,7 +314,8 @@ grid, float cellSize, Arcade::Entity gridEntity) {
             if (grid->getCellType(x, y) == CellType::PACMAN_SPAWN) {
                 float pacmanX = startX + (x * cellSize);
                 float pacmanY = startY + (y * cellSize);
-                Arcade::Entity pacmanEntity = createPacman(pacmanX,
+                std::shared_ptr<Arcade::IEntity> pacmanEntity
+                    = createPacman(pacmanX,
                     pacmanY, x, y);
                 grid->setEntityAtCell(x, y, pacmanEntity);
                 return;
@@ -317,7 +327,7 @@ grid, float cellSize, Arcade::Entity gridEntity) {
     size_t centerY = grid->getHeight() / 2;
     float pacmanX = startX + (centerX * cellSize);
     float pacmanY = startY + (centerY * cellSize);
-    Arcade::Entity pacmanEntity = createPacman(pacmanX,
+    std::shared_ptr<Arcade::IEntity> pacmanEntity = createPacman(pacmanX,
         pacmanY, centerX, centerY);
     grid->setEntityAtCell(centerX, centerY, pacmanEntity);
 }

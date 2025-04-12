@@ -14,6 +14,7 @@
 #include "SFML/SFMLColor.hpp"
 #include "Interface/IArcadeModule.hpp"
 #include "Models/ModuleInfos.hpp"
+#include "Shared/Interface/Core/IWindowModule.hpp"
 
 SFML::~SFML() {
     _window.reset();
@@ -21,9 +22,9 @@ SFML::~SFML() {
     _textures.clear();
 }
 
-void SFML::init(float x, float y) {
-    int width = static_cast<int>(x);
-    int height = static_cast<int>(y);
+void SFML::init(const Arcade::IWindowModule& windowParam) {
+    int width = static_cast<int>(windowParam.getWidth());
+    int height = static_cast<int>(windowParam.getHeight());
     createWindow(width, height);
     _windowWidth = width;
     _windowHeight = height;

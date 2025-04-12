@@ -31,12 +31,12 @@ class UISystem : public Arcade::ISystem {
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
     std::shared_ptr<Arcade::IEntityManager> _entityManager;
 
-    Arcade::Entity _minesTextEntity;
-    Arcade::Entity _timeTextEntity;
-    Arcade::Entity _scoreTextEntity;
-    Arcade::Entity _gameOverTextEntity;
-    Arcade::Entity _gameResultTextEntity;
-    Arcade::Entity _restartTextEntity;
+    std::shared_ptr<IEntity> _minesTextEntity;
+    std::shared_ptr<IEntity> _timeTextEntity;
+    std::shared_ptr<IEntity> _scoreTextEntity;
+    std::shared_ptr<IEntity> _gameOverTextEntity;
+    std::shared_ptr<IEntity> _gameResultTextEntity;
+    std::shared_ptr<IEntity> _restartTextEntity;
 
     void createUIEntities();
     void updateUIEntities();

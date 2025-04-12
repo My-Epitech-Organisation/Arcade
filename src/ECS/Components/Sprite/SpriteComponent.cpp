@@ -10,7 +10,7 @@
 #include "Shared/Models/ModuleInfos.hpp"
 
 ComponentType SpriteComponent::getType() const {
-    return ComponentType::SPRITE;
+    return ComponentType::TEXTURE;
 }
 
 extern "C" {

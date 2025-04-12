@@ -72,8 +72,8 @@ void UISystem::createUIEntities() {
 }
 
 void UISystem::update() {
-    Arcade::Entity boardEntity = 0;
-    for (const auto& entity : _entityManager->getEntities()) {
+    std::shared_ptr<IEntity> boardEntity = 0;
+    for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;

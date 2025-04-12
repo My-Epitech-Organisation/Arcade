@@ -18,6 +18,7 @@
     #include <vector>
     #include "Shared/Interface/ECS/ISystemManager.hpp"
 
+namespace Arcade {
 /**
  * @class SystemManager
  * @brief Manages and updates game systems.
@@ -35,18 +36,33 @@ class SystemManager : public Arcade::ISystemManager {
      *
      * @param system A pointer to an ISystem instance to be managed.
      */
-    void registerSystem(Arcade::ISystem* system);
+    void registerSystem(std::shared_ptr<Arcade::ISystem> system);
 
-    void removeSystem(Arcade::ISystem* system);
+    void removeSystem(std::shared_ptr<Arcade::ISystem> system);
     /**
      * @brief Updates all registered systems.
      *
      * This method iterates through the stored systems and calls their update function.
      */
     void updateSystems();
+    /**
+     * @brief Clears all registered systems.
+     *
+     * This method removes all systems from the manager.
+     */
+    void clearSystems();
+    /**
+     * @brief Retrieves the list of registered systems.
+     *
+     * @return A constant reference to a vector containing pointers to all managed systems.
+     */
+    const std::vector<std::shared_ptr<Arcade::ISystem>>&
+    getSystems() const override {
+        return _systems;
+    };
 
  private:
-    std::vector<Arcade::ISystem*> _systems;  ///< List of managed systems.
+    std::vector<std::shared_ptr<Arcade::ISystem>> _systems;
 };
-
+}  // namespace Arcade
 #endif  // SRC_ECS_SYSTEM_SYSTEMMANAGER_HPP_
