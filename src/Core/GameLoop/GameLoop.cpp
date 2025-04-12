@@ -210,13 +210,8 @@ void GameLoop::updateGame() {
         std::vector<std::shared_ptr<IDrawableComponent>> textureComponents;
         std::vector<std::shared_ptr<IDrawableComponent>> characterComponents;
         for (const auto& [entityId, entityName] : entities) {
-            std::cout << "[DEBUG] Entity ID: " << entityId
-                << ", Name: " << entityName << std::endl;
             auto components = _componentManager->getAllComponentsByType(
                 ComponentType::DRAWABLE);
-            std::cout << "[DEBUG] Found " << components.size()
-                << " drawable components for entity " << entityId
-                << std::endl;
             for (const auto& component : components) {
                 auto drawableComp
                 = std::dynamic_pointer_cast<IDrawableComponent>(
@@ -244,8 +239,6 @@ void GameLoop::updateGame() {
             _currentGraphics->drawDrawable(character);
         for (auto& text : textComponents)
             _currentGraphics->drawDrawable(text);
-    } else {
-        std::cout << "[DEBUG] No current game to update" << std::endl;
     }
 }
 
