@@ -45,7 +45,20 @@ class ArcadeWidget : public QWidget {
 
     void setBuffer(QPixmap* buffer) {
         _buffer = buffer;
-    }
+    }This pull request includes various changes to the `pacman.json` configuration, updates to the `EventManager` class, and enhancements to the `GameLoop` class. The most important changes are listed below:
+
+### Configuration Updates:
+* [`config/pacman.json`](diffhunk://#diff-e070e577ed3db784ce1b615174577720889ec093fc8424e4c0593732feaf6130L14-L93): Refactored the sprite configuration by replacing arrays with individual keys for each direction's frames. This change simplifies the structure and improves readability.
+
+### Event Management Enhancements:
+* `src/Core/EventManager/EventManager.cpp` and `src/Core/EventManager/EventManager.hpp`: Added new methods such as `unsubscribe`, `resetKeys`, `setKeyState`, `unsubscribeAll(const IEvent&)`, and `isEventSubscribed`. These methods improve the flexibility and robustness of event handling. [[1]](diffhunk://#diff-e2f7ad02bba9723d2f1bbde4bb4cdd696978bdcbc589da0f92d1a8966a0f53f6R174-R196) [[2]](diffhunk://#diff-e2f7ad02bba9723d2f1bbde4bb4cdd696978bdcbc589da0f92d1a8966a0f53f6R238-R251) [[3]](diffhunk://#diff-8ba0c4695d41aa367519e62a2a21991590bec7cd294d249f251279c676005ebbR129-R149)
+
+### Game Loop Improvements:
+* [`src/Core/GameLoop/GameLoop.cpp`](diffhunk://#diff-0aa13d329ef2b43294aadb69c518a792a5a3d283b548a95bf8cf1e3194f14fc6L95-L130): Refactored the `run` method to improve error handling and performance tracking, and added new member variables to track frame time and performance. The `handleState` method now marks the component cache for refresh when the state changes. [[1]](diffhunk://#diff-0aa13d329ef2b43294aadb69c518a792a5a3d283b548a95bf8cf1e3194f14fc6L95-L130) [[2]](diffhunk://#diff-0aa13d329ef2b43294aadb69c518a792a5a3d283b548a95bf8cf1e3194f14fc6L139-R148) [[3]](diffhunk://#diff-0aa13d329ef2b43294aadb69c518a792a5a3d283b548a95bf8cf1e3194f14fc6L44-R55)
+
+### Codebase Simplification:
+* [`docs/HowToImplementThings.md`](diffhunk://#diff-c287a10ad9ceb750bad7f11dc1e69607e4cbb9dc63f9f291681fe14f66e73358L207-R207): Updated the `init` method signature in the graphics library module example to use `Arcade::IWindowModule` instead of width and height parameters.
+* [`src/Core/CMakeLists.txt`](diffhunk://#diff-055c2f01762e09108db37267dbdfc4197784aa1377f5c5e038a389728ab6a2edL32-R37): Added `arcade_score` to the list of linked libraries to ensure proper linkage and coverage.
 
  protected:
     void paintEvent(QPaintEvent*) override {
@@ -84,7 +97,20 @@ class ArcadeWidget : public QWidget {
 class ArcadeEventFilter : public QObject {
     Q_OBJECT
 
- private:
+ private:This pull request includes various changes to the `pacman.json` configuration, updates to the `EventManager` class, and enhancements to the `GameLoop` class. The most important changes are listed below:
+
+### Configuration Updates:
+* [`config/pacman.json`](diffhunk://#diff-e070e577ed3db784ce1b615174577720889ec093fc8424e4c0593732feaf6130L14-L93): Refactored the sprite configuration by replacing arrays with individual keys for each direction's frames. This change simplifies the structure and improves readability.
+
+### Event Management Enhancements:
+* `src/Core/EventManager/EventManager.cpp` and `src/Core/EventManager/EventManager.hpp`: Added new methods such as `unsubscribe`, `resetKeys`, `setKeyState`, `unsubscribeAll(const IEvent&)`, and `isEventSubscribed`. These methods improve the flexibility and robustness of event handling. [[1]](diffhunk://#diff-e2f7ad02bba9723d2f1bbde4bb4cdd696978bdcbc589da0f92d1a8966a0f53f6R174-R196) [[2]](diffhunk://#diff-e2f7ad02bba9723d2f1bbde4bb4cdd696978bdcbc589da0f92d1a8966a0f53f6R238-R251) [[3]](diffhunk://#diff-8ba0c4695d41aa367519e62a2a21991590bec7cd294d249f251279c676005ebbR129-R149)
+
+### Game Loop Improvements:
+* [`src/Core/GameLoop/GameLoop.cpp`](diffhunk://#diff-0aa13d329ef2b43294aadb69c518a792a5a3d283b548a95bf8cf1e3194f14fc6L95-L130): Refactored the `run` method to improve error handling and performance tracking, and added new member variables to track frame time and performance. The `handleState` method now marks the component cache for refresh when the state changes. [[1]](diffhunk://#diff-0aa13d329ef2b43294aadb69c518a792a5a3d283b548a95bf8cf1e3194f14fc6L95-L130) [[2]](diffhunk://#diff-0aa13d329ef2b43294aadb69c518a792a5a3d283b548a95bf8cf1e3194f14fc6L139-R148) [[3]](diffhunk://#diff-0aa13d329ef2b43294aadb69c518a792a5a3d283b548a95bf8cf1e3194f14fc6L44-R55)
+
+### Codebase Simplification:
+* [`docs/HowToImplementThings.md`](diffhunk://#diff-c287a10ad9ceb750bad7f11dc1e69607e4cbb9dc63f9f291681fe14f66e73358L207-R207): Updated the `init` method signature in the graphics library module example to use `Arcade::IWindowModule` instead of width and height parameters.
+* [`src/Core/CMakeLists.txt`](diffhunk://#diff-055c2f01762e09108db37267dbdfc4197784aa1377f5c5e038a389728ab6a2edL32-R37): Added `arcade_score` to the list of linked libraries to ensure proper linkage and coverage.
     std::reference_wrapper<std::unordered_map<int, bool>> _keyStates;
     std::reference_wrapper<std::unordered_map<int, bool>> _mouseButtonStates;
     std::reference_wrapper<std::pair<size_t, size_t>> _mousePosition;
@@ -187,6 +213,7 @@ class Qt5Module : public Arcade::IDisplayModule {
     void stop() override;
     void clearScreen() override;
     void refreshScreen() override;
+    void drawDrawable(const Arcade::DrawableComponent& drawable) override;
     void pollEvents() override;
     bool isOpen() const override;
     void drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
