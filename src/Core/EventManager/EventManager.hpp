@@ -145,8 +145,27 @@ class EventManager : public IEventManager {
     */
     void setKeyPressed(Keys key, bool pressed);
 
+    bool isEventSubscribed(const IEvent& event) const {
+        // Check if there are any subscriptions for this event type
+        auto it = _subscribers.find(std::make_pair(event.getType(), event.getKey()));
+        if (it == _subscribers.end()) {
+            return false;
+        }
+        
+        // Check if this specific event has subscribers
+        for (const auto& callback : it->second) {
+            if (callback) {
+                return true; // If there's a valid callback, the event is subscribed
+            }
+        }
+        return false;
+    }
+    
+    void unsubscribeByCallback(const std::function<void(const IEvent&)>& callback) {
+        // Not implemented, but would be useful to unsubscribe specific callbacks
+    }
 
-
+    void unsubscribe(Keys key, EventType eventType);
 
  private:
    /**

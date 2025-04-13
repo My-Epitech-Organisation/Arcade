@@ -52,19 +52,20 @@ EventSubSystem::~EventSubSystem() {
 void EventSubSystem::subscribeToEvents() {
     Arcade::MouseEvent leftClick(Arcade::MouseButton::LEFT,
         Arcade::EventType::MOUSE_BUTTON_PRESSED, 0, 0);
+    Arcade::MouseEvent rightClick(Arcade::MouseButton::RIGHT,
+        Arcade::EventType::MOUSE_BUTTON_PRESSED, 0, 0);
+    Arcade::KeyEvent rKey(Arcade::Keys::R, Arcade::EventType::KEY_PRESSED);
+    _eventManager->unsubscribeAll(rKey);
+    _eventManager->unsubscribeAll(leftClick);
+    _eventManager->unsubscribeAll(rightClick);
     _eventManager->subscribe(leftClick, [this](const IEvent& event) {
         (void)event;
         handleLeftClick();
     });
-
-    Arcade::MouseEvent rightClick(Arcade::MouseButton::RIGHT,
-        Arcade::EventType::MOUSE_BUTTON_PRESSED, 0, 0);
     _eventManager->subscribe(rightClick, [this](const IEvent& event) {
         (void)event;
         handleRightClick();
     });
-
-    Arcade::KeyEvent rKey(Arcade::Keys::R, Arcade::EventType::KEY_PRESSED);
     _eventManager->subscribe(rKey, [this](const IEvent& event) {
         (void)event;
         handleKeyR();
@@ -307,24 +308,36 @@ int cellX, int cellY, std::shared_ptr<Arcade::Minesweeper::Board> board) {
 }
 
 void EventSubSystem::handleLeftClick() {
+    // Find the board entity
     auto [mouseX, mouseY] = _eventManager->getMousePosition();
-    std::shared_ptr<Arcade::IEntity> boardEntity = 0;
+    std::shared_ptr<Arcade::IEntity> boardEntity = nullptr;
     for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;
         }
     }
+
+    // Check if board is in game over state
     auto boardComp = _componentManager->getComponentByType(boardEntity,
         ComponentType::BOARD);
-    auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>
-        (boardComp);
-
+    auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>(boardComp);
+    
+    if (!board) return;
+    
+    // If game is over, clicking anywhere should restart the game
+    if (board->isGameOver()) {
+        handleKeyR();  // Use existing reset functionality
+        return;
+    }
+    
+    // Proceed with normal click handling
     auto posComp = _componentManager->getComponentByType(boardEntity,
         ComponentType::POSITION);
     auto boardPos = std::dynamic_pointer_cast<PositionComponent>(posComp);
 
-    if (!board || !boardPos) return;
+    if (!boardPos) return;
+    
     size_t boardWidth = board->getWidth();
     size_t boardHeight = board->getHeight();
 
@@ -357,6 +370,14 @@ void EventSubSystem::handleLeftClick() {
         }
 
         cell->setState(Arcade::Minesweeper::Cell::REVEALED);
+
+        // IMPORTANT: Remove any existing drawable component before adding a new one
+        auto existingDrawable = _componentManager->getComponentByType(cellEntity,
+            ComponentType::DRAWABLE);
+        if (existingDrawable) {
+            _componentManager->unregisterComponent(cellEntity, 
+                typeid(*existingDrawable).name());
+        }
 
         auto bombComp = _componentManager->getComponentByType(cellEntity,
             ComponentType::BOMB);
@@ -465,6 +486,14 @@ void EventSubSystem::handleRightClick() {
         auto gameStats = std::dynamic_pointer_cast
             <Arcade::Minesweeper::GameStats> (statsComp);
 
+        // IMPORTANT: Remove any existing drawable component first
+        auto existingDrawable = _componentManager->getComponentByType(cellEntity,
+            ComponentType::DRAWABLE);
+        if (existingDrawable) {
+            _componentManager->unregisterComponent(cellEntity, 
+                typeid(*existingDrawable).name());
+        }
+
         if (cell->getState() == Arcade::Minesweeper::Cell::HIDDEN) {
             cell->setState(Arcade::Minesweeper::Cell::FLAGGED);
             auto flagSpriteAsset = _drawableAssets.find("cell.flag");
@@ -554,9 +583,48 @@ void EventSubSystem::handleKeyR() {
     Arcade::Minesweeper::MinesweeperFactory factory(_entityManager,
         _componentManager);
     factory.initializeGame(boardEntity, boardX, boardY, cellSize);
+
+    // Re-subscribe to events after reset
+    subscribeToEvents();
 }
 
 void EventSubSystem::update() {
-    // std::cout << "EventSubSystem update" << std::endl;
+    // Check if we need to resubscribe events
+    static bool wasGameOver = false;
+    
+    std::shared_ptr<Arcade::IEntity> boardEntity = nullptr;
+    for (const auto& entity : _entityManager->getEntitiesMap()) {
+        if (entity.second == "Board") {
+            boardEntity = entity.first;
+            break;
+        }
+    }
+    
+    if (boardEntity) {
+        auto boardComp = _componentManager->getComponentByType(boardEntity,
+            ComponentType::BOARD);
+        auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>(boardComp);
+        
+        if (board) {
+            bool isGameOver = board->isGameOver();
+            
+            // If game state changed, ensure events are properly subscribed
+            if (wasGameOver != isGameOver) {
+                wasGameOver = isGameOver;
+                // Keep subscriptions active even in game over state
+                if (isGameOver) {
+                    // When game ends, ensure R key is still subscribed
+                    Arcade::KeyEvent rKey(Arcade::Keys::R, Arcade::EventType::KEY_PRESSED);
+                    _eventManager->subscribe(rKey, [this](const IEvent& event) {
+                        (void)event;
+                        handleKeyR();
+                    });
+                } else {
+                    // Re-subscribe all events when game is active
+                    subscribeToEvents();
+                }
+            }
+        }
+    }
 }
 }  // namespace Arcade

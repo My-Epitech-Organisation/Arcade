@@ -73,6 +73,9 @@ void UISystem::update() {
             break;
         }
     }
+    
+    if (!boardEntity) return;
+    
     auto statsComp = _componentManager->getComponentByType(
         boardEntity, ComponentType::CUSTOM_BASE);
     auto gameStats = std::dynamic_pointer_cast
@@ -118,6 +121,7 @@ void UISystem::update() {
         scoreText->setAsText("Score: " + std::to_string(gameStats->getScore()),
             scoreText->getFont(), scoreText->getScale());
 
+    // Handle game over/win state UI
     auto gameOverTextComp = _componentManager->getComponentByType(
         _gameOverTextEntity, ComponentType::DRAWABLE);
     auto gameOverText = std::dynamic_pointer_cast<IDrawableComponent>(
@@ -125,8 +129,8 @@ void UISystem::update() {
 
     auto resultTextComp = _componentManager->getComponentByType(
         _gameResultTextEntity, ComponentType::DRAWABLE);
-    auto resultText
-        = std::dynamic_pointer_cast<IDrawableComponent>(resultTextComp);
+    auto resultText = std::dynamic_pointer_cast<IDrawableComponent>(
+        resultTextComp);
 
     auto restartTextComp = _componentManager->getComponentByType(
         _restartTextEntity, ComponentType::DRAWABLE);
@@ -134,24 +138,31 @@ void UISystem::update() {
         restartTextComp);
 
     if (board->isGameOver()) {
+        // Make game over text more visible and centered
         if (gameOverText) {
             if (board->isGameWon()) {
-                gameOverText->setAsText("YOU WIN!!!",
-                    gameOverText->getFont(), gameOverText->getScale());
+                gameOverText->setAsText("YOU WIN!!!", 
+                    "./assets/fonts/Arial.ttf", 36);
                 gameOverText->setColor(Color::GREEN);
             } else {
-                gameOverText->setAsText("GAME OVER",
-                    gameOverText->getFont(), gameOverText->getScale());
+                gameOverText->setAsText("GAME OVER", 
+                    "./assets/fonts/Arial.ttf", 36);
                 gameOverText->setColor(Color::RED);
             }
+            
+            // Center the text on screen
+            auto width = 200; // Approximate text width
+            gameOverText->setPosition(350 - width/2, 250);
             gameOverText->setVisibility(true);
         }
 
         if (resultText) {
             if (board->isGameWon()) {
-                resultText->setAsText("Final Score: "
+                resultText->setAsText("Final Score: " 
                     + std::to_string(gameStats->getScore()),
-                    resultText->getFont(), resultText->getScale());
+                    "./assets/fonts/Arial.ttf", 24);
+                resultText->setPosition(330, 300);
+                resultText->setColor(Color::GREEN);
                 resultText->setVisibility(true);
             } else {
                 resultText->setVisibility(false);
@@ -159,9 +170,14 @@ void UISystem::update() {
         }
 
         if (restartText) {
+            restartText->setAsText("Press 'R' to restart or ESC for menu", 
+                "./assets/fonts/Arial.ttf", 20);
+            restartText->setPosition(250, 350);
+            restartText->setColor(Color::WHITE);
             restartText->setVisibility(true);
         }
     } else {
+        // Hide all game over UI elements when game is active
         if (gameOverText) gameOverText->setVisibility(false);
         if (resultText) resultText->setVisibility(false);
         if (restartText) restartText->setVisibility(false);

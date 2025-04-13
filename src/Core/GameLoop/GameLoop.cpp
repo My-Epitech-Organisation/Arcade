@@ -43,7 +43,12 @@ _gameLoader("."),
 _menuLoader("./lib/arcade_menu.so"),
 _inputPlayerName(""),
 _scoreManager(std::make_shared<ScoreManager>()),
-_gameSwitch(false) {
+_gameSwitch(false),
+_needComponentRefresh(true),
+_lastFrameTime(std::chrono::high_resolution_clock::now()),
+_lastPerformanceReport(std::chrono::high_resolution_clock::now()),
+_frameCount(0),
+_totalFrameTime(0) {
     _eventManager = std::make_shared<EventManager>();
     _entityManager = std::make_shared<EntityManager>();
     _componentManager = std::make_shared<ComponentManager>();
@@ -95,42 +100,6 @@ GameLoop::~GameLoop() {
     _eventManager.reset();
 }
 
-void GameLoop::run() {
-    try {
-        auto running = std::make_shared<bool>(true);
-        auto lastFrameTime = std::chrono::high_resolution_clock::now();
-
-        while (*running) {
-            auto currentTime = std::chrono::high_resolution_clock::now();
-            float deltaTime = std::chrono::duration<float>
-                (currentTime - lastFrameTime).count();
-            lastFrameTime = currentTime;
-            handleEvents(running);
-            if (!*running) break;
-            _window->clearScreen();
-            handleState();
-            _window->refreshScreen();
-            std::this_thread::sleep_for(std::chrono::milliseconds(16));
-        }
-        cleanup();
-    } catch (const GraphicsException& e) {
-        std::cerr << "Graphics error during game loop: "
-                  << e.what() << std::endl;
-    } catch (const GameException& e) {
-        std::cerr << "Game error during game loop: " << e.what() << std::endl;
-    } catch (const InputException& e) {
-        std::cerr << "Input error during game loop: " << e.what() << std::endl;
-    } catch (const LibraryLoadException& e) {
-        std::cerr << "Library error during game loop: "
-                  << e.what() << std::endl;
-    } catch (const ArcadeException& e) {
-        std::cerr << "Error during game loop: " << e.what() << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "Unexpected error during game loop: "
-                  << e.what() << std::endl;
-    }
-}
-
 void GameLoop::handleEvents(std::shared_ptr<bool> running) {
     _window->pollEvents();
     if (!_window->isWindowOpen()) {
@@ -139,20 +108,46 @@ void GameLoop::handleEvents(std::shared_ptr<bool> running) {
 }
 
 void GameLoop::handleState() {
-    if (_gameSwitch && _state == GAME_PLAYING) {
-        _gameSwitch = false;
-        switchGameInGame();
-    }
-
+    // Mark component cache for refresh when state changes
     static auto previousState = MAIN_MENU;
-
+    
     if (_state != previousState) {
-        if (!(_state == GAME_PLAYING && previousState != GAME_PLAYING))
+        std::cout << "GameLoop: State changed from " << previousState << " to " << _state << std::endl;
+        _needComponentRefresh = true;
+        
+        // Don't unsubscribe all when entering or staying in GAME_PLAYING
+        if (previousState == GAME_PLAYING) {
+            // We're leaving the game state
+            std::cout << "GameLoop: Leaving game state, stopping current game" << std::endl;
+            
+            // More aggressive cleanup when leaving game state
+            if (_currentGame) {
+                try {
+                    _currentGame->stop();
+                    _currentGame = nullptr;
+                } catch (...) {
+                    std::cerr << "Error stopping current game" << std::endl;
+                }
+            }
+            
+            // Unsubscribe all events to start fresh
             _eventManager->unsubscribeAll();
+        }
 
         switch (_state) {
             case NAME_INPUT:
                 subscribeNameInputEvents();
+                break;
+            case GRAPHICS_SELECTION:
+                subscribeEvents();
+                subscribeNavEvents();
+                subscribeMouseEvents();
+                subscribeEscEvent();             // Subscribe to all main events first         // Graphics switching
+                break;
+            case GAME_SELECTION:
+                subscribeEvents();
+                subscribeNavEvents();
+                subscribeMouseEvents();
                 break;
             case MAIN_MENU:
                 subscribeEvents();
@@ -160,8 +155,10 @@ void GameLoop::handleState() {
                 subscribeMouseEvents();
                 break;
             case GAME_PLAYING:
-                if (previousState != GAME_PLAYING)
-                    subscribeEscEvent();
+                // IMPORTANT FIX: Subscribe to all relevant game events explicitly
+                subscribeEvents();
+                subscribeEscEvent();             // Subscribe to all main events first         // Graphics switching
+                std::cout << "GameLoop: All game events subscribed" << std::endl;
                 break;
             default:
                 subscribeNavEvents();
@@ -171,21 +168,26 @@ void GameLoop::handleState() {
         previousState = _state;
     }
 
+    // Handle the current state using switch rather than specific code blocks
     switch (_state) {
         case MAIN_MENU:
             displayMainMenu();
             break;
-        case GAME_SELECTION:
-            displayGameSelection();
-            break;
         case GRAPHICS_SELECTION:
             displayGraphicsSelection();
+            break;
+        case GAME_SELECTION:
+            displayGameSelection();
             break;
         case GAME_PLAYING:
             updateGame();
             break;
+            
         case NAME_INPUT:
             displayNameInput();
+            break;
+            
+        default:
             break;
     }
 }
@@ -203,42 +205,22 @@ void GameLoop::displayGraphicsSelection() {
     _menu->displayGraphicsSelection(_graphicsLibs, _selectedGraphics);
 }
 void GameLoop::updateGame() {
+    // Check if we need to switch games
+    if (_gameSwitch) {
+        switchGameInGame();
+        _gameSwitch = false;
+        return;
+    }
+    
     if (_currentGame) {
+        // Update game logic
         _currentGame->update(0);
-        auto entities = _entityManager->getEntitiesMap();
-        std::vector<std::shared_ptr<IDrawableComponent>> textComponents;
-        std::vector<std::shared_ptr<IDrawableComponent>> textureComponents;
-        std::vector<std::shared_ptr<IDrawableComponent>> characterComponents;
-        for (const auto& [entityId, entityName] : entities) {
-            auto components = _componentManager->getAllComponentsByType(
-                ComponentType::DRAWABLE);
-            for (const auto& component : components) {
-                auto drawableComp
-                = std::dynamic_pointer_cast<IDrawableComponent>(
-                    component);
-                if (drawableComp.get() && drawableComp->isRenderable()) {
-                    if (drawableComp->shouldRenderAsText()) {
-                        if (drawableComp)
-                            textComponents.push_back(drawableComp);
-                    } else if (drawableComp->shouldRenderAsTexture()) {
-                        if (drawableComp)
-                            textureComponents.push_back(drawableComp);
-                    } else if (drawableComp->shouldRenderAsCharacter()) {
-                        if (drawableComp)
-                            characterComponents.push_back(drawableComp);
-                    } else {
-                        std::cerr << "Unknown drawable type for entity "
-                            << entityId << std::endl;
-                    }
-                }
-            }
-        }
-        for (auto& texture : textureComponents)
-            _currentGraphics->drawDrawable(texture);
-        for (auto& character : characterComponents)
-            _currentGraphics->drawDrawable(character);
-        for (auto& text : textComponents)
-            _currentGraphics->drawDrawable(text);
+        
+        // Update drawable cache if needed
+        updateDrawableCache();
+        
+        // Render cached components
+        renderCachedComponents();
     }
 }
 
@@ -362,6 +344,13 @@ void GameLoop::loadAndStartGame() {
             _currentGame->stop();
             _currentGame.reset();
         }
+        
+        // Reset component cache when loading a new game
+        _needComponentRefresh = true;
+        _cachedTextComponents.clear();
+        _cachedTextureComponents.clear();
+        _cachedCharacterComponents.clear();
+        
         subscribeEvents();
         subscribeNavEvents();
         subscribeMouseEvents();
@@ -526,4 +515,141 @@ void GameLoop::changeState(std::shared_ptr<IGameState> newState) {
     // Implementation of state management
     // This would be used for more complex state transitions
 }
+
+void GameLoop::updateDrawableCache() {
+    // Always refresh cache when a game is running to ensure latest sprites are shown
+    if (_state == GAME_PLAYING) {
+        _needComponentRefresh = true;
+    }
+    
+    if (!_needComponentRefresh) {
+        return;
+    }
+    
+    _cachedTextComponents.clear();
+    _cachedTextureComponents.clear();
+    _cachedCharacterComponents.clear();
+    
+    auto drawableComponents = _componentManager->getAllComponentsByType(ComponentType::DRAWABLE);
+    
+    for (const auto& component : drawableComponents) {
+        auto drawableComp = std::dynamic_pointer_cast<IDrawableComponent>(component);
+        if (!drawableComp || !drawableComp->isRenderable()) continue;
+        
+        if (drawableComp->shouldRenderAsText()) {
+            _cachedTextComponents.push_back(drawableComp);
+        } else if (drawableComp->shouldRenderAsTexture()) {
+            _cachedTextureComponents.push_back(drawableComp);
+        } else if (drawableComp->shouldRenderAsCharacter()) {
+            _cachedCharacterComponents.push_back(drawableComp);
+        }
+    }
+    
+    _needComponentRefresh = false;
+}
+
+void GameLoop::renderCachedComponents() {
+    // Render in the correct order: textures, then characters, then text
+    for (const auto& texture : _cachedTextureComponents) {
+        _currentGraphics->drawDrawable(texture);
+    }
+    
+    for (const auto& character : _cachedCharacterComponents) {
+        _currentGraphics->drawDrawable(character);
+    }
+    
+    for (const auto& text : _cachedTextComponents) {
+        _currentGraphics->drawDrawable(text);
+    }
+}
+
+void GameLoop::subscribeEscEvent() {
+    std::cout << "GameLoop: Subscribing ESC key for navigation" << std::endl;
+    
+    KeyEvent escEvent(Arcade::Keys::ESC, Arcade::EventType::KEY_PRESSED);
+    
+    _eventManager->subscribe(escEvent, [this](const IEvent& event) {
+        (void)event;
+        std::cout << "GameLoop: ESC key pressed in state " << _state << std::endl;
+        
+        // Handle ESC based on current state
+        switch (_state) {
+            case GAME_PLAYING:
+                std::cout << "GameLoop: Returning to menu from game" << std::endl;
+                
+                // Force immediate state change
+                _state = MAIN_MENU;
+                
+                // Stop the current game
+                if (_currentGame) {
+                    try {
+                        _currentGame->stop();
+                    } catch (...) {
+                        std::cerr << "Error stopping game" << std::endl;
+                    }
+                    _currentGame = nullptr;
+                }
+                _needComponentRefresh = true;
+                
+                // Re-subscribe menu events
+                subscribeEvents();
+                subscribeNavEvents();
+                subscribeMouseEvents();
+                break;
+                
+            case GRAPHICS_SELECTION:
+            case GAME_SELECTION:
+                std::cout << "GameLoop: Returning to menu from selection screen" << std::endl;
+                _state = MAIN_MENU;
+                break;
+                
+            case NAME_INPUT:
+                // Already handled in subscribeNameInputEvents()
+                break;
+                
+            default:
+                // No action for other states
+                break;
+        }
+    });
+}
+
+// Add this new flag to track menu refresh needs
+bool _needMenuRefresh = false;
+
+void GameLoop::run() {
+    std::cout << "GameLoop: Starting run method" << std::endl;
+
+    subscribeEvents();
+    subscribeNavEvents();
+    subscribeMouseEvents();
+    subscribeEscEvent();
+    
+    _state = MAIN_MENU;
+    
+    auto lastFrameTime = std::chrono::high_resolution_clock::now();
+    auto running = std::make_shared<bool>(true);
+    
+    while (*running) {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float deltaTime = std::chrono::duration<float>(currentTime - lastFrameTime).count();
+        lastFrameTime = currentTime;
+
+
+        // Process events
+        handleEvents(running);
+        if (!*running) break;
+        // Clear the display
+        if (_currentGraphics != nullptr)
+            _currentGraphics->clearScreen();
+        handleState();
+        if (_currentGraphics != nullptr)
+            _currentGraphics->refreshScreen();
+
+        // Cap frame rate
+        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS
+    }
+    cleanup();
+}
+
 }  // namespace Arcade

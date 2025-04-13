@@ -109,7 +109,8 @@ void MinesweeperGame::update(float deltaTime) {
             break;
         }
     }
-    if (!boardEntity) return;  // Added safety check
+    if (!boardEntity) return;  // Safety check
+    
     auto comp = _componentManager->getComponentByType(boardEntity,
         ComponentType::BOARD);
     auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>
@@ -118,20 +119,24 @@ void MinesweeperGame::update(float deltaTime) {
         ComponentType::CUSTOM_BASE);
     auto gameStats = std::dynamic_pointer_cast
         <Arcade::Minesweeper::GameStats>(statsComp);
+    
     if (board && gameStats) {
+        // If game is not over, update timers and check win/lose conditions
         if (!board->isGameOver()) {
             gameStats->updateTime();
 
             if (gameStats->isTimeUp()) {
+                std::cout << "Game over: Time's up!" << std::endl;
                 board->setGameOver(true);
+                board->setGameWon(false);
                 _gameOver = true;
                 _gameWon = false;
             }
-        }
-
-        if (!board->isGameOver()) {
+            
+            // Check for victory
             _gameWon = checkVictory(boardEntity);
             if (_gameWon) {
+                std::cout << "Game won!" << std::endl;
                 int timeBonus = gameStats->getTimeRemaining() * 10;
                 gameStats->addTimeBonus(timeBonus);
                 gameStats->updateHighestScore();
@@ -140,14 +145,15 @@ void MinesweeperGame::update(float deltaTime) {
                 board->setGameOver(true);
                 _gameOver = true;
             }
-        }
-
-        if (board->isGameOver()) {
-            gameStats->updateHighestScore();
+        } else {
+            // If game is already over
             _gameOver = true;
+            _gameWon = board->isGameWon();
+            gameStats->updateHighestScore();
         }
     }
 
+    // Always update all systems
     for (const auto& system : _systems) {
         system->update();
     }
@@ -219,9 +225,13 @@ bool MinesweeperGame::checkVictory(std::shared_ptr<IEntity> boardEntity) {
         ComponentType::BOARD);
     auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>(comp);
     if (!board) return false;
+    
     size_t width = board->getWidth();
     size_t height = board->getHeight();
-
+    size_t totalCells = width * height;
+    size_t revealedCells = 0;
+    size_t mineCells = 0;
+    
     for (size_t y = 0; y < height; y++) {
         for (size_t x = 0; x < width; x++) {
             std::shared_ptr<IEntity> cellEntity = board->getCellEntity(x, y);
@@ -230,12 +240,17 @@ bool MinesweeperGame::checkVictory(std::shared_ptr<IEntity> boardEntity) {
             auto cell = std::dynamic_pointer_cast<Arcade::Minesweeper::Cell>
                 (comp2);
             if (!cell) continue;
-            if (!cell->hasMine() && !cell->isRevealed()) {
-                return false;
+            
+            if (cell->hasMine()) {
+                mineCells++;
+            } else if (cell->isRevealed()) {
+                revealedCells++;
             }
         }
     }
-    return true;
+    
+    // Victory condition: all non-mine cells revealed
+    return revealedCells == (totalCells - mineCells);
 }
 
 int MinesweeperGame::getScore() const {

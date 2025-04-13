@@ -171,14 +171,27 @@ void EventManager::unsubscribeAll() {
     }
 }
 
-
 void EventManager::unsubscribeAll(const IEvent& eventType) {
-    (void)eventType;
     try {
-        _subscribers.clear();
-        _mouseSubscribers.clear();
+        // Check if the event is a MouseEvent
+        if (const MouseEvent* mouseEvent = dynamic_cast<const MouseEvent*>(&eventType)) {
+            // For MouseEvents - remove subscriptions matching the event type and mouse button
+            auto mouseEventId = std::pair<EventType, MouseButton>(
+                mouseEvent->getType(), mouseEvent->getMouseButton());
+            _mouseSubscribers.erase(mouseEventId);
+        } 
+        // Check if the event is a KeyEvent
+        else if (const KeyEvent* keyEvent = dynamic_cast<const KeyEvent*>(&eventType)) {
+            // For KeyEvents - remove subscriptions matching the event type and key
+            auto keyEventId = std::pair<EventType, Keys>(
+                keyEvent->getType(), keyEvent->getKey());
+            _subscribers.erase(keyEventId);
+        } else {
+            // For other event types, log the issue but don't fail
+            std::cerr << "Warning: Cannot unsubscribe from unknown event type" << std::endl;
+        }
     } catch (const std::exception& e) {
-        throw InputException("Error unsubscribing events: " +
+        throw InputException("Error unsubscribing specific event type: " +
             std::string(e.what()));
     }
 }

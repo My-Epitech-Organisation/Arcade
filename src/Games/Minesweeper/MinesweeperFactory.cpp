@@ -44,7 +44,7 @@ size_t gridX, size_t gridY, bool hasMine) {
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(cellEntity, positionComponent);
 
-    auto cellComponent = std::make_shared<Cell>(hasMine, 0);
+    auto cellComponent = std::make_shared<Arcade::Minesweeper::Cell>(hasMine, 0);
     cellComponent->setName(cellName);
     cellComponent->_gridX = gridX;
     cellComponent->_gridY = gridY;
@@ -57,11 +57,20 @@ size_t gridX, size_t gridY, bool hasMine) {
     _componentManager->registerComponent(cellEntity, drawable);
 
     if (hasMine) {
-        auto bombComponent = std::make_shared<BombComponent>(
-            "assets/minesweeper/hidden.png",
-            "assets/minesweeper/mine.png");
+        // If it's a mine cell, create a bomb component with proper hidden/revealed states
+        auto hiddenDrawable = std::make_shared<DrawableComponent>();
+        hiddenDrawable->setAsTexture("assets/minesweeper/hidden.png", 100.0f, 100.0f);
+        hiddenDrawable->setPosition(x, y);
+        
+        auto revealedDrawable = std::make_shared<DrawableComponent>();
+        revealedDrawable->setAsTexture("assets/minesweeper/mine.png", 100.0f, 100.0f);
+        revealedDrawable->setPosition(x, y);
+        
+        auto bombComponent = std::make_shared<Arcade::Minesweeper::BombComponent>(
+            hiddenDrawable, revealedDrawable);
         _componentManager->registerComponent(cellEntity, bombComponent);
     }
+    
     return cellEntity;
 }
 
@@ -70,7 +79,7 @@ std::shared_ptr<IEntity> boardEntity, float startX,
 float startY, float cellSize) {
     auto component = _componentManager->getComponentByType(boardEntity,
         ComponentType::BOARD);
-    auto boardComponent = std::dynamic_pointer_cast<Board>(component);
+    auto boardComponent = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>(component);
     if (!boardComponent) return;
     size_t width = boardComponent->getWidth();
     size_t height = boardComponent->getHeight();

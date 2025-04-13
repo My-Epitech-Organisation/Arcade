@@ -14,6 +14,11 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <iostream>
+#include <utility>
+#include <algorithm>
+#include <thread>
+#include <chrono>
 #include <map>
 #include <cstring>
 #include "Shared/Interface/Display/IDisplayModule.hpp"
@@ -191,6 +196,32 @@ class GameLoop : public IStateManager {
     static constexpr int STATUS_OFFSET_Y = 40;
         /** Y-offset for status display. */
     bool _gameSwitch = false;
+
+    // Performance optimization - cache for drawable components
+    std::vector<std::shared_ptr<IDrawableComponent>> _cachedTextComponents;
+    std::vector<std::shared_ptr<IDrawableComponent>> _cachedTextureComponents;
+    std::vector<std::shared_ptr<IDrawableComponent>> _cachedCharacterComponents;
+    bool _needComponentRefresh = true; // Flag to indicate if component cache needs refresh
+    
+    // Performance tracking
+    std::chrono::high_resolution_clock::time_point _lastFrameTime;
+    std::chrono::high_resolution_clock::time_point _lastPerformanceReport;
+    size_t _frameCount = 0;
+    double _totalFrameTime = 0;
+    
+    // Optimize rendering with cached drawable components
+    void updateDrawableCache();
+    void renderCachedComponents();
+    
+    // Adaptive timing
+    static constexpr int TARGET_FPS = 60;
+    static constexpr std::chrono::duration<double, std::milli> FRAME_TIME{1000.0 / TARGET_FPS};
+
+    // Add flag to track when menu needs a refresh
+    bool _needMenuRefresh = true;
+
+    // Add a method to verify event subscriptions
+    void logEventSubscriptionStatus();
 };
 
 }  // namespace Arcade
