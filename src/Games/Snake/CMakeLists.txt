@@ -2,13 +2,15 @@ set(NAME "arcade_snake")
 
 set(SRC
     Snake.cpp
+    Snake.hpp
     SnakeFactory.cpp
-    Components/Snake.cpp
+    SnakeFactory.hpp
+    Components/FoodComponent.cpp
     Components/GridComponent.cpp
-    System/EventSystem.cpp
-    System/MovementSystem.cpp
-    System/CollisionSystem.cpp
-    System/RenderSystem.cpp
+    Components/SnakeHeadComponent.cpp
+    System/EventSubSystem.cpp
+    System/GameLogic.cpp
+    System/UISystem.cpp
 )
 
 add_library(${NAME} SHARED ${SRC})
@@ -17,7 +19,7 @@ set_target_properties(${NAME} PROPERTIES PREFIX "")
 
 if(ENABLE_COVERAGE)
     target_compile_options(${NAME} PRIVATE -O0 -g --coverage -fprofile-arcs -ftest-coverage)
-    target_link_libraries(${NAME} PRIVATE arcade_ecs --coverage)
+    target_link_libraries(${NAME} PRIVATE arcade_ecs arcade_drawable arcade_parser --coverage)
 else()
-    target_link_libraries(${NAME} PRIVATE arcade_ecs)
+    target_link_libraries(${NAME} PRIVATE arcade_ecs arcade_drawable arcade_parser)
 endif()
