@@ -145,12 +145,17 @@ void NCursesModule::drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
 drawable) {
     if (!drawable->isRenderable())
         return;
-    if (drawable.shouldRenderAsText()) {
-        drawText(drawable.text, drawable.posX, drawable.posY, drawable.color);
-    } else if (drawable.shouldRenderAsTexture()) {
-        drawEntity(drawable.posX, drawable.posY, drawable.character);
-    } else if (drawable.shouldRenderAsCharacter()) {
-        drawEntity(drawable.posX, drawable.posY, drawable.character);
+    if (drawable->shouldRenderAsText()) {
+        drawText(drawable->getText(),
+            static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getColor());
+    } else if (drawable->shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getPath());
+    } else if (drawable->shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()),
+            drawable->getCharacter());
     }
 }
 
