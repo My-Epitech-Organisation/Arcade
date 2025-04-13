@@ -47,7 +47,7 @@ _gameSwitch(false),
 _needComponentRefresh(true),
 _lastFrameTime(std::chrono::high_resolution_clock::now()),
 _lastPerformanceReport(std::chrono::high_resolution_clock::now()),
-_lastKeyNavigation(std::chrono::high_resolution_clock::now()), // Add this line
+_lastKeyNavigation(std::chrono::high_resolution_clock::now()),
 _frameCount(0),
 _totalFrameTime(0) {
     _eventManager = std::make_shared<EventManager>();
@@ -187,11 +187,9 @@ void GameLoop::displayGameSelection() {
 }
 
 void GameLoop::displayGraphicsSelection() {
-    // First, ensure the selection is within bounds
     if (!_graphicsLibs.empty() && _selectedGraphics >= _graphicsLibs.size()) {
         _selectedGraphics = _graphicsLibs.size() - 1;
     }
-    
     _menu->displayGraphicsSelection(_graphicsLibs, _selectedGraphics);
 }
 void GameLoop::updateGame() {

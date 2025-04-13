@@ -131,7 +131,7 @@ std::shared_ptr<IEntity> gridEntity) {
 }
 
 void PlayerLogic::tryChangePacmanDirection(
-    std::shared_ptr<PacmanComponent> pacman,
+std::shared_ptr<PacmanComponent> pacman,
 std::shared_ptr<GridComponent> grid) {
     if (!pacman || !grid)
         return;

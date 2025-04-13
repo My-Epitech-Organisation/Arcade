@@ -197,25 +197,21 @@ void GameLoop::subscribeUpEvent() {
     KeyEvent upEvent(Keys::UP, EventType::KEY_PRESSED);
     _eventManager->subscribe(upEvent, [this](const IEvent& event) {
         (void)event;
-        
-        // Add debounce logic to prevent too rapid selection changes
         auto now = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             now - _lastKeyNavigation).count();
-            
         if (elapsed < KEY_NAVIGATION_COOLDOWN_MS) {
-            return;  // Skip this key press if too soon after the last one
+            return;
         }
-        
-        if (_state == GAME_SELECTION && _gameLibs.size() > 0 && _selectedGame > 0) {
+        if (_state == GAME_SELECTION
+            && _gameLibs.size() > 0 && _selectedGame > 0) {
             _selectedGame--;
             _needMenuRefresh = true;
             _lastKeyNavigation = now;
-        } else if (_state == GRAPHICS_SELECTION && _graphicsLibs.size() > 0 && _selectedGraphics > 0) {
+        } else if (_state == GRAPHICS_SELECTION
+            && _graphicsLibs.size() > 0 && _selectedGraphics > 0) {
             size_t oldSelection = _selectedGraphics;
             _selectedGraphics--;
-            std::cout << "Graphics selection moved up: " << oldSelection 
-                      << " -> " << _selectedGraphics << std::endl;
             _needMenuRefresh = true;
             _lastKeyNavigation = now;
         }
@@ -226,26 +222,22 @@ void GameLoop::subscribeDownEvent() {
     KeyEvent downEvent(Keys::DOWN, EventType::KEY_PRESSED);
     _eventManager->subscribe(downEvent, [this](const IEvent& event) {
         (void)event;
-        
-        // Add debounce logic to prevent too rapid selection changes
         auto now = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             now - _lastKeyNavigation).count();
-            
         if (elapsed < KEY_NAVIGATION_COOLDOWN_MS) {
-            return;  // Skip this key press if too soon after the last one
+            return;
         }
-        
-        if (_state == GAME_SELECTION && _gameLibs.size() > 0 && _selectedGame < _gameLibs.size() - 1) {
+        if (_state == GAME_SELECTION
+            && _gameLibs.size() > 0 && _selectedGame < _gameLibs.size() - 1) {
             _selectedGame++;
             _needMenuRefresh = true;
             _lastKeyNavigation = now;
-        } else if (_state == GRAPHICS_SELECTION && _graphicsLibs.size() > 0 && 
+        } else if (_state == GRAPHICS_SELECTION && _graphicsLibs.size() > 0 &&
                   _selectedGraphics < _graphicsLibs.size() - 1) {
             size_t oldSelection = _selectedGraphics;
             _selectedGraphics++;
-            std::cout << "Graphics selection moved down: " << oldSelection 
-                      << " -> " << _selectedGraphics << std::endl;
+
             _needMenuRefresh = true;
             _lastKeyNavigation = now;
         }
@@ -307,17 +299,14 @@ void GameLoop::handleMouseMoveGameSelection(int x, int y, int centerX) {
 
 void GameLoop::handleMouseMoveGraphicsSelection(int x, int y, int centerX) {
     if (_graphicsLibs.empty()) return;
-    
     bool selectionChanged = false;
     size_t oldSelection = _selectedGraphics;
-    
     for (size_t i = 0; i < _graphicsLibs.size(); i++) {
         int itemTop = MENU_START_Y + static_cast<int>(i) * MENU_ITEM_HEIGHT;
-        int itemBottom = MENU_START_Y + static_cast<int>(i + 1) * MENU_ITEM_HEIGHT;
-        
+        int itemBottom = MENU_START_Y
+        + static_cast<int>(i + 1) * MENU_ITEM_HEIGHT;
         if (x >= centerX - 150 && x <= centerX + 150 &&
             y >= itemTop && y <= itemBottom) {
-            
             if (_selectedGraphics != i) {
                 _selectedGraphics = i;
                 selectionChanged = true;
@@ -325,12 +314,8 @@ void GameLoop::handleMouseMoveGraphicsSelection(int x, int y, int centerX) {
             break;
         }
     }
-    
-    // If selection changed, we should trigger a refresh
     if (selectionChanged) {
         _needMenuRefresh = true;
-        std::cout << "Graphics selection changed from " << oldSelection 
-                  << " to " << _selectedGraphics << std::endl;
     }
 }
 
@@ -347,8 +332,6 @@ void GameLoop::subscribeLeftClickEvent() {
             handleLeftClickGameSelection(x, y, centerX);
         } else if (_state == GRAPHICS_SELECTION) {
             handleLeftClickGraphicsSelection(x, y, centerX);
-        } else if (_state == GAME_PLAYING) {
-            // Let the game handle mouse clicks while playing
         }
     });
 }
@@ -396,26 +379,23 @@ void GameLoop::handleLeftClickGameSelection(int x, int y, int centerX) {
 
 void GameLoop::handleLeftClickGraphicsSelection(int x, int y, int centerX) {
     if (_graphicsLibs.empty()) return;
-    
     bool clickedOnGraphics = false;
     for (size_t i = 0; i < _graphicsLibs.size(); i++) {
         int itemTop = MENU_START_Y + static_cast<int>(i) * MENU_ITEM_HEIGHT;
-        int itemBottom = MENU_START_Y + static_cast<int>(i + 1) * MENU_ITEM_HEIGHT;
-        
+        int itemBottom = MENU_START_Y
+            + static_cast<int>(i + 1) * MENU_ITEM_HEIGHT;
         if (x >= centerX - 150 && x <= centerX + 150 &&
             y >= itemTop && y <= itemBottom) {
-            
             _selectedGraphics = i;
             clickedOnGraphics = true;
-            std::cout << "Selected graphics library: " << _graphicsLibs[i] << std::endl;
             loadGraphicsLibraries();
             break;
         }
     }
-    
-    // Back to main menu button
-    int backButtonY = MENU_START_Y + static_cast<int>(_graphicsLibs.size()) * MENU_ITEM_HEIGHT + 40;
-    if (!clickedOnGraphics && y >= backButtonY && y <= backButtonY + MENU_ITEM_HEIGHT &&
+    int backButtonY = MENU_START_Y + static_cast<int>(_graphicsLibs.size())
+    * MENU_ITEM_HEIGHT + 40;
+    if (!clickedOnGraphics && y >= backButtonY
+        && y <= backButtonY + MENU_ITEM_HEIGHT &&
         x >= centerX - 100 && x <= centerX + 100) {
         _state = MAIN_MENU;
     }
@@ -503,34 +483,24 @@ void GameLoop::switchGameInGame() {
 void GameLoop::switchGraphicsInGame() {
     try {
         bool wasInGame = (_state == GAME_PLAYING);
-        
-        // Save current game state
         std::shared_ptr<IGameModule> currentGameBackup = _currentGame;
         std::string newLibPath = _graphicsLibs[_selectedGraphics];
-        
-        // Prepare drawable components before switch
-        auto drawableComponents = _componentManager->getAllComponentsByType(ComponentType::DRAWABLE);
-        
-        // Load new graphics library without disturbing game state
+        auto drawableComponents
+            = _componentManager->getAllComponentsByType
+            (ComponentType::DRAWABLE);
         _graphicsLoader.setLibPath(newLibPath);
         auto newGraphics = _graphicsLoader.getInstanceUPtr("entryPoint");
-        auto sharedPtr = std::shared_ptr<IDisplayModule>(std::move(newGraphics));
+        auto sharedPtr
+            = std::shared_ptr<IDisplayModule>(std::move(newGraphics));
 
         if (sharedPtr) {
-            // Apply fade-out effect on current display (optional)
             if (_currentGraphics && _window) {
                 _window->clearScreen();
                 _window->refreshScreen();
             }
-            
-            // Switch to new graphics library
             _currentGraphics = sharedPtr;
             _window->setDisplayModule(sharedPtr);
-            
-            // Trigger a single refresh of component cache
             _needComponentRefresh = true;
-            
-            // Restore game state
             if (wasInGame && currentGameBackup) {
                 _window->clearScreen();
                 _state = GAME_PLAYING;
@@ -538,11 +508,13 @@ void GameLoop::switchGraphicsInGame() {
             }
         }
     } catch (const LibraryLoadException& e) {
-        std::cerr << "Failed to load graphics library: " << e.what() << std::endl;
+        std::cerr << "Failed to load graphics library: "
+            << e.what() << std::endl;
     } catch (const GraphicsException& e) {
         std::cerr << "Graphics error: " << e.what() << std::endl;
     } catch (const ArcadeException& e) {
-        std::cerr << "Error loading graphics libraries: " << e.what() << std::endl;
+        std::cerr << "Error loading graphics libraries: "
+            << e.what() << std::endl;
     }
 }
 }  // namespace Arcade

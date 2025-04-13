@@ -205,7 +205,7 @@ class GameLoop : public IStateManager {
     std::chrono::high_resolution_clock::time_point _lastFrameTime;
     std::chrono::high_resolution_clock::time_point _lastPerformanceReport;
     std::chrono::high_resolution_clock::time_point _lastGraphicsSwitch;
-    std::chrono::high_resolution_clock::time_point _lastKeyNavigation; // Add this line
+    std::chrono::high_resolution_clock::time_point _lastKeyNavigation;
     size_t _frameCount = 0;
     double _totalFrameTime = 0;
     void updateDrawableCache();
@@ -213,7 +213,7 @@ class GameLoop : public IStateManager {
     static constexpr int TARGET_FPS = 60;
     static constexpr std::chrono::duration<double,
         std::milli> FRAME_TIME{1000.0 / TARGET_FPS};
-    static constexpr int KEY_NAVIGATION_COOLDOWN_MS = 150; // Add this line
+    static constexpr int KEY_NAVIGATION_COOLDOWN_MS = 150;
     bool _needMenuRefresh = true;
     void logEventSubscriptionStatus();
 };
