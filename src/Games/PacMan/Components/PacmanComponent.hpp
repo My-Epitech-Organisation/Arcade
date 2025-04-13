@@ -60,6 +60,49 @@ class PacmanComponent : public Arcade::IComponent {
     void setMovementThreshold(float threshold) {
         _movementThreshold = threshold; }
 
+    // Smooth movement additions
+    float getVisualX() const { return _visualX; }
+    float getVisualY() const { return _visualY; }
+    void setVisualPosition(float x, float y) {
+        _visualX = x;
+        _visualY = y;
+    }
+    float getTargetX() const { return _targetX; }
+    float getTargetY() const { return _targetY; }
+    void setTargetPosition(float x, float y) {
+        _targetX = x;
+        _targetY = y;
+    }
+    bool isMoving() const { return _isMoving; }
+    void setMoving(bool isMoving) { _isMoving = isMoving; }
+    void updateVisualPosition(float deltaTime);
+    bool isAtTarget() const;
+    float getMovementSpeed() const { return _movementSpeed; }
+    void setMovementSpeed(float speed) { _movementSpeed = speed; }
+    float getLeft() const;
+    float getRight() const;
+    float getTop() const;
+    float getBottom() const;
+    void setDimensions(float width, float height);
+    bool collidesWith(float otherLeft, float otherTop,
+        float otherWidth, float otherHeight) const;
+    void updateAnimation(float deltaTime);
+    int getAnimationFrame() const { return _animationFrame; }
+    bool isAnimating() const { return _isMoving && _animationEnabled; }
+    void setAnimationEnabled(bool enabled) { _animationEnabled = enabled; }
+    void resetAnimation() {
+        _animationFrame = 0;
+        _animationTimer = 0.0f;
+    }
+    std::string getDirectionalSprite() const;
+    void updateDirectionAndAnimation(Direction newDirection) {
+        if (_currentDirection != newDirection) {
+            _currentDirection = newDirection;
+            _animationFrame = 1;
+            _animationTimer = 0.0f;
+        }
+    }
+
  private:
     std::string _name;
     Direction _currentDirection;
@@ -73,6 +116,25 @@ class PacmanComponent : public Arcade::IComponent {
     float _movementTimer = 0.0f;
     float _movementThreshold = 0.20f;
     float _totalGameTime = 0.0f;
+
+    // Smooth movement variables
+    float _visualX;      // Current visual x position
+    float _visualY;      // Current visual y position
+    float _targetX;      // Target x position for interpolation
+    float _targetY;      // Target y position for interpolation
+    float _movementSpeed;  // Speed of movement interpolation
+    bool _isMoving;      // Whether entity is currently moving between cells
+
+    // Sprite dimensions for collision detection
+    float _width;
+    float _height;
+
+    // Animation properties
+    int _animationFrame = 0;
+    int _animationFrameCount = 4;  // Number of animation frames
+    float _animationTimer = 0.0f;  // Timer for animation
+    float _animationSpeed = 0.15f;  // Speed of animation
+    bool _animationEnabled = true;  // Whether animation is enabled
 };
 
 }  // namespace PacMan

@@ -6,6 +6,7 @@
 ** Qt5 class
 */
 
+
 #ifndef SRC_GRAPHICS_QT5_QT5_HPP_
     #define SRC_GRAPHICS_QT5_QT5_HPP_
     #include <QApplication>
@@ -187,6 +188,7 @@ class Qt5Module : public Arcade::IDisplayModule {
     void clearScreen() override;
     void refreshScreen() override;
     void drawDrawable(const Arcade::DrawableComponent& drawable) override;
+
     void pollEvents() override;
     bool isOpen() const override;
     const std::string& getName() const override;

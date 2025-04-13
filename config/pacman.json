@@ -11,86 +11,78 @@
             "width": 32,
             "height": 32
           },
-          "right": [
-            {
-              "path": "assets/pacman/pacman-right/1.png",
-              "char": ">",
-              "width": 32,
-              "height": 32
-            },
-            {
-              "path": "assets/pacman/pacman-right/2.png",
-              "char": "O",
-              "width": 32,
-              "height": 32
-            },
-            {
-              "path": "assets/pacman/pacman-right/3.png",
-              "char": "C",
-              "width": 32,
-              "height": 32
-            }
-          ],
-          "left": [
-            {
-              "path": "assets/pacman/pacman-left/1.png",
-              "char": "<",
-              "width": 32,
-              "height": 32
-            },
-            {
-              "path": "assets/pacman/pacman-left/2.png",
-              "char": "O",
-              "width": 32,
-              "height": 32
-            },
-            {
-              "path": "assets/pacman/pacman-left/3.png",
-              "char": "C",
-              "width": 32,
-              "height": 32
-            }
-          ],
-          "up": [
-            {
-              "path": "assets/pacman/pacman-up/1.png",
-              "char": "^",
-              "width": 32,
-              "height": 32
-            },
-            {
-              "path": "assets/pacman/pacman-up/2.png",
-              "char": "O",
-              "width": 32,
-              "height": 32
-            },
-            {
-              "path": "assets/pacman/pacman-up/3.png",
-              "char": "C",
-              "width": 32,
-              "height": 32
-            }
-          ],
-          "down": [
-            {
-              "path": "assets/pacman/pacman-down/1.png",
-              "char": "v",
-              "width": 32,
-              "height": 32
-            },
-            {
-              "path": "assets/pacman/pacman-down/2.png",
-              "char": "O",
-              "width": 32,
-              "height": 32
-            },
-            {
-              "path": "assets/pacman/pacman-down/3.png",
-              "char": "C",
-              "width": 32,
-              "height": 32
-            }
-          ]
+          "right.1": {
+            "path": "assets/pacman/pacman-right/1.png",
+            "char": ">",
+            "width": 32,
+            "height": 32
+          },
+          "right.2": {
+            "path": "assets/pacman/pacman-right/2.png",
+            "char": "O",
+            "width": 32,
+            "height": 32
+          },
+          "right.3": {
+            "path": "assets/pacman/pacman-right/3.png",
+            "char": "C",
+            "width": 32,
+            "height": 32
+          },
+          "left.1": {
+            "path": "assets/pacman/pacman-left/1.png",
+            "char": "<",
+            "width": 32,
+            "height": 32
+          },
+          "left.2": {
+            "path": "assets/pacman/pacman-left/2.png",
+            "char": "O",
+            "width": 32,
+            "height": 32
+          },
+          "left.3": {
+            "path": "assets/pacman/pacman-left/3.png",
+            "char": "C",
+            "width": 32,
+            "height": 32
+          },
+          "up.1": {
+            "path": "assets/pacman/pacman-up/1.png",
+            "char": "^",
+            "width": 32,
+            "height": 32
+          },
+          "up.2": {
+            "path": "assets/pacman/pacman-up/2.png",
+            "char": "O",
+            "width": 32,
+            "height": 32
+          },
+          "up.3": {
+            "path": "assets/pacman/pacman-up/3.png",
+            "char": "C",
+            "width": 32,
+            "height": 32
+          },
+          "down.1": {
+            "path": "assets/pacman/pacman-down/1.png",
+            "char": "v",
+            "width": 32,
+            "height": 32
+          },
+          "down.2": {
+            "path": "assets/pacman/pacman-down/2.png",
+            "char": "O",
+            "width": 32,
+            "height": 32
+          },
+          "down.3": {
+            "path": "assets/pacman/pacman-down/3.png",
+            "char": "C",
+            "width": 32,
+            "height": 32
+          }
         },
         "ghosts": {
           "red": {
@@ -173,7 +165,6 @@
           },
           "lives": {
             "text": "Lives: ",
-            "path": "assets/pacman/pacman.png",
             "char": "L",
             "width": 32,
             "height": 32

@@ -11,7 +11,6 @@
     #include "Shared/Models/ComponentType.hpp"
     #include "Shared/Interface/IArcadeModule.hpp"
     #include "Shared/Interface/ECS/IEntity.hpp"
-    #include "Shared/Models/EntityType.hpp"
 
 namespace Arcade {
 class IComponent : public IArcadeModule {

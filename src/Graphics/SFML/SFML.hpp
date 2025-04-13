@@ -14,6 +14,7 @@
     #include <unordered_map>
     #include <SFML/Graphics.hpp>
     #include "Interface/Display/IDisplayModule.hpp"
+    #include "Interface/Core/IWindowModule.hpp"
     #include "Models/ColorType.hpp"
 
 class SFML : public Arcade::IDisplayModule {
@@ -28,21 +29,22 @@ class SFML : public Arcade::IDisplayModule {
     sf::Texture* loadTexture(const std::string& texturePath);
     std::unordered_map<std::string, std::unique_ptr<sf::Font>> _fonts;
     std::unordered_map<std::string, std::unique_ptr<sf::Texture>> _textures;
-    void drawEntity(int x, int y, char symbol);
-    void drawTexture(int x, int y, const std::string &textureId);
+    void drawEntity(int x, int y, char symbol, float scale);
+    void drawTexture(int x, int y, const std::string &textureId, float scale);
     void drawText(const std::string &text, int x, int y,
-        Arcade::Color);
+        Arcade::Color, float scale);
 
  public:
     SFML() : _name("SFML") {}
     ~SFML() override;
-    void init(float width = 800.f, float height = 600.f) override;
+    void init(const Arcade::IWindowModule& windowParam) override;
     void stop() override;
     void clearScreen() override;
     void refreshScreen() override;
     void pollEvents() override;
     bool isOpen() const override;
-    void drawDrawable(const Arcade::DrawableComponent& drawable) override;
+    void drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
+        drawable) override;
     const std::string& getName() const override;
     int getWidth() const override;
     int getHeight() const override;

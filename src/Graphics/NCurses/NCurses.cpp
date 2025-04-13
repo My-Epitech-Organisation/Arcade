@@ -16,6 +16,7 @@
 #include "NCurses/NCursesColor.hpp"
 #include "Interface/IArcadeModule.hpp"
 #include "Models/ModuleInfos.hpp"
+#include "Interface/Display/IDrawableComponent.hpp"
 
 NCursesModule::~NCursesModule() {
     stop();
@@ -78,9 +79,9 @@ int NCursesModule::charToPixelY(int y) const {
     return y * 20;
 }
 
-void NCursesModule::init(float width, float height) {
-    _windowWidth = static_cast<int>(width);
-    _windowHeight = static_cast<int>(height);
+void NCursesModule::init(const Arcade::IWindowModule& windowParam) {
+    _windowWidth = static_cast<int>(windowParam.getWidth());
+    _windowHeight = static_cast<int>(windowParam.getHeight());
 
     try {
         _window.createWindow(_windowWidth, _windowHeight);
@@ -140,15 +141,21 @@ void NCursesModule::drawEntity(int x, int y, char symbol) {
     _entity.drawEntity(win, charX, charY, symbol, colorPair);
 }
 
-void NCursesModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
-    if (!drawable.isVisible)
+void NCursesModule::drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
+drawable) {
+    if (!drawable->isRenderable())
         return;
-    if (drawable.shouldRenderAsText()) {
-        drawText(drawable.text, drawable.posX, drawable.posY, drawable.color);
-    } else if (drawable.shouldRenderAsTexture()) {
-        drawEntity(drawable.posX, drawable.posY, drawable.character);
-    } else if (drawable.shouldRenderAsCharacter()) {
-        drawEntity(drawable.posX, drawable.posY, drawable.character);
+    if (drawable->shouldRenderAsText()) {
+        drawText(drawable->getText(),
+            static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getColor());
+    } else if (drawable->shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getPath());
+    } else if (drawable->shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()),
+            drawable->getCharacter());
     }
 }
 

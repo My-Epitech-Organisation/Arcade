@@ -126,12 +126,70 @@ std::pair<std::size_t, std::size_t> EventManager::getMousePosition() const {
     return std::make_pair(_mouseX, _mouseY);
 }
 
+void EventManager::unsubscribe(const IEvent& eventType, Callback callback) {
+    (void)eventType;
+    (void)callback;
+    try {
+        _subscribers.clear();
+        _mouseSubscribers.clear();
+    } catch (const std::exception& e) {
+        throw InputException("Error unsubscribing events: " +
+            std::string(e.what()));
+    }
+}
+
+void EventManager::resetKeys() {
+    try {
+        for (auto& [key, _] : _keyStates) {
+            _keyStates[key] = false;
+        }
+        for (auto& [button, _] : _mouseButtonStates) {
+            _mouseButtonStates[button] = false;
+        }
+    } catch (const std::exception& e) {
+        throw InputException("Error resetting keys: " +
+            std::string(e.what()));
+    }
+}
+
+void EventManager::setKeyState(Keys key) {
+    try {
+        _keyStates[key] = true;
+    } catch (const std::exception& e) {
+        throw InputException("Error setting key state: " +
+            std::string(e.what()));
+    }
+}
+
 void EventManager::unsubscribeAll() {
     try {
         _subscribers.clear();
         _mouseSubscribers.clear();
     } catch (const std::exception& e) {
         throw InputException("Error unsubscribing events: " +
+            std::string(e.what()));
+    }
+}
+
+void EventManager::unsubscribeAll(const IEvent& eventType) {
+    try {
+        // Check if the event is a MouseEvent
+        if (const MouseEvent* mouseEvent
+            = dynamic_cast<const MouseEvent*>(&eventType)) {
+            auto mouseEventId = std::pair<EventType, MouseButton>(
+                mouseEvent->getType(), mouseEvent->getMouseButton());
+            _mouseSubscribers.erase(mouseEventId);
+        } else if (const KeyEvent* keyEvent
+            = dynamic_cast<const KeyEvent*>(&eventType)) {
+            auto keyEventId = std::pair<EventType, Keys>(
+                keyEvent->getType(), keyEvent->getKey());
+            _subscribers.erase(keyEventId);
+        } else {
+            std::cerr << "Warning: Cannot unsubscribe from unknown event type"
+                << std::endl;
+        }
+    } catch (const std::exception& e) {
+        throw InputException("Error unsubscribing specific event type: " +
             std::string(e.what()));
     }
 }
@@ -149,7 +207,7 @@ void EventManager::publish(const IEvent& eventType) {
             }
             for (const auto& callback : callbacksToInvoke) {
                 if (callback) {
-                    callback();
+                    callback(eventType);
                 }
             }
         } else if (dynamic_cast<const KeyEvent*>(&eventType) != nullptr) {
@@ -162,7 +220,7 @@ void EventManager::publish(const IEvent& eventType) {
             }
             for (const auto& callback : callbacksToInvoke) {
                 if (callback) {
-                    callback();
+                    callback(eventType);
                 }
             }
         } else {
@@ -175,6 +233,20 @@ void EventManager::publish(const IEvent& eventType) {
         throw InputException("Unexpected error while publishing event: " +
             std::string(e.what()));
     }
+}
+
+bool EventManager::isEventSubscribed(const IEvent& event) const {
+    auto it = _subscribers.find(std::make_pair(event.getType(),
+        event.getKey()));
+    if (it == _subscribers.end()) {
+        return false;
+    }
+    for (const auto& callback : it->second) {
+        if (callback) {
+            return true;
+        }
+    }
+    return false;
 }
 
 }  // namespace Arcade

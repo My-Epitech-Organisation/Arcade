@@ -14,6 +14,7 @@
 #include "GTK+/GTK.hpp"
 #include "Models/ColorType.hpp"
 #include "Models/ModuleInfos.hpp"
+#include "Shared/Interface/Display/IDrawableComponent.hpp"
 
 static gboolean on_window_close_request(GtkWindow* window, gpointer user_data) {
     GTKModule* module = static_cast<GTKModule*>(user_data);
@@ -201,19 +202,21 @@ void GTKModule::refreshScreen() {
     });
 }
 
-void GTKModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
-    if (!drawable.isVisible)
-        return;
-
-    if (drawable.shouldRenderAsText()) {
-        drawText(drawable.text, static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.color);
-    } else if (drawable.shouldRenderAsTexture()) {
-        drawTexture(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.path);
-    } else if (drawable.shouldRenderAsCharacter()) {
-        drawEntity(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.character);
+void GTKModule::drawDrawable
+(std::shared_ptr<Arcade::IDrawableComponent> drawable) {
+    if (!drawable->isRenderable())
+    return;
+    if (drawable->shouldRenderAsText()) {
+        drawText(drawable->getText(),
+            static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getColor());
+    } else if (drawable->shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getPath());
+    } else if (drawable->shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()),
+            drawable->getCharacter());
     }
 }
 

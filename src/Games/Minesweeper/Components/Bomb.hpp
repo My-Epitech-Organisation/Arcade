@@ -19,8 +19,8 @@ namespace Minesweeper {
 
 class BombComponent : public Arcade::IComponent {
  public:
-    BombComponent(std::shared_ptr<DrawableComponent> hiddenSprite,
-                 std::shared_ptr<DrawableComponent> revealedSprite)
+    BombComponent(std::shared_ptr<IDrawableComponent> hiddenSprite,
+                 std::shared_ptr<IDrawableComponent> revealedSprite)
         : _hiddenSprite(hiddenSprite),
           _revealedSprite(revealedSprite),
           _isRevealed(false) {}
@@ -38,7 +38,7 @@ class BombComponent : public Arcade::IComponent {
         return ComponentType::BOMB;
     }
 
-    std::shared_ptr<DrawableComponent> getActiveSprite() const {
+    std::shared_ptr<IDrawableComponent> getActiveSprite() const {
         return _isRevealed ? _revealedSprite : _hiddenSprite;
     }
 
@@ -51,8 +51,8 @@ class BombComponent : public Arcade::IComponent {
     }
 
  private:
-    std::shared_ptr<DrawableComponent> _hiddenSprite;
-    std::shared_ptr<DrawableComponent> _revealedSprite;
+    std::shared_ptr<IDrawableComponent> _hiddenSprite;
+    std::shared_ptr<IDrawableComponent> _revealedSprite;
     bool _isRevealed;
 };
 

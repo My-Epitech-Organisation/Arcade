@@ -10,6 +10,7 @@
 #define SRC_GAMES_PACMAN_COMPONENTS_GHOSTCOMPONENT_HPP_
 
 #include <string>
+#include <memory>
 #include <vector>
 #include "Shared/Interface/ECS/IComponent.hpp"
 #include "Shared/Models/ComponentType.hpp"
@@ -19,10 +20,10 @@ namespace Arcade {
 namespace PacMan {
 
 enum class GhostType {
-    RED,   // Blinky - pursues PacMan
-    PINK,  // Pinky - ambushes in front of PacMan
-    BLUE,  // Inky - unpredictable
-    ORANGE  // Clyde - random movement
+    RED,
+    PINK,
+    BLUE,
+    ORANGE
 };
 
 enum class GhostState {
@@ -43,7 +44,7 @@ class GhostComponent : public Arcade::IComponent {
     ~GhostComponent() = default;
 
     ComponentType getType() const override {
-        return static_cast<ComponentType>(1002);  // Custom component type
+        return static_cast<ComponentType>(1002);
     }
 
     GhostType getGhostType() const { return _ghostType; }
@@ -88,6 +89,31 @@ class GhostComponent : public Arcade::IComponent {
         _movementThreshold = threshold; }
     void updateReleaseTimer(float deltaTime);
     void resetReleaseTimer() { _releaseTimer = 0.0f; }
+    float getVisualX() const { return _visualX; }
+    float getVisualY() const { return _visualY; }
+    void setVisualPosition(float x, float y) {
+        _visualX = x;
+        _visualY = y;
+    }
+    float getVisualTargetX() const { return _targetVisualX; }
+    float getVisualTargetY() const { return _targetVisualY; }
+    void setTargetPosition(float x, float y) {
+        _targetVisualX = x;
+        _targetVisualY = y;
+    }
+    bool isMoving() const { return _isMoving; }
+    void setMoving(bool isMoving) { _isMoving = isMoving; }
+    void updateVisualPosition(float deltaTime);
+    bool isAtTarget() const;
+    float getMovementSpeed() const { return _movementSpeed; }
+    void setMovementSpeed(float speed) { _movementSpeed = speed; }
+    float getLeft() const;
+    float getRight() const;
+    float getTop() const;
+    float getBottom() const;
+    void setDimensions(float width, float height);
+    bool collidesWith(float otherLeft, float otherTop,
+                     float otherWidth, float otherHeight) const;
 
  private:
     std::string _name;
@@ -101,7 +127,7 @@ class GhostComponent : public Arcade::IComponent {
     bool _canMove;
     float _movementTimer;
     float _movementCooldown;
-    static constexpr float SCARED_DURATION = 10.0f;
+    static constexpr float SCARED_DURATION = 15.0f;  // Increased from 10.0f
     GhostMode _mode;
     size_t _homeCornerX;
     size_t _homeCornerY;
@@ -115,6 +141,18 @@ class GhostComponent : public Arcade::IComponent {
 
     static constexpr float CHASE_DURATION = 20.0f;
     static constexpr float SCATTER_DURATION = 5.0f;
+
+    // Smooth movement variables
+    float _visualX;          // Current visual x position
+    float _visualY;          // Current visual y position
+    float _targetVisualX;    // Target visual x position for interpolation
+    float _targetVisualY;    // Target visual y position for interpolation
+    float _movementSpeed;    // Speed of movement interpolation
+    bool _isMoving;          // Whether entity is currently moving between cells
+
+    // Sprite dimensions for collision detection
+    float _width;
+    float _height;
 };
 
 }  // namespace PacMan

@@ -13,12 +13,13 @@
 #include "Allegro5/Allegro5.hpp"
 #include "Models/ColorType.hpp"
 #include "Models/ModuleInfos.hpp"
+#include "Shared/Interface/Core/IWindowModule.hpp"
 
 Allegro5::~Allegro5() {
     stop();
 }
 
-void Allegro5::init(float x, float y) {
+void Allegro5::init(const Arcade::IWindowModule& windowParam) {
     if (!al_init()) {
         throw std::runtime_error("Failed to initialize Allegro");
     }
@@ -27,7 +28,8 @@ void Allegro5::init(float x, float y) {
     al_install_mouse();
     al_init_image_addon();
 
-    _window.createWindow(static_cast<int>(x), static_cast<int>(y));
+    _window.createWindow(static_cast<int>(windowParam.getWidth()),
+        static_cast<int>(windowParam.getHeight()));
     _event.init();
     _text.init();
 
@@ -45,19 +47,21 @@ void Allegro5::refreshScreen() {
     al_flip_display();
 }
 
-void Allegro5::drawDrawable(const Arcade::DrawableComponent& drawable) {
-    if (!drawable.isVisible)
+void Allegro5::drawDrawable
+(std::shared_ptr<Arcade::IDrawableComponent> drawable) {
+    if (!drawable->isRenderable())
         return;
-
-    if (drawable.shouldRenderAsText()) {
-        drawText(drawable.text, static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.color);
-    } else if (drawable.shouldRenderAsTexture()) {
-        drawTexture(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.path);
-    } else if (drawable.shouldRenderAsCharacter()) {
-        drawEntity(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.character);
+    if (drawable->shouldRenderAsText()) {
+        drawText(drawable->getText(),
+            static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getColor());
+    } else if (drawable->shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getPath());
+    } else if (drawable->shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()),
+            drawable->getCharacter());
     }
 }
 

@@ -74,7 +74,7 @@ uml.node("EntityManager", label="""<
     <TR><TD ALIGN="LEFT">- _activeEntities: vector&lt;Entity&gt;</TD></TR>
     <TR><TD ALIGN="LEFT">+ createEntity(): Entity</TD></TR>
     <TR><TD ALIGN="LEFT">+ destroyEntity(entity: Entity)</TD></TR>
-    <TR><TD ALIGN="LEFT">+ getEntities(): vector&lt;Entity&gt;&amp;</TD></TR>
+    <TR><TD ALIGN="LEFT">+ getEntitiesMap(): vector&lt;Entity&gt;&amp;</TD></TR>
 </TABLE>>""", shape="none")
 
 uml.node("ComponentManager", label="""<

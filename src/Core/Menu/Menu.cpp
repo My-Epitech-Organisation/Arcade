@@ -32,11 +32,11 @@ void Menu::displayTitle(const std::string &title) {
     int centerX = window->getWidth() / 2;
     DrawableComponent titleText;
     titleText.setAsText(title, "./assets/fonts/Arial.ttf", 32.0f);
-    titleText.posX = centerX - (title.length() * 8);
-    titleText.posY = 80;
-    titleText.color = Color::YELLOW;
-    titleText.isVisible = true;
-    window->drawDrawable(titleText);
+    titleText.setPosition(centerX - (title.length() * 8), 80);
+    titleText.setColor(Color::YELLOW);
+    titleText.setVisibility(true);
+    auto titleTextPtr = std::make_shared<DrawableComponent>(titleText);
+    window->drawDrawable(titleTextPtr);
 }
 
 void Menu::displayMenuOption(const std::string &option, int x,
@@ -48,11 +48,11 @@ int y, Color color, bool isSelected) {
     std::string displayText = isSelected ? "> " + option : option;
     DrawableComponent optionText;
     optionText.setAsText(displayText, "./assets/fonts/Arial.ttf", 20.0f);
-    optionText.posX = x;
-    optionText.posY = y;
-    optionText.color = color;
-    optionText.isVisible = true;
-    window->drawDrawable(optionText);
+    optionText.setPosition(x, y);
+    optionText.setColor(color);
+    optionText.setVisibility(true);
+    auto optionTextPtr = std::make_shared<DrawableComponent>(optionText);
+    window->drawDrawable(optionTextPtr);
 }
 
 void Menu::displayStatus(const std::string &label,
@@ -61,16 +61,15 @@ const std::string &value, int y, Color color) {
     if (!window) {
         throw std::runtime_error("Window cast failed");
     }
-    std::string statusText = label + ": "
-        + (value.empty() ? "None" : value);
+    std::string statusText = label + ": " + (value.empty() ? "None" : value);
     DrawableComponent statusComponent;
-    statusComponent.setAsText(statusText,
-        "./assets/fonts/Arial.ttf", 16.0f);
-    statusComponent.posX = 10;
-    statusComponent.posY = y;
-    statusComponent.color = color;
-    statusComponent.isVisible = true;
-    window->drawDrawable(statusComponent);
+    statusComponent.setAsText(statusText, "./assets/fonts/Arial.ttf", 16.0f);
+    statusComponent.setPosition(10, y);
+    statusComponent.setColor(color);
+    statusComponent.setVisibility(true);
+    auto statusComponentPtr
+        = std::make_shared<DrawableComponent>(statusComponent);
+    window->drawDrawable(statusComponentPtr);
 }
 
 void Menu::displayMainMenu(const std::vector<std::string> &graphicsLibs,
@@ -163,6 +162,7 @@ void Menu::setWindow(std::shared_ptr<IWindowModule> window) {
         throw std::runtime_error("Invalid window");
     }
 }
+
 void Menu::displayNameInput(const std::string &currentInput) {
     auto window = std::dynamic_pointer_cast<Window>(_window);
     if (!window) {
@@ -173,19 +173,17 @@ void Menu::displayNameInput(const std::string &currentInput) {
 
     displayTitle("ENTER YOUR NAME");
     std::string displayName = currentInput + "_";
-    DrawableComponent nameInput;
-    nameInput.setAsText(displayName, "./assets/fonts/Arial.ttf", 24.0f);
-    nameInput.posX = centerX - (displayName.length() * 5);
-    nameInput.posY = centerY;
-    nameInput.color = Color::GREEN;
-    nameInput.isVisible = true;
-    DrawableComponent instructions;
-    instructions.setAsText("Press ENTER to confirm, ESC to cancel",
+    auto nameInput = std::make_shared<DrawableComponent>();
+    nameInput->setAsText(displayName, "./assets/fonts/Arial.ttf", 24.0f);
+    nameInput->setPosition(centerX - (displayName.length() * 5), centerY);
+    nameInput->setColor(Color::GREEN);
+    nameInput->setVisibility(true);
+    auto instructions = std::make_shared<DrawableComponent>();
+    instructions->setAsText("Press ENTER to confirm, ESC to cancel",
                           "./assets/fonts/Arial.ttf", 18.0f);
-    instructions.posX = centerX - 150;
-    instructions.posY = centerY + 60;
-    instructions.color = Color::WHITE;
-    instructions.isVisible = true;
+    instructions->setPosition(centerX - 150, centerY + 60);
+    instructions->setColor(Color::WHITE);
+    instructions->setVisibility(true);
     window->drawDrawable(nameInput);
     window->drawDrawable(instructions);
 }

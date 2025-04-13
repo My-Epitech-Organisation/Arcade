@@ -16,6 +16,7 @@
 #include "Shared/Interface/Game/IGameModule.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "Shared/Interface/ECS/IEntityManager.hpp"
+#include "Shared/Interface/ECS/IEntity.hpp"
 #include "Shared/Interface/ECS/ISystem.hpp"
 #include "Shared/Interface/Core/IEventManager.hpp"
 #include "Games/Minesweeper/System/EventSubSystem.hpp"
@@ -36,24 +37,28 @@ class MinesweeperGame : public IGameModule {
 
     void init(std::shared_ptr<IEventManager> eventManager,
         std::shared_ptr<IComponentManager> componentManager,
-        std::shared_ptr<IEntityManager> entityManager) override;
-    void update() override;
+        std::shared_ptr<IEntityManager> entityManager,
+        std::shared_ptr<IScoreProvider> scoreProvider) override;
+    void update(float deltaTime) override;
     bool isGameOver() const override;
     bool hasWon() const override;
     void stop() override;
     int getScore() const override;
+    void setScoreProvider(
+        std::shared_ptr<IScoreProvider> scoreProvider) override {}
 
  private:
     void createBoard();
-    bool checkVictory(Arcade::Entity boardEntity);
+    bool checkVictory(std::shared_ptr<IEntity> boardEntity);
     void loadDrawableAssets();
-    std::shared_ptr<DrawableComponent>
+    std::shared_ptr<IDrawableComponent>
         getDrawableAsset(const std::string& key) const;
     std::shared_ptr<IEventManager> _eventManager;
     std::shared_ptr<IComponentManager> _componentManager;
     std::shared_ptr<IEntityManager> _entityManager;
     std::shared_ptr<EventSubSystem> _eventSystem;
     std::vector<std::shared_ptr<ISystem>> _systems;
+    std::shared_ptr<IScoreProvider> _scoreProvider;
     std::map<std::string, DrawableComponent> _drawableAssets;
     bool _gameOver;
     bool _gameWon;

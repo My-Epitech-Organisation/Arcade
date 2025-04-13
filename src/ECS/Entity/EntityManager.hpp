@@ -19,11 +19,12 @@
     #include <iostream>
     #include <unordered_map>
     #include <vector>
+    #include <memory>
     #include <string>
     #include "Shared/Interface/ECS/IEntity.hpp"
     #include "Shared/Interface/ECS/IEntityManager.hpp"
 
-using Entity = std::size_t;  /// Alias for entity identifiers.
+namespace Arcade {
 /**
  * @class EntityManager
  * @brief Manages entities in an ECS.
@@ -31,7 +32,7 @@ using Entity = std::size_t;  /// Alias for entity identifiers.
  * The EntityManager class handles the creation and deletion of entities,
  * ensuring each entity has a unique identifier and maintaining a list of active entities.
  */
-class EntityManager : public Arcade::IEntityManager {
+class EntityManager : public IEntityManager {
  public:
     /**
      * @brief Creates a new entity.
@@ -40,7 +41,7 @@ class EntityManager : public Arcade::IEntityManager {
      *
      * @return The newly created entity identifier.
      */
-    Entity createEntity(std::string name);
+    std::shared_ptr<IEntity> createEntity(std::string name) override;
 
     /**
      * @brief Destroys an existing entity.
@@ -49,19 +50,25 @@ class EntityManager : public Arcade::IEntityManager {
      *
      * @param entity The entity identifier to be destroyed.
      */
-    void destroyEntity(Entity entity);
+    void destroyEntity(std::shared_ptr<IEntity> entity) override;
 
     /**
      * @brief Retrieves the list of active entities.
      *
      * @return A constant reference to a vector containing all active entity identifiers.
      */
-    const std::unordered_map<Entity, std::string>& getEntities() const;
+    const std::vector<std::shared_ptr<IEntity>> getEntitiesVector()
+        const override;
+    const std::unordered_map<std::shared_ptr<IEntity>, std::string>
+        getEntitiesMap() const override;
+    void resetEntities() override;
+    void addEntity(std::shared_ptr<IEntity> entity) override;
+    std::shared_ptr<IEntity> getEntity(int id) override;
 
  private:
-    Entity _nextEntityId = 0;  /// Tracks the next available entity identifier.
-    std::unordered_map<Entity, std::string>
+    std::shared_ptr<IEntity> _nextEntityId = 0;
+    std::unordered_map<std::shared_ptr<IEntity>, std::string>
         _activeEntities;  /// Stores currently active entities.
 };
-
+}  // namespace Arcade
 #endif  // SRC_ECS_ENTITY_ENTITYMANAGER_HPP_

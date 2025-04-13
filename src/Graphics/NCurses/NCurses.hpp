@@ -14,6 +14,7 @@
     #include <map>
     #include <utility>
     #include "Interface/Display/IDisplayModule.hpp"
+    #include "Interface/Display/IDrawableComponent.hpp"
     #include "Models/ColorType.hpp"
     #include "NCursesUtils/NCursesWindow.hpp"
     #include "NCursesUtils/NCursesColor.hpp"
@@ -53,11 +54,12 @@ class NCursesModule : public Arcade::IDisplayModule {
  public:
     NCursesModule() : _name("NCurses") {}
     ~NCursesModule() override;
-    void init(float width, float height) override;
+    void init(const Arcade::IWindowModule& windowParam) override;
     void stop() override;
     void clearScreen() override;
     void refreshScreen() override;
-    void drawDrawable(const Arcade::DrawableComponent& drawable) override;
+    void drawDrawable(std::shared_ptr<Arcade::IDrawableComponent> drawable)
+        override;
     void pollEvents() override;
     bool isOpen() const override;
     const std::string& getName() const override;

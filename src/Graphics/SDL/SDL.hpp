@@ -17,6 +17,8 @@
     #include <string>
     #include <vector>
     #include "Interface/Display/IDisplayModule.hpp"
+    #include "Interface/Display/IDrawableComponent.hpp"
+    #include "Interface/Core/IWindowModule.hpp"
     #include "Models/ColorType.hpp"
     #include "Models/MouseButtonType.hpp"
     #include "SDLUtils/SDLWindow.hpp"
@@ -44,11 +46,12 @@ class SDLModule : public Arcade::IDisplayModule {
  public:
     SDLModule() : _name("SDL2") {}
     ~SDLModule() override;
-    void init(float width = 800.f, float height = 600.f) override;
+    void init(const Arcade::IWindowModule& windowParam) override;
     void stop() override;
     void clearScreen() override;
     void refreshScreen() override;
-    void drawDrawable(const Arcade::DrawableComponent& drawable) override;
+    void drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
+        drawable) override;
     void pollEvents() override;
     bool isOpen() const override;
     const std::string& getName() const override;

@@ -9,6 +9,7 @@
 #ifndef SRC_SHARED_INTERFACE_ECS_ISYSTEMMANAGER_HPP_
     #define SRC_SHARED_INTERFACE_ECS_ISYSTEMMANAGER_HPP_
     #include <memory>
+    #include <vector>
     #include "Shared/Interface/ECS/ISystem.hpp"
 
 namespace Arcade {
@@ -17,7 +18,10 @@ class ISystemManager {
     virtual ~ISystemManager() = default;
     virtual void registerSystem(std::shared_ptr<Arcade::ISystem> system) = 0;
     virtual void unregisterSystem(std::shared_ptr<Arcade::ISystem> system) = 0;
-    virtual void updateSystems() = 0;
+    virtual void updateSystems(float deltaTime) = 0;
+    virtual const std::vector<std::shared_ptr<Arcade::ISystem>>&
+        getSystems() const = 0;
+    virtual void clearSystems() = 0;
 };
 }  // namespace Arcade
 

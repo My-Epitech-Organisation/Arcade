@@ -18,6 +18,8 @@
 #include "Shared/Interface/ECS/IEntityManager.hpp"
 #include "Shared/Models/ColorType.hpp"
 #include "ECS/Components/Drawable/DrawableComponent.hpp"
+#include "Games/PacMan/Components/PacmanComponent.hpp"
+#include "Games/PacMan/Components/GridComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -36,18 +38,21 @@ class UISystem : public Arcade::ISystem {
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
     std::shared_ptr<Arcade::IEntityManager> _entityManager;
     const std::map<std::string, DrawableComponent>& _assets;
-    Arcade::Entity _scoreTextEntity;
-    Arcade::Entity _livesTextEntity;
-    Arcade::Entity _levelTextEntity;
-    Arcade::Entity _gameOverTextEntity;
-    Arcade::Entity _gameWinTextEntity;
-    Arcade::Entity _restartTextEntity;
-    std::vector<Arcade::Entity> _livesIconEntities;
-
+    std::shared_ptr<IEntity> _scoreTextEntity;
+    std::shared_ptr<IEntity> _livesTextEntity;
+    std::shared_ptr<IEntity> _levelTextEntity;
+    std::shared_ptr<IEntity> _gameOverTextEntity;
+    std::shared_ptr<IEntity> _gameWinTextEntity;
+    std::shared_ptr<IEntity> _restartTextEntity;
+    std::vector<std::shared_ptr<IEntity>> _livesIconEntities;
     void createUIEntities();
     void updateUITexts();
     void updateLivesIcons();
     void updateGameOverState();
+    std::shared_ptr<IEntity> _cachedPacmanEntity;
+    std::shared_ptr<IEntity> _cachedGridEntity;
+    std::shared_ptr<PacmanComponent> _cachedPacmanComponent;
+    std::shared_ptr<GridComponent> _cachedGridComponent;
 };
 
 }  // namespace PacMan

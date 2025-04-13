@@ -19,7 +19,7 @@
 
 namespace Arcade {
 
-void GameLoop::subscribeEvents() {
+void GameLoop:: subscribeEvents() {
     subscribeNum1Event();
     subscribeNum2Event();
     subscribeNum3Event();
@@ -31,9 +31,13 @@ void GameLoop::subscribeEvents() {
     subscribePKeyEvent();
 }
 
+void GameLoop::logEventSubscriptionStatus() {
+}
+
 void GameLoop::subscribeGKeyEvent() {
     KeyEvent gKeyEvent(Keys::G, EventType::KEY_RELEASED);
-    _eventManager->subscribe(gKeyEvent, [this]() {
+    _eventManager->subscribe(gKeyEvent, [this](const IEvent& event) {
+        (void)event;
         if (_state == GAME_PLAYING && _gameLibs.size() > 1 && !_gameSwitch) {
             _selectedGame = (_selectedGame + 1) % _gameLibs.size();
             _gameSwitch = true;
@@ -43,7 +47,8 @@ void GameLoop::subscribeGKeyEvent() {
 
 void GameLoop::subscribeHKeyEvent() {
     KeyEvent hKeyEvent(Keys::H, EventType::KEY_RELEASED);
-    _eventManager->subscribe(hKeyEvent, [this]() {
+    _eventManager->subscribe(hKeyEvent, [this](const IEvent& event) {
+        (void)event;
         if (_state == GAME_PLAYING && _gameLibs.size() > 1 && !_gameSwitch) {
             _selectedGame = (_selectedGame == 0) ?
                 _gameLibs.size() - 1 : _selectedGame - 1;
@@ -54,7 +59,8 @@ void GameLoop::subscribeHKeyEvent() {
 
 void GameLoop::subscribeNKeyEvent() {
     KeyEvent nKeyEvent(Keys::N, EventType::KEY_RELEASED);
-    _eventManager->subscribe(nKeyEvent, [this]() {
+    _eventManager->subscribe(nKeyEvent, [this](const IEvent& event) {
+        (void)event;
         if (_state == GAME_PLAYING && _graphicsLibs.size() > 1) {
             _selectedGraphics = (_selectedGraphics + 1) % _graphicsLibs.size();
             switchGraphicsInGame();
@@ -64,7 +70,8 @@ void GameLoop::subscribeNKeyEvent() {
 
 void GameLoop::subscribePKeyEvent() {
     KeyEvent pKeyEvent(Keys::P, EventType::KEY_RELEASED);
-    _eventManager->subscribe(pKeyEvent, [this]() {
+    _eventManager->subscribe(pKeyEvent, [this](const IEvent& event) {
+        (void)event;
         if (_state == GAME_PLAYING && _graphicsLibs.size() > 1) {
             _selectedGraphics = (_selectedGraphics == 0) ?
                 _graphicsLibs.size() - 1 : _selectedGraphics - 1;
@@ -76,7 +83,8 @@ void GameLoop::subscribePKeyEvent() {
 void GameLoop::subscribeNameInputEvents() {
     for (int key = Keys::A; key <= Keys::Z; key++) {
         KeyEvent letterEvent(static_cast<Keys>(key), EventType::KEY_PRESSED);
-        _eventManager->subscribe(letterEvent, [this, key]() {
+        _eventManager->subscribe(letterEvent, [this, key](const IEvent& event) {
+            (void)event;
             if (_state == NAME_INPUT && _inputPlayerName.length() < 15) {
                 char c = 'A' + (key - Keys::A);
                 _inputPlayerName += c;
@@ -86,7 +94,8 @@ void GameLoop::subscribeNameInputEvents() {
 
     for (int key = Keys::NUM6; key <= Keys::NUM9; key++) {
         KeyEvent numEvent(static_cast<Keys>(key), EventType::KEY_PRESSED);
-        _eventManager->subscribe(numEvent, [this, key]() {
+        _eventManager->subscribe(numEvent, [this, key](const IEvent& event) {
+            (void)event;
             if (_state == NAME_INPUT && _inputPlayerName.length() < 15) {
                 char c = '0' + (key - Keys::NUM0);
                 _inputPlayerName += c;
@@ -95,14 +104,16 @@ void GameLoop::subscribeNameInputEvents() {
     }
 
     KeyEvent backspaceEvent(Keys::BACKSPACE, EventType::KEY_PRESSED);
-    _eventManager->subscribe(backspaceEvent, [this]() {
+    _eventManager->subscribe(backspaceEvent, [this](const IEvent& event) {
+        (void)event;
         if (_state == NAME_INPUT && !_inputPlayerName.empty()) {
             _inputPlayerName.pop_back();
         }
     });
 
     KeyEvent enterEvent(Keys::ENTER, EventType::KEY_PRESSED);
-    _eventManager->subscribe(enterEvent, [this]() {
+    _eventManager->subscribe(enterEvent, [this](const IEvent& event) {
+        (void)event;
         if (_state == NAME_INPUT) {
             if (!_inputPlayerName.empty()) {
                 _scoreManager->setCurrentPlayerName(_inputPlayerName);
@@ -114,7 +125,8 @@ void GameLoop::subscribeNameInputEvents() {
     });
 
     KeyEvent escEvent(Keys::ESC, EventType::KEY_PRESSED);
-    _eventManager->subscribe(escEvent, [this]() {
+    _eventManager->subscribe(escEvent, [this](const IEvent& event) {
+        (void)event;
         if (_state == NAME_INPUT) {
             _inputPlayerName = "";
             _state = MAIN_MENU;
@@ -124,7 +136,8 @@ void GameLoop::subscribeNameInputEvents() {
 
 void GameLoop::subscribeNum1Event() {
     KeyEvent num1Event(Keys::NUM1, EventType::KEY_PRESSED);
-    _eventManager->subscribe(num1Event, [this]() {
+    _eventManager->subscribe(num1Event, [this](const IEvent& event) {
+        (void)event;
         if (_state == MAIN_MENU && !_gameLibs.empty()) {
             loadAndStartGame();
         }
@@ -133,7 +146,8 @@ void GameLoop::subscribeNum1Event() {
 
 void GameLoop::subscribeNum2Event() {
     KeyEvent num2Event(Keys::NUM2, EventType::KEY_PRESSED);
-    _eventManager->subscribe(num2Event, [this]() {
+    _eventManager->subscribe(num2Event, [this](const IEvent& event) {
+        (void)event;
         if (_state == MAIN_MENU) {
             _state = GRAPHICS_SELECTION;
         }
@@ -142,7 +156,8 @@ void GameLoop::subscribeNum2Event() {
 
 void GameLoop::subscribeNum3Event() {
     KeyEvent num3Event(Keys::NUM3, EventType::KEY_PRESSED);
-    _eventManager->subscribe(num3Event, [this]() {
+    _eventManager->subscribe(num3Event, [this](const IEvent& event) {
+        (void)event;
         if (_state == MAIN_MENU) {
             _state = GAME_SELECTION;
         }
@@ -151,7 +166,8 @@ void GameLoop::subscribeNum3Event() {
 
 void GameLoop::subscribeNum4Event() {
     KeyEvent num4Event(Keys::NUM4, EventType::KEY_PRESSED);
-    _eventManager->subscribe(num4Event, [this]() {
+    _eventManager->subscribe(num4Event, [this](const IEvent& event) {
+        (void)event;
         if (_state == MAIN_MENU) {
             _window->closeWindow();
         }
@@ -161,7 +177,8 @@ void GameLoop::subscribeNum4Event() {
 
 void GameLoop::subscribeNum5Event() {
     KeyEvent num5Event(Keys::NUM5, EventType::KEY_PRESSED);
-    _eventManager->subscribe(num5Event, [this]() {
+    _eventManager->subscribe(num5Event, [this](const IEvent& event) {
+        (void)event;
         if (_state == MAIN_MENU) {
             _inputPlayerName = "";
             _state = NAME_INPUT;
@@ -178,49 +195,63 @@ void GameLoop::subscribeNavEvents() {
 
 void GameLoop::subscribeUpEvent() {
     KeyEvent upEvent(Keys::UP, EventType::KEY_PRESSED);
-    _eventManager->subscribe(upEvent, [this]() {
-        if (_state == GAME_SELECTION && _selectedGame > 0) {
+    _eventManager->subscribe(upEvent, [this](const IEvent& event) {
+        (void)event;
+        auto now = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now - _lastKeyNavigation).count();
+        if (elapsed < KEY_NAVIGATION_COOLDOWN_MS) {
+            return;
+        }
+        if (_state == GAME_SELECTION
+            && _gameLibs.size() > 0 && _selectedGame > 0) {
             _selectedGame--;
-        } else if (_state == GRAPHICS_SELECTION && _selectedGraphics > 0) {
+            _needMenuRefresh = true;
+            _lastKeyNavigation = now;
+        } else if (_state == GRAPHICS_SELECTION
+            && _graphicsLibs.size() > 0 && _selectedGraphics > 0) {
+            size_t oldSelection = _selectedGraphics;
             _selectedGraphics--;
+            _needMenuRefresh = true;
+            _lastKeyNavigation = now;
         }
     });
 }
 
 void GameLoop::subscribeDownEvent() {
     KeyEvent downEvent(Keys::DOWN, EventType::KEY_PRESSED);
-    _eventManager->subscribe(downEvent, [this]() {
-        if (_state == GAME_SELECTION && _selectedGame < _gameLibs.size() - 1) {
+    _eventManager->subscribe(downEvent, [this](const IEvent& event) {
+        (void)event;
+        auto now = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now - _lastKeyNavigation).count();
+        if (elapsed < KEY_NAVIGATION_COOLDOWN_MS) {
+            return;
+        }
+        if (_state == GAME_SELECTION
+            && _gameLibs.size() > 0 && _selectedGame < _gameLibs.size() - 1) {
             _selectedGame++;
-        } else if (_state == GRAPHICS_SELECTION
-            && _selectedGraphics < _graphicsLibs.size() - 1) {
+            _needMenuRefresh = true;
+            _lastKeyNavigation = now;
+        } else if (_state == GRAPHICS_SELECTION && _graphicsLibs.size() > 0 &&
+                  _selectedGraphics < _graphicsLibs.size() - 1) {
+            size_t oldSelection = _selectedGraphics;
             _selectedGraphics++;
+
+            _needMenuRefresh = true;
+            _lastKeyNavigation = now;
         }
     });
 }
 
 void GameLoop::subscribeEnterEvent() {
     KeyEvent enterEvent(Keys::ENTER, EventType::KEY_PRESSED);
-    _eventManager->subscribe(enterEvent, [this]() {
+    _eventManager->subscribe(enterEvent, [this](const IEvent& event) {
+        (void)event;
         if (_state == GAME_SELECTION && !_gameLibs.empty()) {
             loadAndStartGame();
         } else if (_state == GRAPHICS_SELECTION && !_graphicsLibs.empty()) {
             loadGraphicsLibraries();
-        }
-    });
-}
-
-void GameLoop::subscribeEscEvent() {
-    KeyEvent escEvent(Keys::ESC, EventType::KEY_PRESSED);
-    _eventManager->subscribe(escEvent, [this]() {
-        if (_state == GAME_SELECTION || _state == GRAPHICS_SELECTION) {
-            _state = MAIN_MENU;
-        } else if (_state == GAME_PLAYING) {
-            if (_currentGame) {
-                auto score = _currentGame->getScore();
-                _scoreManager->addScore(_gameLibs[_selectedGame], score);
-            }
-            _state = MAIN_MENU;
         }
     });
 }
@@ -234,7 +265,8 @@ void GameLoop::subscribeMouseEvents() {
 void GameLoop::subscribeRightClickEvent() {
     MouseEvent rightClickEvent(MouseButton::RIGHT,
         EventType::MOUSE_BUTTON_PRESSED, 0, 0);
-    _eventManager->subscribe(rightClickEvent, [this]() {
+    _eventManager->subscribe(rightClickEvent, [this](const IEvent& event) {
+        (void)event;
         if (_state == GAME_SELECTION || _state == GRAPHICS_SELECTION) {
             _state = MAIN_MENU;
         }
@@ -243,7 +275,8 @@ void GameLoop::subscribeRightClickEvent() {
 
 void GameLoop::subscribeMouseMoveEvent() {
     MouseEvent mouseMoveEvent(MouseButton::NONE, EventType::MOUSE_MOVED, 0, 0);
-    _eventManager->subscribe(mouseMoveEvent, [this]() {
+    _eventManager->subscribe(mouseMoveEvent, [this](const IEvent& event) {
+        (void)event;
         auto [x, y] = _eventManager->getMousePosition();
         int centerX = _window->getWidth() / 2;
         if (_state == GAME_SELECTION && !_gameLibs.empty()) {
@@ -265,19 +298,32 @@ void GameLoop::handleMouseMoveGameSelection(int x, int y, int centerX) {
 }
 
 void GameLoop::handleMouseMoveGraphicsSelection(int x, int y, int centerX) {
+    if (_graphicsLibs.empty()) return;
+    bool selectionChanged = false;
+    size_t oldSelection = _selectedGraphics;
     for (size_t i = 0; i < _graphicsLibs.size(); i++) {
-        if (x >= centerX - 100 && x <= centerX + 100 &&
-            y >= MENU_START_Y + i * MENU_ITEM_HEIGHT &&
-            y <= MENU_START_Y + (i + 1) * MENU_ITEM_HEIGHT) {
-            _selectedGraphics = i;
+        int itemTop = MENU_START_Y + static_cast<int>(i) * MENU_ITEM_HEIGHT;
+        int itemBottom = MENU_START_Y
+        + static_cast<int>(i + 1) * MENU_ITEM_HEIGHT;
+        if (x >= centerX - 150 && x <= centerX + 150 &&
+            y >= itemTop && y <= itemBottom) {
+            if (_selectedGraphics != i) {
+                _selectedGraphics = i;
+                selectionChanged = true;
+            }
+            break;
         }
+    }
+    if (selectionChanged) {
+        _needMenuRefresh = true;
     }
 }
 
 void GameLoop::subscribeLeftClickEvent() {
     MouseEvent leftClickEvent(MouseButton::LEFT,
         EventType::MOUSE_BUTTON_PRESSED, 0, 0);
-    _eventManager->subscribe(leftClickEvent, [this]() {
+    _eventManager->subscribe(leftClickEvent, [this](const IEvent& event) {
+        (void)event;
         auto [x, y] = _eventManager->getMousePosition();
         int centerX = _window->getWidth() / 2;
         if (_state == MAIN_MENU) {
@@ -286,8 +332,6 @@ void GameLoop::subscribeLeftClickEvent() {
             handleLeftClickGameSelection(x, y, centerX);
         } else if (_state == GRAPHICS_SELECTION) {
             handleLeftClickGraphicsSelection(x, y, centerX);
-        } else if (_state == GAME_PLAYING) {
-            // Let the game handle mouse clicks while playing
         }
     });
 }
@@ -334,19 +378,25 @@ void GameLoop::handleLeftClickGameSelection(int x, int y, int centerX) {
 }
 
 void GameLoop::handleLeftClickGraphicsSelection(int x, int y, int centerX) {
+    if (_graphicsLibs.empty()) return;
     bool clickedOnGraphics = false;
     for (size_t i = 0; i < _graphicsLibs.size(); i++) {
-        if (x >= centerX - 100 && x <= centerX + 100 &&
-            y >= MENU_START_Y + i * MENU_ITEM_HEIGHT &&
-            y <= MENU_START_Y + (i + 1) * MENU_ITEM_HEIGHT) {
+        int itemTop = MENU_START_Y + static_cast<int>(i) * MENU_ITEM_HEIGHT;
+        int itemBottom = MENU_START_Y
+            + static_cast<int>(i + 1) * MENU_ITEM_HEIGHT;
+        if (x >= centerX - 150 && x <= centerX + 150 &&
+            y >= itemTop && y <= itemBottom) {
             _selectedGraphics = i;
             clickedOnGraphics = true;
             loadGraphicsLibraries();
             break;
         }
     }
-    if (!clickedOnGraphics && y >= MENU_START_Y
-        + _graphicsLibs.size() * MENU_ITEM_HEIGHT + 40) {
+    int backButtonY = MENU_START_Y + static_cast<int>(_graphicsLibs.size())
+    * MENU_ITEM_HEIGHT + 40;
+    if (!clickedOnGraphics && y >= backButtonY
+        && y <= backButtonY + MENU_ITEM_HEIGHT &&
+        x >= centerX - 100 && x <= centerX + 100) {
         _state = MAIN_MENU;
     }
 }
@@ -365,7 +415,10 @@ void GameLoop::switchGameInGame() {
             _currentGame->stop();
             _currentGame.reset();
         }
-
+        _needComponentRefresh = true;
+        _cachedTextComponents.clear();
+        _cachedTextureComponents.clear();
+        _cachedCharacterComponents.clear();
         _entityManager = std::make_shared<EntityManager>();
 
         _componentManager = std::make_shared<ComponentManager>();
@@ -374,6 +427,7 @@ void GameLoop::switchGameInGame() {
         subscribeEvents();
         subscribeNavEvents();
         subscribeMouseEvents();
+        subscribeEscEvent();
 
         _gameLoader.setLibPath(_gameLibs[_selectedGame]);
         typedef IArcadeModule* (*EntryPointFunc)(
@@ -416,8 +470,7 @@ void GameLoop::switchGameInGame() {
             _window->clearScreen();
 
             _currentGame->init(_eventManager, _componentManager,
-                _entityManager);
-
+                _entityManager, _scoreProvider);
             _state = GAME_PLAYING;
 
             _window->refreshScreen();
@@ -430,19 +483,29 @@ void GameLoop::switchGameInGame() {
 void GameLoop::switchGraphicsInGame() {
     try {
         bool wasInGame = (_state == GAME_PLAYING);
-
+        std::shared_ptr<IGameModule> currentGameBackup = _currentGame;
         std::string newLibPath = _graphicsLibs[_selectedGraphics];
+        auto drawableComponents
+            = _componentManager->getAllComponentsByType
+            (ComponentType::DRAWABLE);
         _graphicsLoader.setLibPath(newLibPath);
         auto newGraphics = _graphicsLoader.getInstanceUPtr("entryPoint");
-        auto sharedPtr = std::shared_ptr<IDisplayModule>(
-            std::move(newGraphics));
+        auto sharedPtr
+            = std::shared_ptr<IDisplayModule>(std::move(newGraphics));
 
         if (sharedPtr) {
+            if (_currentGraphics && _window) {
+                _window->clearScreen();
+                _window->refreshScreen();
+            }
             _currentGraphics = sharedPtr;
             _window->setDisplayModule(sharedPtr);
-
-            if (wasInGame && _currentGame)
+            _needComponentRefresh = true;
+            if (wasInGame && currentGameBackup) {
+                _window->clearScreen();
                 _state = GAME_PLAYING;
+                _window->refreshScreen();
+            }
         }
     } catch (const LibraryLoadException& e) {
         std::cerr << "Failed to load graphics library: "
@@ -454,5 +517,4 @@ void GameLoop::switchGraphicsInGame() {
             << e.what() << std::endl;
     }
 }
-
 }  // namespace Arcade

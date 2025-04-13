@@ -167,6 +167,25 @@ void Qt5Module::clearScreen() {
     });
 }
 
+void Qt5Module::drawDrawable
+(std::shared_ptr<Arcade::IDrawableComponent> drawable) {
+    if (!drawable->isRenderable())
+        return;
+
+    if (drawable->shouldRenderAsText()) {
+        drawText(drawable->getText(),
+            static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getColor());
+    } else if (drawable->shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getPath());
+    } else if (drawable->shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()),
+            drawable->getCharacter());
+    }
+}
+
 void Qt5Module::refreshScreen() {
     if (!_running) return;
 

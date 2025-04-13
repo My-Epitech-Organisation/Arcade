@@ -11,8 +11,10 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include "Shared/Interface/Core/IWindowModule.hpp"
 #include "Shared/Interface/Display/IDisplayModule.hpp"
+#include "Shared/Interface/Display/IDrawableComponent.hpp"
 #include "Shared/Models/KeysType.hpp"
 #include "Shared/Models/ColorType.hpp"
 #include "Shared/EventManager/KeyEvent/RawInputState.hpp"
@@ -135,7 +137,16 @@ class Window : public IWindowModule {
      * @return A shared pointer to the event manager.
      */
     std::shared_ptr<IEventManager> getEventManager() const;
-    void drawDrawable(const DrawableComponent& drawable);
+    void drawDrawable(std::shared_ptr<IDrawableComponent> drawable);
+    void setTitle(const std::string &title) override {
+        _title = title;
+    };
+    std::pair<int, int> getWindowSize() const {
+        return {_width, _height};
+    }
+    const std::string& getTitle() const {
+        return _title;
+    }
 
  private:
     std::shared_ptr<IDisplayModule> _displayModule;
@@ -145,6 +156,7 @@ class Window : public IWindowModule {
     int _width;  /// The width of the window in pixels.
     int _height;  /// The height of the window in pixels.
     std::string _title;  /// The title of the window.
+    std::string _iconPath;  /// The path to the window icon.
     bool _isShuttingDown;
         /// Indicates if the window is in the process of shutting down.
     void updateMousePosition(std::shared_ptr<RawInputState> state);

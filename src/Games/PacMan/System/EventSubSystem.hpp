@@ -24,7 +24,8 @@
 namespace Arcade {
 namespace PacMan {
 
-class EventSubSystem : public Arcade::ISystem {
+class EventSubSystem : public Arcade::ISystem,
+                      public std::enable_shared_from_this<EventSubSystem> {
  public:
     EventSubSystem(std::shared_ptr<Arcade::IComponentManager> componentManager,
                   std::shared_ptr<Arcade::IEntityManager> entityManager,
@@ -34,6 +35,8 @@ class EventSubSystem : public Arcade::ISystem {
     ~EventSubSystem() override;
     void update() override;
     void subscribeToEvents();
+    bool areEventsSubscribed() const;
+    void subscribeToEscKey();
 
  private:
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
@@ -45,9 +48,10 @@ class EventSubSystem : public Arcade::ISystem {
     void handleKeyLeft();
     void handleKeyRight();
     void handleKeyR();
+    void handleKeyEsc();
     Direction validateDirection(Direction requestedDir, size_t x, size_t y,
                                std::shared_ptr<GridComponent> grid);
-    Arcade::Entity findPacmanEntity() const;
+    std::shared_ptr<Arcade::IEntity> findPacmanEntity() const;
     std::pair<std::shared_ptr<PacmanComponent>,
         std::shared_ptr<GridComponent>>
         getPacmanAndGridComponents();

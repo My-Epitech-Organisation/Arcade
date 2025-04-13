@@ -41,7 +41,7 @@ class IEventManager {
     /**
      * @brief Type definition for event callback functions.
      */
-    using Callback = std::function<void()>;
+    using Callback = std::function<void(const IEvent&)>;
 
     /**
      * @brief Subscribe to a keyboard event with a callback function.
@@ -96,6 +96,10 @@ class IEventManager {
      * @param state The raw input state to process.
      */
     virtual void updateInputState(const RawInputState& state) = 0;
+    virtual void resetKeys() = 0;
+    virtual void setKeyState(Keys key) = 0;
+    virtual void unsubscribe(const IEvent& eventType, Callback callback) = 0;
+    virtual void unsubscribeAll(const IEvent& eventType) = 0;
 };
 }  // namespace Arcade
 

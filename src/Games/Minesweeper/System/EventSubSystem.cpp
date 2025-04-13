@@ -18,6 +18,7 @@
 #include "Games/Minesweeper/System/EventSubSystem.hpp"
 #include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
 #include "Shared/EventManager/KeyEvent/MouseEvent.hpp"
+#include "Shared/Interface/Core/IEvent.hpp"
 #include "Shared/Models/EventType.hpp"
 #include "Shared/Models/KeysType.hpp"
 #include "Shared/Models/MouseButtonType.hpp"
@@ -51,18 +52,22 @@ EventSubSystem::~EventSubSystem() {
 void EventSubSystem::subscribeToEvents() {
     Arcade::MouseEvent leftClick(Arcade::MouseButton::LEFT,
         Arcade::EventType::MOUSE_BUTTON_PRESSED, 0, 0);
-    _eventManager->subscribe(leftClick, [this]() {
-        handleLeftClick();
-    });
-
     Arcade::MouseEvent rightClick(Arcade::MouseButton::RIGHT,
         Arcade::EventType::MOUSE_BUTTON_PRESSED, 0, 0);
-    _eventManager->subscribe(rightClick, [this]() {
+    Arcade::KeyEvent rKey(Arcade::Keys::R, Arcade::EventType::KEY_PRESSED);
+    _eventManager->unsubscribeAll(rKey);
+    _eventManager->unsubscribeAll(leftClick);
+    _eventManager->unsubscribeAll(rightClick);
+    _eventManager->subscribe(leftClick, [this](const IEvent& event) {
+        (void)event;
+        handleLeftClick();
+    });
+    _eventManager->subscribe(rightClick, [this](const IEvent& event) {
+        (void)event;
         handleRightClick();
     });
-
-    Arcade::KeyEvent rKey(Arcade::Keys::R, Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(rKey, [this]() {
+    _eventManager->subscribe(rKey, [this](const IEvent& event) {
+        (void)event;
         handleKeyR();
     });
 }
@@ -77,8 +82,8 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
     cellsToReveal.push({cellX, cellY});
     processedCells.insert({cellX, cellY});
 
-    Arcade::Entity boardEntity = 0;
-    for (const auto& entity : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> boardEntity = 0;
+    for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;
@@ -108,7 +113,7 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
                     if (processedCells.count({neighborX,
                         neighborY}) > 0) continue;
 
-                    Arcade::Entity neighborEntity =
+                    std::shared_ptr<Arcade::IEntity> neighborEntity =
                         board->getCellEntity(neighborX, neighborY);
                     if (neighborEntity == 0) continue;
 
@@ -136,11 +141,10 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
                             std::make_shared<Arcade::DrawableComponent>();
                         neighborRevealedSprite->setAsTexture
                             (neighborNumberSpritePath, 100.0f, 100.0f);
-                        neighborRevealedSprite->isVisible = true;
-                        neighborRevealedSprite->posX
-                            = static_cast<float>(neighborX * 100);
-                        neighborRevealedSprite->posY
-                            = static_cast<float>(neighborY * 100);
+                        neighborRevealedSprite->setPosition
+                            (static_cast<float>(neighborX * 100),
+                                static_cast<float>(neighborY * 100));
+                        neighborRevealedSprite->setVisibility(true);
                         _componentManager->registerComponent(neighborEntity,
                             neighborRevealedSprite);
                     } else {
@@ -148,9 +152,10 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
                             = std::make_shared<Arcade::DrawableComponent>();
                         emptySprite->setAsTexture
                             ("assets/minesweeper/revealed.png", 100.0f, 100.0f);
-                        emptySprite->isVisible = true;
-                        emptySprite->posX = static_cast<float>(neighborX * 100);
-                        emptySprite->posY = static_cast<float>(neighborY * 100);
+                        emptySprite->setPosition(
+                            static_cast<float>(neighborX * 100),
+                                static_cast<float>(neighborY * 100));
+                        emptySprite->setVisibility(true);
                         _componentManager->registerComponent(neighborEntity,
                             emptySprite);
                     }
@@ -243,14 +248,12 @@ int cellX, int cellY, std::shared_ptr<Arcade::Minesweeper::Board> board) {
                                     = std::make_shared
                                     <Arcade::DrawableComponent>
                                     (mineAsset->second);
-                                hiddenDrawable->posX
-                                    = static_cast<float>(sx * 100);
-                                hiddenDrawable->posY
-                                    = static_cast<float>(sy * 100);
-                                revealedDrawable->posX
-                                    = static_cast<float>(sx * 100);
-                                revealedDrawable->posY
-                                    = static_cast<float>(sy * 100);
+                                hiddenDrawable->setPosition
+                                    (static_cast<float>(sx * 100),
+                                        static_cast<float>(sy * 100));
+                                revealedDrawable->setPosition
+                                    (static_cast<float>(sx * 100),
+                                        static_cast<float>(sy * 100));
                                 auto bombComponent
                                     = std::make_shared
                                     <Minesweeper::BombComponent>(
@@ -305,24 +308,31 @@ int cellX, int cellY, std::shared_ptr<Arcade::Minesweeper::Board> board) {
 }
 
 void EventSubSystem::handleLeftClick() {
+    // Find the board entity
     auto [mouseX, mouseY] = _eventManager->getMousePosition();
-    Arcade::Entity boardEntity = 0;
-    for (const auto& entity : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> boardEntity = nullptr;
+    for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;
         }
     }
+
+    // Check if board is in game over state
     auto boardComp = _componentManager->getComponentByType(boardEntity,
         ComponentType::BOARD);
     auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>
         (boardComp);
-
+    if (!board) return;
+    if (board->isGameOver()) {
+        handleKeyR();
+        return;
+    }
     auto posComp = _componentManager->getComponentByType(boardEntity,
         ComponentType::POSITION);
     auto boardPos = std::dynamic_pointer_cast<PositionComponent>(posComp);
 
-    if (!board || !boardPos) return;
+    if (!boardPos) return;
     size_t boardWidth = board->getWidth();
     size_t boardHeight = board->getHeight();
 
@@ -335,7 +345,8 @@ void EventSubSystem::handleLeftClick() {
 
     if (cellX >= 0 && cellX < static_cast<int>(boardWidth) &&
         cellY >= 0 && cellY < static_cast<int>(boardHeight)) {
-        Arcade::Entity cellEntity = board->getCellEntity(cellX, cellY);
+        std::shared_ptr<Arcade::IEntity> cellEntity
+            = board->getCellEntity(cellX, cellY);
         if (cellEntity == 0) return;
 
         auto cellComp = _componentManager->getComponentByType(cellEntity,
@@ -354,6 +365,13 @@ void EventSubSystem::handleLeftClick() {
         }
 
         cell->setState(Arcade::Minesweeper::Cell::REVEALED);
+        auto existingDrawable = _componentManager->getComponentByType
+            (cellEntity,
+            ComponentType::DRAWABLE);
+        if (existingDrawable) {
+            _componentManager->unregisterComponent(cellEntity,
+                typeid(*existingDrawable).name());
+        }
 
         auto bombComp = _componentManager->getComponentByType(cellEntity,
             ComponentType::BOMB);
@@ -366,9 +384,9 @@ void EventSubSystem::handleLeftClick() {
             if (bombSpriteAsset != _drawableAssets.end()) {
                 auto bombSprite = std::make_shared<Arcade::DrawableComponent>
                     (bombSpriteAsset->second);
-                bombSprite->isVisible = true;
-                bombSprite->posX = static_cast<float>(cellX * 100);
-                bombSprite->posY = static_cast<float>(cellY * 100);
+                bombSprite->setVisibility(true);
+                bombSprite->setPosition(static_cast<float>(cellX * 100),
+                    static_cast<float>(cellY * 100));
                 _componentManager->registerComponent(cellEntity, bombSprite);
                 bombComponent->reveal();
                 board->setGameOver(true);
@@ -388,9 +406,9 @@ void EventSubSystem::handleLeftClick() {
                 if (numberSpriteAsset != _drawableAssets.end()) {
                     auto revealedSprite = std::make_shared
                         <Arcade::DrawableComponent>(numberSpriteAsset->second);
-                    revealedSprite->isVisible = true;
-                    revealedSprite->posX = static_cast<float>(cellX * 100);
-                    revealedSprite->posY = static_cast<float>(cellY * 100);
+                    revealedSprite->setVisibility(true);
+                    revealedSprite->setPosition(static_cast<float>(cellX * 100),
+                        static_cast<float>(cellY * 100));
                     _componentManager->registerComponent
                         (cellEntity, revealedSprite);
                 }
@@ -399,9 +417,9 @@ void EventSubSystem::handleLeftClick() {
                 if (emptySpriteAsset != _drawableAssets.end()) {
                     auto emptySprite = std::make_shared
                         <Arcade::DrawableComponent>(emptySpriteAsset->second);
-                    emptySprite->isVisible = true;
-                    emptySprite->posX = static_cast<float>(cellX * 100);
-                    emptySprite->posY = static_cast<float>(cellY * 100);
+                    emptySprite->setVisibility(true);
+                    emptySprite->setPosition(static_cast<float>(cellX * 100),
+                        static_cast<float>(cellY * 100));
                     _componentManager->registerComponent
                         (cellEntity, emptySprite);
                 }
@@ -417,8 +435,8 @@ void EventSubSystem::handleLeftClick() {
 void EventSubSystem::handleRightClick() {
     auto [mouseX, mouseY] = _eventManager->getMousePosition();
 
-    Arcade::Entity boardEntity = 0;
-    for (const auto& entity : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> boardEntity = 0;
+    for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;
@@ -446,7 +464,8 @@ void EventSubSystem::handleRightClick() {
     int cellY = (mouseY - boardStartY) / cellSize;
     if (cellX >= 0 && cellX < static_cast<int>(boardWidth) &&
         cellY >= 0 && cellY < static_cast<int>(boardHeight)) {
-        Arcade::Entity cellEntity = board->getCellEntity(cellX, cellY);
+        std::shared_ptr<Arcade::IEntity> cellEntity
+            = board->getCellEntity(cellX, cellY);
         if (cellEntity == 0) return;
 
         auto cellComp = _componentManager->getComponentByType(cellEntity,
@@ -460,6 +479,13 @@ void EventSubSystem::handleRightClick() {
             ComponentType::CUSTOM_BASE);
         auto gameStats = std::dynamic_pointer_cast
             <Arcade::Minesweeper::GameStats> (statsComp);
+        auto existingDrawable = _componentManager->getComponentByType
+            (cellEntity,
+            ComponentType::DRAWABLE);
+        if (existingDrawable) {
+            _componentManager->unregisterComponent(cellEntity,
+                typeid(*existingDrawable).name());
+        }
 
         if (cell->getState() == Arcade::Minesweeper::Cell::HIDDEN) {
             cell->setState(Arcade::Minesweeper::Cell::FLAGGED);
@@ -467,9 +493,9 @@ void EventSubSystem::handleRightClick() {
             if (flagSpriteAsset != _drawableAssets.end()) {
                 auto flagSprite = std::make_shared
                     <Arcade::DrawableComponent>(flagSpriteAsset->second);
-                flagSprite->isVisible = true;
-                flagSprite->posX = static_cast<float>(cellX * 100);
-                flagSprite->posY = static_cast<float>(cellY * 100);
+                flagSprite->setVisibility(true);
+                flagSprite->setPosition(static_cast<float>(cellX * 100),
+                    static_cast<float>(cellY * 100));
                 _componentManager->registerComponent(cellEntity, flagSprite);
                 if (gameStats)
                     gameStats->addFlag();
@@ -480,9 +506,9 @@ void EventSubSystem::handleRightClick() {
             if (hiddenSpriteAsset != _drawableAssets.end()) {
                 auto hiddenSprite = std::make_shared
                     <Arcade::DrawableComponent>(hiddenSpriteAsset->second);
-                hiddenSprite->isVisible = true;
-                hiddenSprite->posX = static_cast<float>(cellX * 100);
-                hiddenSprite->posY = static_cast<float>(cellY * 100);
+                hiddenSprite->setVisibility(true);
+                hiddenSprite->setPosition(static_cast<float>(cellX * 100),
+                    static_cast<float>(cellY * 100));
                 _componentManager->registerComponent(cellEntity, hiddenSprite);
                 if (gameStats)
                     gameStats->removeFlag();
@@ -493,8 +519,8 @@ void EventSubSystem::handleRightClick() {
 
 void EventSubSystem::handleKeyR() {
     _firstClick = true;
-    Arcade::Entity boardEntity = -1;
-    for (const auto& entity : _entityManager->getEntities()) {
+    std::shared_ptr<Arcade::IEntity> boardEntity = nullptr;
+    for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
             boardEntity = entity.first;
             break;
@@ -532,7 +558,8 @@ void EventSubSystem::handleKeyR() {
 
     for (size_t y = 0; y < height; y++) {
         for (size_t x = 0; x < width; x++) {
-            Arcade::Entity cellEntity = board->getCellEntity(x, y);
+            std::shared_ptr<Arcade::IEntity> cellEntity
+                = board->getCellEntity(x, y);
             if (cellEntity == 0) continue;
 
             auto components = _componentManager->getEntityComponents
@@ -549,9 +576,44 @@ void EventSubSystem::handleKeyR() {
     Arcade::Minesweeper::MinesweeperFactory factory(_entityManager,
         _componentManager);
     factory.initializeGame(boardEntity, boardX, boardY, cellSize);
+
+    // Re-subscribe to events after reset
+    subscribeToEvents();
 }
 
 void EventSubSystem::update() {
-    // std::cout << "EventSubSystem update" << std::endl;
+    // Check if we need to resubscribe events
+    static bool wasGameOver = false;
+    std::shared_ptr<Arcade::IEntity> boardEntity = nullptr;
+    for (const auto& entity : _entityManager->getEntitiesMap()) {
+        if (entity.second == "Board") {
+            boardEntity = entity.first;
+            break;
+        }
+    }
+    if (boardEntity) {
+        auto boardComp = _componentManager->getComponentByType(boardEntity,
+            ComponentType::BOARD);
+        auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>
+            (boardComp);
+        if (board) {
+            bool isGameOver = board->isGameOver();
+            if (wasGameOver != isGameOver) {
+                wasGameOver = isGameOver;
+                if (isGameOver) {
+                    Arcade::KeyEvent rKey(Arcade::Keys::R,
+                        Arcade::EventType::KEY_PRESSED);
+                        _eventManager->subscribe(rKey,
+                        [this](const IEvent& event) {
+                        (void)event;
+                        handleKeyR();
+                    });
+                } else {
+                    // Re-subscribe all events when game is active
+                    subscribeToEvents();
+                }
+            }
+        }
+    }
 }
 }  // namespace Arcade

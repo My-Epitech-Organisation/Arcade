@@ -19,11 +19,11 @@ OpenGLModule::~OpenGLModule() {
     stop();
 }
 
-void OpenGLModule::init(float width, float height) {
+void OpenGLModule::init(const Arcade::IWindowModule &windowParam) {
     try {
-        _windowWidth = static_cast<int>(width);
-        _windowHeight = static_cast<int>(height);
-        _window.init(width, height, _name);
+        _windowWidth = static_cast<int>(windowParam.getWidth());
+        _windowHeight = static_cast<int>(windowParam.getHeight());
+        _window.init(_windowWidth, _windowHeight, _name);
         _event.setupCallbacks(_window.getWindow());
         _text.init();
         _texture.init();
@@ -48,19 +48,21 @@ void OpenGLModule::refreshScreen() {
     _window.refreshScreen();
 }
 
-void OpenGLModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
-    if (!drawable.isVisible)
-        return;
-
-    if (drawable.shouldRenderAsTexture()) {
-        drawTexture(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.path);
-    } else if (drawable.shouldRenderAsText()) {
-        drawText(drawable.text, static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.color);
-    } else if (drawable.shouldRenderAsCharacter()) {
-        drawEntity(static_cast<int>(drawable.posX),
-            static_cast<int>(drawable.posY), drawable.character);
+void OpenGLModule::drawDrawable
+(std::shared_ptr<Arcade::IDrawableComponent> drawable) {
+    if (!drawable->isRenderable())
+    return;
+    if (drawable->shouldRenderAsText()) {
+        drawText(drawable->getText(),
+            static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getColor());
+    } else if (drawable->shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()), drawable->getPath());
+    } else if (drawable->shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable->getPositionX()),
+            static_cast<int>(drawable->getPositionY()),
+            drawable->getCharacter());
     }
 }
 

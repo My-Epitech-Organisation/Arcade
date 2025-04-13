@@ -20,22 +20,27 @@ class IComponentManager {
  public:
     virtual ~IComponentManager() = default;
     // Register a component
-    virtual void registerComponent(Entity entity,
+    virtual void registerComponent(std::shared_ptr<IEntity> entity,
         std::shared_ptr<IComponent> component) = 0;
     // Get component by entity and component type
-    virtual std::shared_ptr<IComponent> getComponentByType(Entity entity,
+    virtual std::shared_ptr<IComponent>
+        getComponentByType(std::shared_ptr<IEntity> entity,
         ComponentType type) = 0;
     // Get all components of a specific type
     virtual std::vector<std::shared_ptr<IComponent>> getAllComponentsByType(
         ComponentType type) = 0;
+    virtual bool
+        hasComponent(std::shared_ptr<IEntity> entity,
+        ComponentType type) const = 0;
     // Unregister a component
-    virtual void unregisterComponent(Entity entity,
+    virtual void unregisterComponent(std::shared_ptr<IEntity> entity,
         const std::string& componentName) = 0;
     // Get all components for an entity
     virtual std::vector<std::shared_ptr<IComponent>>
-        getEntityComponents(Entity entity) = 0;
+        getEntityComponents(std::shared_ptr<IEntity> entity) = 0;
     // Get all components
     virtual std::vector<std::shared_ptr<IComponent>> getAllComponents() = 0;
+    virtual void clearComponents() = 0;
 };
 }  // namespace Arcade
 

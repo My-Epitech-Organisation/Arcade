@@ -11,6 +11,8 @@
 #include <memory>
 #include <map>
 #include <string>
+#include "Shared/Interface/ECS/IEntity.hpp"
+#include "ECS/Entity/Entity.hpp"
 #include "Games/PacMan/System/EventSubSystem.hpp"
 #include "Games/PacMan/System/GameLogic.hpp"
 #include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
@@ -37,61 +39,93 @@ _drawableAssets(drawableAssets) {
 }
 
 EventSubSystem::~EventSubSystem() {
-    if (_eventManager)
-        _eventManager->unsubscribeAll();
+    if (_eventManager) {
+        try {
+            _eventManager->unsubscribeAll();
+        } catch (const std::exception& e) {
+            std::cerr
+                << "Error unsubscribing events in ~EventSubSystem(): "
+                << e.what() << std::endl;
+        } catch (...) {
+            std::cerr
+                << "Unknown error unsubscribing events in ~EventSubSystem()"
+                << std::endl;
+        }
+    }
+    _componentManager.reset();
+    _entityManager.reset();
+    _eventManager.reset();
 }
 
 void EventSubSystem::subscribeToEvents() {
-    Arcade::KeyEvent upKey(Arcade::Keys::UP, Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(upKey, [this]() {
-        handleKeyUp();
-    });
-
-    Arcade::KeyEvent downKey(Arcade::Keys::DOWN,
-        Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(downKey, [this]() {
-        handleKeyDown();
-    });
-
-    Arcade::KeyEvent leftKey(Arcade::Keys::LEFT,
-        Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(leftKey, [this]() {
-        handleKeyLeft();
-    });
-
-    Arcade::KeyEvent rightKey(Arcade::Keys::RIGHT,
-        Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(rightKey, [this]() {
-        handleKeyRight();
-    });
-
-    Arcade::KeyEvent rKey(Arcade::Keys::R,
-        Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(rKey, [this]() {
-        handleKeyR();
-    });
+    if (!_eventManager) {
+        std::cerr
+            << "EventSubSystem: Cannot subscribe, event manager is null"
+            << std::endl;
+        return;
+    }
+    try {
+        Arcade::KeyEvent upKey(Arcade::Keys::UP,
+            Arcade::EventType::KEY_PRESSED);
+        Arcade::KeyEvent downKey(Arcade::Keys::DOWN,
+            Arcade::EventType::KEY_PRESSED);
+        Arcade::KeyEvent leftKey(Arcade::Keys::LEFT,
+            Arcade::EventType::KEY_PRESSED);
+        Arcade::KeyEvent rightKey(Arcade::Keys::RIGHT,
+            Arcade::EventType::KEY_PRESSED);
+        Arcade::KeyEvent rKey(Arcade::Keys::R,
+            Arcade::EventType::KEY_PRESSED);
+        _eventManager->unsubscribeAll(upKey);
+        _eventManager->unsubscribeAll(downKey);
+        _eventManager->unsubscribeAll(leftKey);
+        _eventManager->unsubscribeAll(rightKey);
+        _eventManager->unsubscribeAll(rKey);
+        _eventManager->subscribe(upKey, [this](const IEvent& event) {
+            (void)event;
+            handleKeyUp();
+        });
+        _eventManager->subscribe(downKey, [this](const IEvent& event) {
+            (void)event;
+            handleKeyDown();
+        });
+        _eventManager->subscribe(leftKey, [this](const IEvent& event) {
+            (void)event;
+            handleKeyLeft();
+        });
+        _eventManager->subscribe(rightKey, [this](const IEvent& event) {
+            (void)event;
+            handleKeyRight();
+        });
+        _eventManager->subscribe(rKey, [this](const IEvent& event) {
+            (void)event;
+            handleKeyR();
+        });
+    } catch (const std::exception& e) {
+        std::cerr << "Error subscribing events: " << e.what() << std::endl;
+    }
 }
 
-Arcade::Entity EventSubSystem::findPacmanEntity() const {
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+std::shared_ptr<Arcade::IEntity>
+EventSubSystem::findPacmanEntity() const {
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto component = _componentManager->getComponentByType(entity,
             static_cast<ComponentType>(1001));
         if (component)
             return entity;
     }
-    return 0;
+    return nullptr;
 }
 
 std::pair<std::shared_ptr<PacmanComponent>, std::shared_ptr<GridComponent>>
 EventSubSystem::getPacmanAndGridComponents() {
-    Arcade::Entity pacmanEntity = findPacmanEntity();
+    std::shared_ptr<IEntity> pacmanEntity = findPacmanEntity();
 
     auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
         _componentManager->getComponentByType(pacmanEntity,
             static_cast<ComponentType>(1001)));
 
-    Arcade::Entity gridEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    std::shared_ptr<IEntity> gridEntity = 0;
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto component = _componentManager->getComponentByType(entity,
             static_cast<ComponentType>(1000));
         if (component) {
@@ -161,48 +195,89 @@ void EventSubSystem::handleKeyRight() {
         pacmanComp->setNextDirection(Direction::RIGHT);
 }
 
+void EventSubSystem::handleKeyEsc() {
+}
+
 void EventSubSystem::handleKeyR() {
-    Arcade::Entity gridEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    std::shared_ptr<IEntity> gridEntity;
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Grid") {
             gridEntity = entity;
             break;
         }
     }
 
-    if (gridEntity != 0)
+    if (!gridEntity) {
+        std::cout << "Cannot find Grid entity for restart" << std::endl;
         return;
+    }
 
     auto gridComp = std::dynamic_pointer_cast<GridComponent>(
         _componentManager->getComponentByType(gridEntity,
             static_cast<ComponentType>(1000)));
 
-    gridComp->setGameOver(false);
-    gridComp->setGameWon(false);
-
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
+    if (!gridComp) return;
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Pacman") {
             auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
                 _componentManager->getComponentByType(entity,
                     static_cast<ComponentType>(1001)));
 
             if (pacmanComp) {
-                pacmanComp->setLives(3);
                 pacmanComp->setScore(0);
-                pacmanComp->setCurrentDirection(Direction::NONE);
-                pacmanComp->setNextDirection(Direction::NONE);
+                pacmanComp->setLives(3);
             }
             break;
         }
     }
+    auto gameStateManager = std::make_shared<GameStateManager>(
+        _componentManager, _entityManager, _drawableAssets);
+    gameStateManager->resetEntireGame();
+}
 
-    auto gameLogic = std::make_shared<GameLogic>(_componentManager,
-        _entityManager, _drawableAssets);
-    gameLogic->reloadCurrentMap();
+bool EventSubSystem::areEventsSubscribed() const {
+    try {
+        bool upSubscribed = _eventManager->isKeyPressed(Arcade::Keys::UP);
+        bool downSubscribed = _eventManager->isKeyPressed(Arcade::Keys::DOWN);
+        bool leftSubscribed = _eventManager->isKeyPressed(Arcade::Keys::LEFT);
+        bool rightSubscribed = _eventManager->isKeyPressed(Arcade::Keys::RIGHT);
+        bool rSubscribed = _eventManager->isKeyPressed(Arcade::Keys::R);
+        bool escSubscribed = _eventManager->isKeyPressed(Arcade::Keys::ESC);
+        return upSubscribed || downSubscribed || leftSubscribed ||
+               rightSubscribed || rSubscribed || escSubscribed;
+    } catch (...) {
+        return false;
+    }
 }
 
 void EventSubSystem::update() {
-    // Nothing to do here - event handling is done via callbacks
+    static bool firstUpdate = true;
+    if (firstUpdate) {
+        std::cerr << "EventSubSystem: First update executed" << std::endl;
+        firstUpdate = false;
+    }
+    static int checkCounter = 0;
+    checkCounter = (checkCounter + 1) % 30;
+    if (checkCounter == 0) {
+        bool needResubscribe = false;
+        try {
+            bool upSubscribed = _eventManager->isKeyPressed(Arcade::Keys::UP);
+            if (!upSubscribed) {
+                needResubscribe = true;
+            }
+        } catch (const std::exception& e) {
+            needResubscribe = true;
+        } catch (...) {
+            needResubscribe = true;
+        }
+
+        if (needResubscribe) {
+            try {
+                subscribeToEvents();
+            } catch (const std::exception& e) {
+            }
+        }
+    }
 }
 
 }  // namespace PacMan

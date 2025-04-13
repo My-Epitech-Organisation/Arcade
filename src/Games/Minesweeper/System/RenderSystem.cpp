@@ -13,6 +13,6 @@
 
 
 void RenderSystem::update() {
-    auto entities = _entityManager->getEntities();
+    auto entities = _entityManager->getEntitiesMap();
     for (const auto& entity : entities) {}
 }

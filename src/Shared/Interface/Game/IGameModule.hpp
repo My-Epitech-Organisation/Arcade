@@ -23,6 +23,7 @@
     #include "Shared/Interface/IArcadeModule.hpp"
     #include "Shared/Interface/ECS/IEntityManager.hpp"
     #include "Shared/Interface/Core/IEventManager.hpp"
+    #include "Shared/Interface/Game/IScoreProvider.hpp"
 
 namespace Arcade {
 /**
@@ -38,12 +39,15 @@ class IGameModule : public IArcadeModule {
     virtual ~IGameModule() = default;
     virtual void init(std::shared_ptr<IEventManager> eventManager,
         std::shared_ptr<IComponentManager> componentManager,
-        std::shared_ptr<IEntityManager> entityManager) = 0;
-    virtual void update() = 0;
+        std::shared_ptr<IEntityManager> entityManager,
+        std::shared_ptr<IScoreProvider> scoreProvider) = 0;
+    virtual void update(float deltaTime) = 0;
     virtual void stop() = 0;
     virtual bool isGameOver() const = 0;
     virtual bool hasWon() const = 0;
     virtual int getScore() const = 0;
+    virtual void setScoreProvider(
+        std::shared_ptr<Arcade::IScoreProvider> scoreProvider) = 0;
 };
 }  // namespace Arcade
 #endif  // SRC_SHARED_INTERFACE_GAME_IGAMEMODULE_HPP_

@@ -27,6 +27,7 @@
     #include "GTKUtils/GTKFont.hpp"
     #include "GTKUtils/GTKEvent.hpp"
     #include "Models/ColorType.hpp"
+    #include "Interface/Display/IDrawableComponent.hpp"
 
     class GTKModule : public Arcade::IDisplayModule {
      private:
@@ -72,11 +73,12 @@
         GTKModule() : _running(false), _initialized(false),
             _threadRunning(false) {}
         ~GTKModule() override;
-        void init(float width = 800.f, float height = 600.f) override;
+        void init(const Arcade::IWindowModule& windowParam) override;
         void stop() override;
         void clearScreen() override;
         void refreshScreen() override;
-        void drawDrawable(const Arcade::DrawableComponent &drawable) override;
+        void drawDrawable(std::shared_ptr<Arcade::IDrawableComponent>
+            drawable) override;
         void pollEvents() override;
         bool isOpen() const override;
         const std::string& getName() const override;

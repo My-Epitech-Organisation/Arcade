@@ -5,20 +5,28 @@
 ** File description:
 ** System Manager
 */
-#include "ECS/System/SystemManager.hpp"
 #include <algorithm>
+#include <memory>
+#include "ECS/System/SystemManager.hpp"
 
-void SystemManager::registerSystem(Arcade::ISystem* system) {
+namespace Arcade {
+void SystemManager::registerSystem(std::shared_ptr<Arcade::ISystem> system) {
     _systems.push_back(system);
 }
 
-void SystemManager::removeSystem(Arcade::ISystem* system) {
+void SystemManager::unregisterSystem(std::shared_ptr<Arcade::ISystem> system) {
     _systems.erase(std::remove(_systems.begin(),
         _systems.end(), system), _systems.end());
 }
 
-void SystemManager::updateSystems() {
-    for (Arcade::ISystem* system : _systems) {
+void SystemManager::updateSystems(float deltaTime) {
+    (void)deltaTime;
+    for (std::shared_ptr<Arcade::ISystem> system : _systems) {
         system->update();
     }
 }
+
+void SystemManager::clearSystems() {
+    _systems.clear();
+}
+}  // namespace Arcade

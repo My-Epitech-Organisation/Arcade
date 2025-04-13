@@ -6,6 +6,7 @@
 ** Food Component implementation
 */
 
+#include <iostream>
 #include "Games/PacMan/Components/FoodComponent.hpp"
 
 namespace Arcade {
@@ -13,6 +14,9 @@ namespace PacMan {
 
 FoodComponent::FoodComponent(FoodType type)
 : _foodType(type), _eaten(false), _gridX(0), _gridY(0) {
+    if (type == FoodType::POWER_PILL) {
+        std::cout << "Created a POWER_PILL food component" << std::endl;
+    }
 }
 
 int FoodComponent::getPoints() const {

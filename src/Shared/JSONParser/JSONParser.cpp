@@ -293,17 +293,17 @@ const std::string& fontPath) {
 DrawableComponent JSONParser::createGraphicalElement(
 const std::shared_ptr<JSONValue>& node, const std::string& fontPath) {
     DrawableComponent element;
-    element.path = node->get("path")->asString();
-    element.font = fontPath;
-    element.character = node->get("char")->asString()[0];
+    element.setPath(node->get("path")->asString());
+    element.setFont(fontPath);
+    element.setCharacter(node->get("char")->asString()[0]);
     // Use setAsTexture if width and height are specified
     if (node->hasKey("width") && node->hasKey("height")) {
         float width = node->get("width")->asNumber();
         float height = node->get("height")->asNumber();
-        element.setAsTexture(element.path, width, height);
+        element.setAsTexture(element.getPath(), width, height);
     } else {
         // Otherwise, set as character
-        element.setAsCharacter(element.character);
+        element.setAsCharacter(element.getCharacter());
     }
     return element;
 }

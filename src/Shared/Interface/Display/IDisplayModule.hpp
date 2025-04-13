@@ -24,6 +24,8 @@
     #include "Models/ColorType.hpp"
     #include "Interface/IArcadeModule.hpp"
     #include "../ECS/Components/Drawable/DrawableComponent.hpp"
+    #include "Interface/Core/IWindowModule.hpp"
+    #include "Interface/Display/IDrawableComponent.hpp"
 
 namespace Arcade {
 
@@ -38,11 +40,11 @@ namespace Arcade {
 class IDisplayModule : public IArcadeModule {
  public:
     virtual ~IDisplayModule() = default;
-    virtual void init(float width, float height) = 0;
+    virtual void init(const Arcade::IWindowModule& windowParam) = 0;
     virtual void stop() = 0;
     virtual void clearScreen() = 0;
     virtual void refreshScreen() = 0;
-    virtual void drawDrawable(const DrawableComponent& drawable) = 0;
+    virtual void drawDrawable(std::shared_ptr<IDrawableComponent> drawable) = 0;
     virtual void pollEvents() = 0;
     virtual bool isOpen() const = 0;
     virtual bool isKeyPressed(int keyCode) = 0;

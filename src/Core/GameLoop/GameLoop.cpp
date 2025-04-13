@@ -30,6 +30,8 @@
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 #include "ECS/Components/Text/TextComponent.hpp"
 #include "Shared/Exceptions/Exceptions.hpp"
+#include "Shared/Models/KeysType.hpp"
+#include "Shared/ScoreProvider/ScoreProvider.hpp"
 
 namespace Arcade {
 GameLoop::GameLoop(const std::string& initialLib)
@@ -41,10 +43,17 @@ _gameLoader("."),
 _menuLoader("./lib/arcade_menu.so"),
 _inputPlayerName(""),
 _scoreManager(std::make_shared<ScoreManager>()),
-_gameSwitch(false) {
+_gameSwitch(false),
+_needComponentRefresh(true),
+_lastFrameTime(std::chrono::high_resolution_clock::now()),
+_lastPerformanceReport(std::chrono::high_resolution_clock::now()),
+_lastKeyNavigation(std::chrono::high_resolution_clock::now()),
+_frameCount(0),
+_totalFrameTime(0) {
     _eventManager = std::make_shared<EventManager>();
     _entityManager = std::make_shared<EntityManager>();
     _componentManager = std::make_shared<ComponentManager>();
+    _scoreProvider = std::make_shared<ScoreProvider>();
     subscribeEvents();
     subscribeNavEvents();
     subscribeMouseEvents();
@@ -92,42 +101,6 @@ GameLoop::~GameLoop() {
     _eventManager.reset();
 }
 
-void GameLoop::run() {
-    try {
-        auto running = std::make_shared<bool>(true);
-        auto lastFrameTime = std::chrono::high_resolution_clock::now();
-
-        while (*running) {
-            auto currentTime = std::chrono::high_resolution_clock::now();
-            float deltaTime = std::chrono::duration<float>
-                (currentTime - lastFrameTime).count();
-            lastFrameTime = currentTime;
-            handleEvents(running);
-            if (!*running) break;
-            _window->clearScreen();
-            handleState();
-            _window->refreshScreen();
-            std::this_thread::sleep_for(std::chrono::milliseconds(16));
-        }
-        cleanup();
-    } catch (const GraphicsException& e) {
-        std::cerr << "Graphics error during game loop: "
-                  << e.what() << std::endl;
-    } catch (const GameException& e) {
-        std::cerr << "Game error during game loop: " << e.what() << std::endl;
-    } catch (const InputException& e) {
-        std::cerr << "Input error during game loop: " << e.what() << std::endl;
-    } catch (const LibraryLoadException& e) {
-        std::cerr << "Library error during game loop: "
-                  << e.what() << std::endl;
-    } catch (const ArcadeException& e) {
-        std::cerr << "Error during game loop: " << e.what() << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "Unexpected error during game loop: "
-                  << e.what() << std::endl;
-    }
-}
-
 void GameLoop::handleEvents(std::shared_ptr<bool> running) {
     _window->pollEvents();
     if (!_window->isWindowOpen()) {
@@ -136,20 +109,36 @@ void GameLoop::handleEvents(std::shared_ptr<bool> running) {
 }
 
 void GameLoop::handleState() {
-    if (_gameSwitch && _state == GAME_PLAYING) {
-        _gameSwitch = false;
-        switchGameInGame();
-    }
-
+    // Mark component cache for refresh when state changes
     static auto previousState = MAIN_MENU;
-
     if (_state != previousState) {
-        if (!(_state == GAME_PLAYING && previousState != GAME_PLAYING))
+        _needComponentRefresh = true;
+        if (previousState == GAME_PLAYING) {
+            if (_currentGame) {
+                try {
+                    _currentGame->stop();
+                    _currentGame = nullptr;
+                } catch (...) {
+                    std::cerr << "Error stopping current game" << std::endl;
+                }
+            }
             _eventManager->unsubscribeAll();
+        }
 
         switch (_state) {
             case NAME_INPUT:
                 subscribeNameInputEvents();
+                break;
+            case GRAPHICS_SELECTION:
+                subscribeEvents();
+                subscribeNavEvents();
+                subscribeMouseEvents();
+                subscribeEscEvent();
+                break;
+            case GAME_SELECTION:
+                subscribeEvents();
+                subscribeNavEvents();
+                subscribeMouseEvents();
                 break;
             case MAIN_MENU:
                 subscribeEvents();
@@ -157,8 +146,8 @@ void GameLoop::handleState() {
                 subscribeMouseEvents();
                 break;
             case GAME_PLAYING:
-                if (previousState != GAME_PLAYING)
-                    subscribeEscEvent();
+                subscribeEvents();
+                subscribeEscEvent();
                 break;
             default:
                 subscribeNavEvents();
@@ -167,22 +156,23 @@ void GameLoop::handleState() {
         }
         previousState = _state;
     }
-
     switch (_state) {
         case MAIN_MENU:
             displayMainMenu();
             break;
-        case GAME_SELECTION:
-            displayGameSelection();
-            break;
         case GRAPHICS_SELECTION:
             displayGraphicsSelection();
+            break;
+        case GAME_SELECTION:
+            displayGameSelection();
             break;
         case GAME_PLAYING:
             updateGame();
             break;
         case NAME_INPUT:
             displayNameInput();
+            break;
+        default:
             break;
     }
 }
@@ -197,47 +187,22 @@ void GameLoop::displayGameSelection() {
 }
 
 void GameLoop::displayGraphicsSelection() {
+    if (!_graphicsLibs.empty() && _selectedGraphics >= _graphicsLibs.size()) {
+        _selectedGraphics = _graphicsLibs.size() - 1;
+    }
     _menu->displayGraphicsSelection(_graphicsLibs, _selectedGraphics);
 }
 void GameLoop::updateGame() {
+    // Check if we need to switch games
+    if (_gameSwitch) {
+        switchGameInGame();
+        _gameSwitch = false;
+        return;
+    }
     if (_currentGame) {
-        _currentGame->update();
-        auto entities = _entityManager->getEntities();
-        std::vector<std::shared_ptr<DrawableComponent>> textComponents;
-        std::vector<std::shared_ptr<DrawableComponent>> textureComponents;
-        std::vector<std::shared_ptr<DrawableComponent>> characterComponents;
-        for (const auto& [entityId, entityName] : entities) {
-            auto components = _componentManager->getAllComponentsByType(
-                ComponentType::DRAWABLE);
-            for (const auto& component : components) {
-                auto drawableComp
-                = std::dynamic_pointer_cast<DrawableComponent>(
-                    component);
-                if (drawableComp.get() && drawableComp->isVisible) {
-                    if (drawableComp->shouldRenderAsText()) {
-                        if (drawableComp)
-                            textComponents.push_back(drawableComp);
-                    } else if (drawableComp->shouldRenderAsTexture()) {
-                        if (drawableComp)
-                            textureComponents.push_back(drawableComp);
-                    } else if (drawableComp->shouldRenderAsCharacter()) {
-                        if (drawableComp)
-                            characterComponents.push_back(drawableComp);
-                    } else {
-                        std::cerr << "Unknown drawable type for entity "
-                            << entityId << std::endl;
-                    }
-                }
-            }
-        }
-        for (auto& texture : textureComponents)
-            _currentGraphics->drawDrawable(*texture);
-        for (auto& character : characterComponents)
-            _currentGraphics->drawDrawable(*character);
-        for (auto& text : textComponents)
-            _currentGraphics->drawDrawable(*text);
-    } else {
-        std::cout << "[DEBUG] No current game to update" << std::endl;
+        _currentGame->update(0);
+        updateDrawableCache();
+        renderCachedComponents();
     }
 }
 
@@ -361,6 +326,10 @@ void GameLoop::loadAndStartGame() {
             _currentGame->stop();
             _currentGame.reset();
         }
+        _needComponentRefresh = true;
+        _cachedTextComponents.clear();
+        _cachedTextureComponents.clear();
+        _cachedCharacterComponents.clear();
         subscribeEvents();
         subscribeNavEvents();
         subscribeMouseEvents();
@@ -399,7 +368,7 @@ void GameLoop::loadAndStartGame() {
             });
         if (_currentGame) {
             _currentGame->init(_eventManager,
-                _componentManager, _entityManager);
+                _componentManager, _entityManager, _scoreProvider);
             _state = GAME_PLAYING;
         }
     } catch (const std::exception& e) {
@@ -417,7 +386,7 @@ void GameLoop::loadGraphicsLibraries() {
         }
 
         if (_entityManager) {
-            auto entities = _entityManager->getEntities();
+            auto entities = _entityManager->getEntitiesMap();
             for (const auto& entity : entities) {
                 _entityManager->destroyEntity(entity.first);
             }
@@ -490,7 +459,6 @@ void GameLoop::loadCommonComponents() {
             << e.what() << std::endl;
     }
 }
-
 void GameLoop::displayNameInput() {
     int centerX = _window->getWidth() / 2;
     int centerY = _window->getHeight() / 2;
@@ -498,35 +466,141 @@ void GameLoop::displayNameInput() {
     auto titleText = std::make_shared<DrawableComponent>();
     titleText->setAsText("ENTER YOUR NAME",
         "assets/fonts/arial.ttf", 30);
-    titleText->posX = centerX - 80;
-    titleText->posY = TITLE_Y;
-    titleText->color = Color::WHITE;
-    titleText->isVisible = true;
-    _currentGraphics->drawDrawable(*titleText);
+    titleText->setPosition(centerX - 80, TITLE_Y);
+    titleText->setColor(Color::WHITE);
+    titleText->setVisibility(true);
+    _currentGraphics->drawDrawable(titleText);
 
     auto inputText = std::make_shared<DrawableComponent>();
     inputText->setAsText(_inputPlayerName + "_",
         "assets/fonts/arial.ttf", 30);
-    inputText->posX = centerX - (inputText->text.length() * 5);
-    inputText->posY = centerY;
-    inputText->isVisible = true;
-    inputText->text = _inputPlayerName + "_";
-    inputText->color = Color::GREEN;
-    _currentGraphics->drawDrawable(*inputText);
+    // Calculate position based on text length
+    inputText->setPosition(centerX - (_inputPlayerName.length() * 5), centerY);
+    inputText->setVisibility(true);
+    inputText->setText(_inputPlayerName + "_");
+    inputText->setColor(Color::GREEN);
+    _currentGraphics->drawDrawable(inputText);
 
     auto instructionsText = std::make_shared<DrawableComponent>();
     instructionsText->setAsText("Press ENTER to confirm, ESC to cancel",
         "assets/fonts/arial.ttf", 20);
-    instructionsText->posX = centerX - 150;
-    instructionsText->posY = centerY + 60;
-    instructionsText->isVisible = true;
-    instructionsText->text = "Press ENTER to confirm, ESC to cancel";
-    instructionsText->color = Color::WHITE;
-    _currentGraphics->drawDrawable(*instructionsText);
+    instructionsText->setPosition(centerX - 150, centerY + 60);
+    instructionsText->setVisibility(true);
+    instructionsText->setText("Press ENTER to confirm, ESC to cancel");
+    instructionsText->setColor(Color::WHITE);
+    _currentGraphics->drawDrawable(instructionsText);
 }
-
 void GameLoop::changeState(std::shared_ptr<IGameState> newState) {
     // Implementation of state management
     // This would be used for more complex state transitions
 }
+
+void GameLoop::updateDrawableCache() {
+    if (_state == GAME_PLAYING) {
+        _needComponentRefresh = true;
+    }
+    if (!_needComponentRefresh) {
+        return;
+    }
+    _cachedTextComponents.clear();
+    _cachedTextureComponents.clear();
+    _cachedCharacterComponents.clear();
+    auto drawableComponents
+        = _componentManager->getAllComponentsByType(ComponentType::DRAWABLE);
+    for (const auto& component : drawableComponents) {
+        auto drawableComp
+            = std::dynamic_pointer_cast<IDrawableComponent>(component);
+        if (!drawableComp || !drawableComp->isRenderable()) continue;
+        if (drawableComp->shouldRenderAsText()) {
+            _cachedTextComponents.push_back(drawableComp);
+        } else if (drawableComp->shouldRenderAsTexture()) {
+            _cachedTextureComponents.push_back(drawableComp);
+        } else if (drawableComp->shouldRenderAsCharacter()) {
+            _cachedCharacterComponents.push_back(drawableComp);
+        }
+    }
+    _needComponentRefresh = false;
+}
+
+void GameLoop::renderCachedComponents() {
+    for (const auto& texture : _cachedTextureComponents) {
+        _currentGraphics->drawDrawable(texture);
+    }
+    for (const auto& character : _cachedCharacterComponents) {
+        _currentGraphics->drawDrawable(character);
+    }
+    for (const auto& text : _cachedTextComponents) {
+        _currentGraphics->drawDrawable(text);
+    }
+}
+
+void GameLoop::subscribeEscEvent() {
+    KeyEvent escEvent(Arcade::Keys::ESC, Arcade::EventType::KEY_PRESSED);
+    _eventManager->subscribe(escEvent, [this](const IEvent& event) {
+        (void)event;
+        switch (_state) {
+            case GAME_PLAYING:
+                _state = MAIN_MENU;
+                if (_currentGame) {
+                    try {
+                        _currentGame->stop();
+                    } catch (...) {
+                        std::cerr << "Error stopping game" << std::endl;
+                    }
+                    _currentGame = nullptr;
+                }
+                _needComponentRefresh = true;
+                subscribeEvents();
+                subscribeNavEvents();
+                subscribeMouseEvents();
+                break;
+            case GRAPHICS_SELECTION:
+            case GAME_SELECTION:
+                _state = MAIN_MENU;
+                break;
+            case NAME_INPUT:
+                break;
+            default:
+                break;
+        }
+    });
+}
+
+
+
+bool _needMenuRefresh = false;
+
+void GameLoop::run() {
+    std::cout << "GameLoop: Starting run method" << std::endl;
+
+    subscribeEvents();
+    subscribeNavEvents();
+    subscribeMouseEvents();
+    subscribeEscEvent();
+    _state = MAIN_MENU;
+    auto lastFrameTime = std::chrono::high_resolution_clock::now();
+    auto running = std::make_shared<bool>(true);
+    _lastGraphicsSwitch = std::chrono::high_resolution_clock::now();
+    while (*running) {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float deltaTime = std::chrono::duration<float>(currentTime
+            - lastFrameTime).count();
+        lastFrameTime = currentTime;
+
+        // Process events
+        handleEvents(running);
+        if (!*running) break;
+        // Clear the display
+        if (_currentGraphics != nullptr)
+            _currentGraphics->clearScreen();
+        handleState();
+        if (_currentGraphics != nullptr)
+            _currentGraphics->refreshScreen();
+
+        // Cap frame rate
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    }
+    cleanup();
+}
+
 }  // namespace Arcade
