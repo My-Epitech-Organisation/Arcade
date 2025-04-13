@@ -24,7 +24,9 @@
 namespace Arcade {
 namespace PacMan {
 
-class EventSubSystem : public Arcade::ISystem {
+// Make EventSubSystem inherit from std::enable_shared_from_this for weak_ptr support
+class EventSubSystem : public Arcade::ISystem, 
+                      public std::enable_shared_from_this<EventSubSystem> {
  public:
     EventSubSystem(std::shared_ptr<Arcade::IComponentManager> componentManager,
                   std::shared_ptr<Arcade::IEntityManager> entityManager,
@@ -34,6 +36,12 @@ class EventSubSystem : public Arcade::ISystem {
     ~EventSubSystem() override;
     void update() override;
     void subscribeToEvents();
+    
+    // Add a method to check if events are registered
+    bool areEventsSubscribed() const;
+    
+    // Add a method to explicitly subscribe to ESC key only
+    void subscribeToEscKey();
 
  private:
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
@@ -45,6 +53,7 @@ class EventSubSystem : public Arcade::ISystem {
     void handleKeyLeft();
     void handleKeyRight();
     void handleKeyR();
+    void handleKeyEsc(); // Add ESC key handler
     Direction validateDirection(Direction requestedDir, size_t x, size_t y,
                                std::shared_ptr<GridComponent> grid);
     std::shared_ptr<Arcade::IEntity> findPacmanEntity() const;

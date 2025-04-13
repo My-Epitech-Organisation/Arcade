@@ -62,6 +62,8 @@ size_t gridX, size_t gridY) {
     auto pacmanComponent = std::make_shared<PacmanComponent>();
     pacmanComponent->setName("Pacman");
     pacmanComponent->setGridPosition(gridX, gridY);
+    pacmanComponent->setVisualPosition(x, y); // Initialize visual position
+    pacmanComponent->setTargetPosition(x, y); // Initialize target position
     pacmanComponent->setCurrentDirection(Direction::NONE);
     _componentManager->registerComponent(pacmanEntity, pacmanComponent);
     return pacmanEntity;
@@ -106,6 +108,8 @@ float y, size_t gridX, size_t gridY, GhostType type) {
     auto ghostComponent = std::make_shared<GhostComponent>(type);
     ghostComponent->setName(ghostName);
     ghostComponent->setGridPosition(gridX, gridY);
+    ghostComponent->setVisualPosition(x, y); // Initialize visual position
+    ghostComponent->setTargetPosition(x, y); // Initialize target position
     ghostComponent->setState(GhostState::NORMAL);
     _componentManager->registerComponent(ghostEntity, ghostComponent);
 

@@ -179,142 +179,133 @@ void UISystem::createUIEntities() {
 }
 
 void UISystem::updateUITexts() {
-    std::shared_ptr<Arcade::IEntity> pacmanEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
-        if (name == "Pacman") {
-            pacmanEntity = entity;
-            break;
-        }
-    }
-
-    if (!pacmanEntity) return;
-
-    auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
-        _componentManager->getComponentByType(pacmanEntity,
-            static_cast<ComponentType>(1001)));
-
-    if (!pacmanComp) return;
+    if (!_cachedPacmanComponent) return;
 
     auto scoreTextComp = std::dynamic_pointer_cast<IDrawableComponent>(
         _componentManager->getComponentByType(_scoreTextEntity,
             ComponentType::DRAWABLE));
-    if (scoreTextComp)
-        scoreTextComp->setText("SCORE: " + std::to_string(
-            pacmanComp->getScore()));
+    if (scoreTextComp) {
+        // Only update if score has changed
+        static int lastScore = -1;
+        int currentScore = _cachedPacmanComponent->getScore();
+        if (lastScore != currentScore) {
+            scoreTextComp->setText("SCORE: " + std::to_string(currentScore));
+            lastScore = currentScore;
+        }
+    }
 
     auto levelTextComp = std::dynamic_pointer_cast<IDrawableComponent>(
         _componentManager->getComponentByType(_levelTextEntity,
             ComponentType::DRAWABLE));
-    if (levelTextComp) {
-        std::shared_ptr<Arcade::IEntity> gridEntity = 0;
-        for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
-            if (name == "Grid") {
-                gridEntity = entity;
-                break;
-            }
+    if (levelTextComp && _cachedGridComponent) {
+        // Only update if level has changed
+        static int lastLevel = -1;
+        int currentLevel = _cachedGridComponent->getLevel();
+        if (lastLevel != currentLevel) {
+            levelTextComp->setText("LEVEL: " + std::to_string(currentLevel));
+            lastLevel = currentLevel;
         }
-        auto gridComp = std::dynamic_pointer_cast<GridComponent>(
-            _componentManager->getComponentByType(gridEntity,
-                static_cast<ComponentType>(1000)));
-        int level = (gridComp) ? gridComp->getLevel() : 1;
-        levelTextComp->setText("LEVEL: " + std::to_string(level));
     }
 }
 
 void UISystem::updateLivesIcons() {
-    std::shared_ptr<Arcade::IEntity> pacmanEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
-        if (name == "Pacman") {
-            pacmanEntity = entity;
-            break;
-        }
+    if (!_cachedPacmanComponent) return;
+
+    // Only update if lives have changed
+    static int lastLives = -1;
+    int lives = _cachedPacmanComponent->getLives();
+    
+    if (lastLives == lives) {
+        return;
     }
-
-    if (!pacmanEntity) return;
-
-    auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
-        _componentManager->getComponentByType(pacmanEntity,
-            static_cast<ComponentType>(1001)));
-
-    if (!pacmanComp) return;
-
-    int lives = pacmanComp->getLives();
+    
+    lastLives = lives;
 
     for (size_t i = 0; i < _livesIconEntities.size(); i++) {
         auto spriteComp = std::dynamic_pointer_cast<IDrawableComponent>(
             _componentManager->getComponentByType(_livesIconEntities[i],
                 ComponentType::DRAWABLE));
 
-        if (i < static_cast<size_t>(lives)) {
-            if (!spriteComp) {
-                auto newDrawableComp = std::make_shared<DrawableComponent>();
-                auto pacmanAsset = _assets.find("pacman.default");
-                if (pacmanAsset != _assets.end()) {
-                    // Copy properties from the asset
-                    newDrawableComp->setPath(pacmanAsset->second.getPath());
-                    newDrawableComp->setFont(pacmanAsset->second.getFont());
-                    newDrawableComp->setColor(pacmanAsset->second.getColor());
-                    newDrawableComp->setScale(pacmanAsset->second.getScale());
-                    newDrawableComp->setRotation(pacmanAsset->
-                        second.getRotation());
-                    newDrawableComp->setDimensions(pacmanAsset->
-                        second.getWidth(),
-                        pacmanAsset->second.getHeight());
-                } else {
-                    newDrawableComp->setAsTexture("assets/pacman/pacman.png",
-                        32, 32);
-                }
-                _componentManager->registerComponent(_livesIconEntities[i],
-                    newDrawableComp);
-            } else {
-                spriteComp->setVisibility(true);
-            }
-        } else if (spriteComp) {
-            spriteComp->setVisibility(false);
+        if (spriteComp) {
+            spriteComp->setVisibility(i < static_cast<size_t>(lives));
         }
     }
 }
 
 void UISystem::update() {
-    std::shared_ptr<Arcade::IEntity> pacmanEntity = nullptr;
-    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
-        if (name == "Pacman") {
-            pacmanEntity = entity;
-            break;
+    // Only update UI every few frames to reduce overhead
+    static int frameCounter = 0;
+    frameCounter = (frameCounter + 1) % 5; // Update UI only every 5 frames
+    
+    if (frameCounter != 0) {
+        return;
+    }
+    
+    // Cache Pacman entity lookup
+    if (!_cachedPacmanEntity) {
+        for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
+            if (name == "Pacman") {
+                _cachedPacmanEntity = entity;
+                break;
+            }
         }
     }
+    
+    // Cache Grid entity lookup
+    if (!_cachedGridEntity) {
+        for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
+            if (name == "Grid") {
+                _cachedGridEntity = entity;
+                break;
+            }
+        }
+    }
+    
+    // Check if entities are still valid
+    if (!_cachedPacmanEntity || !_cachedGridEntity) {
+        return;
+    }
 
-    if (!pacmanEntity) return;
+    // Cache components
+    if (!_cachedPacmanComponent) {
+        _cachedPacmanComponent = std::dynamic_pointer_cast<PacmanComponent>(
+            _componentManager->getComponentByType(_cachedPacmanEntity,
+                static_cast<ComponentType>(1001)));
+    }
+    
+    if (!_cachedGridComponent) {
+        _cachedGridComponent = std::dynamic_pointer_cast<GridComponent>(
+            _componentManager->getComponentByType(_cachedGridEntity,
+                static_cast<ComponentType>(1000)));
+    }
+    
+    // Early exit if components aren't available
+    if (!_cachedPacmanComponent || !_cachedGridComponent) {
+        return;
+    }
 
-    auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
-        _componentManager->getComponentByType(pacmanEntity,
-            static_cast<ComponentType>(1001)));
-
-    if (!pacmanComp) return;
-
+    // Update the UI elements
     updateUITexts();
     updateLivesIcons();
     updateGameOverState();
 }
 
 void UISystem::updateGameOverState() {
-    std::shared_ptr<Arcade::IEntity> gridEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
-        if (name == "Grid") {
-            gridEntity = entity;
-            break;
-        }
+    if (!_cachedGridComponent) return;
+
+    // Only update if game state has changed
+    static bool lastGameOver = false;
+    static bool lastGameWon = false;
+    
+    bool gameOver = _cachedGridComponent->isGameOver();
+    bool gameWon = _cachedGridComponent->isGameWon();
+    
+    if (lastGameOver == gameOver && lastGameWon == gameWon) {
+        return;
     }
-
-    if (gridEntity == 0)
-        return;
-
-    auto gridComp = std::dynamic_pointer_cast<GridComponent>(
-        _componentManager->getComponentByType(gridEntity,
-            static_cast<ComponentType>(1000)));
-
-    if (!gridComp)
-        return;
+    
+    lastGameOver = gameOver;
+    lastGameWon = gameWon;
 
     auto gameOverTextComp = std::dynamic_pointer_cast<IDrawableComponent>(
         _componentManager->getComponentByType(_gameOverTextEntity,
@@ -328,12 +319,12 @@ void UISystem::updateGameOverState() {
         _componentManager->getComponentByType(_restartTextEntity,
             ComponentType::DRAWABLE));
 
-    if (gridComp->isGameOver()) {
+    if (gameOver) {
         if (gameOverTextComp)
-            gameOverTextComp->setVisibility(!gridComp->isGameWon());
+            gameOverTextComp->setVisibility(!gameWon);
 
         if (gameWinTextComp)
-            gameWinTextComp->setVisibility(gridComp->isGameWon());
+            gameWinTextComp->setVisibility(gameWon);
 
         if (restartTextComp)
             restartTextComp->setVisibility(true);
@@ -348,8 +339,6 @@ void UISystem::updateGameOverState() {
             restartTextComp->setVisibility(false);
     }
 }
-
-// Implementation of update() and other methods remain the same
 
 }  // namespace PacMan
 }  // namespace Arcade

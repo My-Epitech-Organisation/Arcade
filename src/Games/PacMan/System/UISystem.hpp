@@ -18,6 +18,8 @@
 #include "Shared/Interface/ECS/IEntityManager.hpp"
 #include "Shared/Models/ColorType.hpp"
 #include "ECS/Components/Drawable/DrawableComponent.hpp"
+#include "Games/PacMan/Components/PacmanComponent.hpp"
+#include "Games/PacMan/Components/GridComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -48,6 +50,12 @@ class UISystem : public Arcade::ISystem {
     void updateUITexts();
     void updateLivesIcons();
     void updateGameOverState();
+    
+    // Cached entities for better performance
+    std::shared_ptr<IEntity> _cachedPacmanEntity;
+    std::shared_ptr<IEntity> _cachedGridEntity;
+    std::shared_ptr<PacmanComponent> _cachedPacmanComponent;
+    std::shared_ptr<GridComponent> _cachedGridComponent;
 };
 
 }  // namespace PacMan

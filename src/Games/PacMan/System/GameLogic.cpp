@@ -9,550 +9,93 @@
 #include <iostream>
 #include <chrono>
 #include <memory>
-#include <utility>
-#include <algorithm>
-#include <array>
-#include <map>
-#include <string>
-#include <ctime>
 #include "Games/PacMan/System/GameLogic.hpp"
+#include "Games/PacMan/System/PlayerLogic.hpp"
+#include "Games/PacMan/System/GhostLogic.hpp"
+#include "Games/PacMan/System/CollisionManager.hpp"
+#include "Games/PacMan/System/GameStateManager.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
-#include "ECS/Components/Sprite/SpriteComponent.hpp"
 #include "Games/PacMan/Components/PacmanComponent.hpp"
-#include "Games/PacMan/Components/FoodComponent.hpp"
-#include "ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
 
-GameLogic::GameLogic(std::shared_ptr<Arcade::IComponentManager>
-componentManager,
-std::shared_ptr<Arcade::IEntityManager> entityManager,
-const std::map<std::string, DrawableComponent>& assets)
-: _componentManager(componentManager), _entityManager(entityManager),
-_assets(assets) {
+void GameLogic::recordSectionTime(const std::string& section, double time) {
+    _sectionTimings[section] += time;
+}
+
+void GameLogic::reportPerformance() {
+    _frameCounter++;
+    
+    if (_frameCounter % 100 == 0 && _debugMode) {
+        std::cout << "----- PERFORMANCE REPORT (100 frames) -----" << std::endl;
+        for (const auto& [section, time] : _sectionTimings) {
+            std::cout << std::fixed << std::setprecision(3)
+                      << section << ": " << (time / 100) << "ms/frame" << std::endl;
+        }
+        std::cout << "----------------------------------------" << std::endl;
+        _sectionTimings.clear();
+    }
+}
+
+GameLogic::GameLogic(std::shared_ptr<Arcade::IComponentManager> componentManager,
+                    std::shared_ptr<Arcade::IEntityManager> entityManager,
+                    const std::map<std::string, DrawableComponent>& assets)
+    : _componentManager(componentManager), _entityManager(entityManager), _assets(assets) {
+    
+    // Initialize subsystems
+    _playerLogic = std::make_unique<PlayerLogic>(componentManager, entityManager, assets);
+    _ghostLogic = std::make_unique<GhostLogic>(componentManager, entityManager, assets);
+    _collisionManager = std::make_unique<CollisionManager>(componentManager, entityManager, assets);
+    _gameStateManager = std::make_unique<GameStateManager>(componentManager, entityManager, assets);
+    
     _lastUpdateTime = std::chrono::high_resolution_clock::now();
     initializeEntityCache();
-}
-
-void GameLogic::initializeEntityCache() {
-    _cachedPacmanEntity = findPacmanEntity();
-    _cachedGridEntity = findGridEntity();
-    if (_cachedPacmanEntity) {
-        _cachedPacmanComponent = std::dynamic_pointer_cast<PacmanComponent>(
-            _componentManager->getComponentByType(_cachedPacmanEntity,
-                static_cast<ComponentType>(1001)));
-    }
-    if (_cachedGridEntity) {
-        _cachedGridComponent = std::dynamic_pointer_cast<GridComponent>(
-            _componentManager->getComponentByType(_cachedGridEntity,
-                static_cast<ComponentType>(1000)));
-    }
-}
-
-void GameLogic::moveGhost(std::shared_ptr<GhostComponent> ghostComp,
-std::shared_ptr<Arcade::IEntity> entity, std::shared_ptr<GridComponent> grid,
-std::shared_ptr<PacmanComponent> pacman) {
-    if (!ghostComp->canMove() || !grid || !pacman)
-        return;
-
-    size_t pacmanX = pacman->getGridX();
-    size_t pacmanY = pacman->getGridY();
-    Direction pacmanDir = pacman->getCurrentDirection();
-    size_t targetX = 0;
-    size_t targetY = 0;
-
-    if (ghostComp->getState() == GhostState::SCARED) {
-        unsigned int seed = static_cast<unsigned int>(
-            std::time(nullptr)
-            + reinterpret_cast<std::uintptr_t>(entity.get()) +
-            static_cast<unsigned int>(std::chrono::duration_cast
-                <std::chrono::milliseconds>(
-                std::chrono::high_resolution_clock::now
-                ().time_since_epoch()).count() % 10000));
-        Direction dirs[] = {Direction::UP, Direction::DOWN,
-            Direction::LEFT, Direction::RIGHT};
-        ghostComp->setCurrentDirection(dirs[rand_r(&seed) % 4]);
-    } else if (ghostComp->getState() == GhostState::RETURNING) {
-        for (size_t y = 0; y < grid->getHeight(); y++) {
-            for (size_t x = 0; x < grid->getWidth(); x++) {
-                if (grid->getCellType(x, y) == CellType::GHOST_SPAWN) {
-                    targetX = x;
-                    targetY = y;
-                    break;
-                }
-            }
-        }
-        auto ghostSpriteTemp = std::dynamic_pointer_cast<IDrawableComponent>(
-            _componentManager->getComponentByType(entity,
-                ComponentType::DRAWABLE));
-        auto eyesAsset = _assets.find("ghosts.eyes");
-        if (eyesAsset != _assets.end()) {
-            *ghostSpriteTemp = eyesAsset->second;
-        } else {
-            ghostSpriteTemp->setAsTexture("assets/pacman/eyes.png", 32, 32);
-            ghostSpriteTemp->setAsCharacter('e');
-        }
-
-        if (ghostComp->getGridX() == targetX &&
-            ghostComp->getGridY() == targetY) {
-            ghostComp->setState(GhostState::NORMAL);
-            ghostComp->setCurrentDirection(Direction::NONE);
-
-            auto ghostSprite = std::dynamic_pointer_cast<IDrawableComponent>(
-                _componentManager->getComponentByType(entity,
-                    ComponentType::DRAWABLE));
-            if (ghostSprite) {
-                std::string ghostAssetKey;
-                switch (ghostComp->getGhostType()) {
-                    case GhostType::RED:
-                        ghostAssetKey = "ghosts.red";
-                        break;
-                    case GhostType::PINK:
-                        ghostAssetKey = "ghosts.pink";
-                        break;
-                    case GhostType::BLUE:
-                        ghostAssetKey = "ghosts.blue";
-                        break;
-                    case GhostType::ORANGE:
-                        ghostAssetKey = "ghosts.orange";
-                        break;
-                }
-                auto ghostAsset = _assets.find(ghostAssetKey);
-                if (ghostAsset != _assets.end()) {
-                    *ghostSprite = ghostAsset->second;
-                } else {
-                    // Fallback to hardcoded paths if asset not found
-                    switch (ghostComp->getGhostType()) {
-                        case GhostType::RED:
-                            ghostSprite->setAsTexture
-                                ("assets/pacman/ghost_red.png", 32, 32);
-                            ghostSprite->setAsCharacter('r');
-                            break;
-                        case GhostType::PINK:
-                            ghostSprite->setAsTexture
-                                ("assets/pacman/ghost_pink.png", 32, 32);
-                            ghostSprite->setAsCharacter('i');
-                            break;
-                        case GhostType::BLUE:
-                            ghostSprite->setAsTexture
-                                ("assets/pacman/ghost_cyan.png", 32, 32);
-                            ghostSprite->setAsCharacter('c');
-                            break;
-                        case GhostType::ORANGE:
-                            ghostSprite->setAsTexture
-                                    ("assets/pacman/ghost_orange.png", 32, 32);
-                            ghostSprite->setAsCharacter('o');
-                            break;
-                    }
-                }
-            }
-        }
-        ghostComp->setTarget(targetX, targetY);
-    } else {
-        if (ghostComp->getMode() == GhostMode::SCATTER) {
-            targetX = ghostComp->getHomeCornerX();
-            targetY = ghostComp->getHomeCornerY();
-        } else {
-            switch (ghostComp->getGhostType()) {
-                case GhostType::RED:
-                    targetX = pacmanX;
-                    targetY = pacmanY;
-                    break;
-                case GhostType::PINK:
-                    targetX = pacmanX;
-                    targetY = pacmanY;
-                    switch (pacmanDir) {
-                        case Direction::UP:
-                            targetY = (targetY >= 4) ? targetY - 4 : 0;
-                            targetX = (targetX >= 4) ? targetX - 4 : 0;
-                            break;
-                        case Direction::DOWN:
-                            targetY = std::min(targetY + 4,
-                                grid->getHeight() - 1);
-                            break;
-                        case Direction::LEFT:
-                            targetX = (targetX >= 4) ? targetX - 4 : 0;
-                            break;
-                        case Direction::RIGHT:
-                            targetX = std::min(targetX + 4,
-                                grid->getWidth() - 1);
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                case GhostType::BLUE: {
-                    std::shared_ptr<GhostComponent> blinkyComp = nullptr;
-                    for (const auto& [e, name] :
-                        _entityManager->getEntitiesMap()) {
-                        auto ghost = std::dynamic_pointer_cast<GhostComponent>(
-                            _componentManager->getComponentByType(e,
-                                static_cast<ComponentType>(1002)));
-                        if (ghost && ghost->getGhostType() == GhostType::RED) {
-                            blinkyComp = ghost;
-                            break;
-                        }
-                    }
-                    if (blinkyComp) {
-                        size_t intermediateX = pacmanX;
-                        size_t intermediateY = pacmanY;
-                        switch (pacmanDir) {
-                            case Direction::UP:
-                                if (intermediateY >= 2) intermediateY -= 2;
-                                else intermediateY = 0;
-                                break;
-                            case Direction::DOWN:
-                                intermediateY = std::min(intermediateY + 2,
-                                    grid->getHeight() - 1);
-                                break;
-                            case Direction::LEFT:
-                                if (intermediateX >= 2) intermediateX -= 2;
-                                else intermediateX = 0;
-                                break;
-                            case Direction::RIGHT:
-                                intermediateX = std::min(intermediateX + 2,
-                                    grid->getWidth() - 1);
-                                break;
-                            default:
-                                break;
-                        }
-
-                        int vectorX = static_cast<int>(intermediateX)
-                            - static_cast<int>(blinkyComp->getGridX());
-                        int vectorY = static_cast<int>(intermediateY)
-                            - static_cast<int>(blinkyComp->getGridY());
-
-                        int targetXInt = static_cast<int>(intermediateX)
-                            + vectorX;
-                        int targetYInt = static_cast<int>(intermediateY)
-                            + vectorY;
-
-                        targetX = std::clamp(targetXInt, 0,
-                            static_cast<int>(grid->getWidth() - 1));
-                        targetY = std::clamp(targetYInt, 0,
-                            static_cast<int>(grid->getHeight() - 1));
-                    } else {
-                        targetX = pacmanX;
-                        targetY = pacmanY;
-                    }
-                    break;
-                }
-                case GhostType::ORANGE:
-                {
-                    size_t distance = std::abs(static_cast<int>
-                        (ghostComp->getGridX()) - static_cast<int>(pacmanX)) +
-                        std::abs(static_cast<int>
-                        (ghostComp->getGridY()) - static_cast<int>(pacmanY));
-                    if (distance > 8) {
-                        targetX = pacmanX;
-                        targetY = pacmanY;
-                    } else {
-                        targetX = ghostComp->getHomeCornerX();
-                        targetY = ghostComp->getHomeCornerY();
-                    }
-                    break;
-                }
-            }
-        }
-        ghostComp->setTarget(targetX, targetY);
-    }
-
-
-    Direction bestDirection = ghostComp->getCurrentDirection();
-    if (ghostComp->getState() != GhostState::SCARED) {
-        size_t bestDistance = SIZE_MAX;
-        Direction possibleDirections[] = {Direction::UP, Direction::LEFT,
-            Direction::DOWN, Direction::RIGHT};
-
-        size_t ghostX = ghostComp->getGridX();
-        size_t ghostY = ghostComp->getGridY();
-        Direction oppositeDir = ghostComp->getOppositeDirection();
-
-        for (Direction dir : possibleDirections) {
-            if (dir == oppositeDir && ghostComp->getCurrentDirection()
-                != Direction::NONE)
-                continue;
-
-            size_t newX = ghostX;
-            size_t newY = ghostY;
-
-            switch (dir) {
-                case Direction::UP:
-                    if (ghostY > 0) newY--;
-                    else newY = grid->getHeight() - 1;
-                    break;
-                case Direction::DOWN:
-                    if (ghostY < grid->getHeight() - 1) newY++;
-                    else newY = 0;
-                    break;
-                case Direction::LEFT:
-                    if (ghostX > 0) newX--;
-                    else newX = grid->getWidth() - 1;
-                    break;
-                case Direction::RIGHT:
-                    if (ghostX < grid->getWidth() - 1) newX++;
-                    else newX = 0;
-                    break;
-                default:
-                    continue;
-            }
-
-            if (grid->getCellType(newX, newY) == CellType::WALL)
-                continue;
-
-            size_t distance = std::abs(static_cast<int>(newX)
-                - static_cast<int>(targetX)) +
-                std::abs(static_cast<int>(newY)
-                    - static_cast<int>(targetY));
-
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                bestDirection = dir;
-            }
-        }
-    }
-
-    ghostComp->setCurrentDirection(bestDirection);
-
-    Direction dir = ghostComp->getCurrentDirection();
-    if (dir == Direction::NONE)
-        return;
-
-    size_t x = ghostComp->getGridX();
-    size_t y = ghostComp->getGridY();
-
-    if (canMoveInDirection(dir, x, y, grid)) {
-        size_t newX = x;
-        size_t newY = y;
-
-        switch (dir) {
-            case Direction::UP:
-                newY = (y == 0) ? grid->getHeight() - 1 : y - 1;
-                break;
-            case Direction::DOWN:
-                newY = (y == grid->getHeight() - 1) ? 0 : y + 1;
-                break;
-            case Direction::LEFT:
-                newX = (x == 0) ? grid->getWidth() - 1 : x - 1;
-                break;
-            case Direction::RIGHT:
-                newX = (x == grid->getWidth() - 1) ? 0 : x + 1;
-                break;
-            default: break;
-        }
-
-        bool ghostCollision = false;
-        for (const auto& [e, name] : _entityManager->getEntitiesMap()) {
-            if (e != entity) {
-                auto otherGhost = std::dynamic_pointer_cast<GhostComponent>(
-                    _componentManager->getComponentByType(e,
-                        static_cast<ComponentType>(1002)));
-
-                if (otherGhost && otherGhost->getGridX() == newX &&
-                    otherGhost->getGridY() == newY) {
-                    ghostCollision = true;
-                    break;
-                }
-            }
-        }
-
-        if (!ghostCollision) {
-            ghostComp->setGridPosition(newX, newY);
-            auto posComp = std::dynamic_pointer_cast<PositionComponent>(
-                _componentManager->getComponentByType(entity,
-                    ComponentType::POSITION));
-            if (posComp) {
-                auto gridEntity = findGridEntity();
-                auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
-                    _componentManager->getComponentByType(gridEntity,
-                        ComponentType::POSITION));
-                float startX = gridPosComp ? gridPosComp->x : 0;
-                float startY = gridPosComp ? gridPosComp->y : 0;
-                float cellSize = grid->getCellSize();
-                posComp->x = startX + (newX * cellSize);
-                posComp->y = startY + (newY * cellSize);
-                // Add this code to update the DrawableComponent
-                auto ghostDrawable
-                    = std::dynamic_pointer_cast<IDrawableComponent>(
-                    _componentManager->getComponentByType(entity,
-                        ComponentType::DRAWABLE));
-                if (ghostDrawable) {
-                    ghostDrawable->setPosition(
-                        startX + (newX * cellSize),
-                        startY + (newY * cellSize));
-                }
-            }
-            ghostComp->setCanMove(false);
-            ghostComp->resetMovementTimer();
-        } else {
-            ghostComp->setCurrentDirection(Direction::NONE);
-        }
-    } else {
-        ghostComp->setCurrentDirection(Direction::NONE);
-    }
-}
-
-void GameLogic::update() {
-    updateDeltaTime();
-    float deltaTime = _currentDeltaTime;
-    if (!_cachedPacmanComponent || !_cachedGridComponent) {
-        initializeEntityCache();
-    }
-
-    if (!_cachedPacmanEntity || (_cachedGridEntity != 0)) {
-        return;
-    }
-    auto pacman = _cachedPacmanComponent;
-    auto grid = _cachedGridComponent;
-
-    std::cout << "Pacman lives: " << pacman->getLives() << std::endl;
-    if (!pacman || (grid == nullptr))
-        return;
-
-    if (grid->isGameOver() || pacman->isDead()) {
-        grid->setGameOver(true);
-        return;
-    }
-    pacman->updateMovementTimer(deltaTime);
-    pacman->addGameTime(deltaTime);
-
-    if (pacman->canMove())
-        movePacman();
-
-    if (pacman->getCurrentDirection() == Direction::NONE)
-        pacman->setCurrentDirection(Direction::RIGHT);
-
+    
+    // Pre-cache ghost entities
+    _cachedGhosts.clear();
     for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
             _componentManager->getComponentByType(entity,
                 static_cast<ComponentType>(1002)));
-        if (!ghostComp)
-            continue;
-        if (!ghostComp->canLeaveBox()) {
-            ghostComp->updateReleaseTimer(deltaTime);
-            continue;
-        }
         if (ghostComp) {
-            GhostState previousState = ghostComp->getState();
-
-            ghostComp->addGameTime(deltaTime);
-            ghostComp->updateStateTimer(deltaTime);
-            ghostComp->updateMovementTimer(deltaTime);
-            ghostComp->updateModeTimer(deltaTime);
-
-
-            if (ghostComp->canMove()) {
-                if (ghostComp->getCurrentDirection() == Direction::NONE) {
-                    unsigned int seed = static_cast<unsigned int>(
-                        std::time(nullptr)
-                        + reinterpret_cast<std::uintptr_t>(entity.get()) +
-                        static_cast<unsigned int>(std::chrono::duration_cast
-                            <std::chrono::milliseconds>(
-                            std::chrono::high_resolution_clock::
-                                now().time_since_epoch()).count() % 10000));
-                    Direction dirs[] = {Direction::UP, Direction::DOWN,
-                        Direction::LEFT, Direction::RIGHT};
-                    ghostComp->setCurrentDirection(dirs[rand_r(&seed) % 4]);
-                }
-                moveGhost(ghostComp, entity, grid, pacman);
-            }
-            if (previousState == GhostState::SCARED &&
-                ghostComp->getState() == GhostState::NORMAL) {
-                auto ghostSprite
-                    = std::dynamic_pointer_cast<IDrawableComponent>(
-                    _componentManager->getComponentByType(entity,
-                        ComponentType::DRAWABLE));
-                if (ghostSprite) {
-                    switch (ghostComp->getGhostType()) {
-                        case GhostType::RED:
-                            ghostSprite->setPath(
-                                "assets/pacman/ghost_red.png");
-                            ghostSprite->setAsTexture(
-                                "assets/pacman/ghost_red.png", 32, 32);
-                            ghostSprite->setAsCharacter('r');
-                            break;
-                        case GhostType::PINK:
-                            ghostSprite->setPath(
-                                "assets/pacman/ghost_pink.png");
-                            ghostSprite->setAsTexture(
-                                "assets/pacman/ghost_pink.png", 32, 32);
-                            ghostSprite->setAsCharacter('i');
-                            break;
-                        case GhostType::BLUE:
-                            ghostSprite->setPath(
-                                "assets/pacman/ghost_cyan.png");
-                            ghostSprite->setAsTexture(
-                                "assets/pacman/ghost_cyan.png", 32, 32);
-                            ghostSprite->setAsCharacter('c');
-                            break;
-                        case GhostType::ORANGE:
-                            ghostSprite->setPath(
-                                "assets/pacman/ghost_orange.png");
-                            ghostSprite->setAsTexture(
-                                "assets/pacman/ghost_orange.png", 32, 32);
-                            ghostSprite->setAsCharacter('o');
-                            break;
-                    }
-                }
-            }
+            _cachedGhosts.push_back({entity, ghostComp});
         }
     }
-
-    tryChangePacmanDirection(pacman, grid);
-    checkCollisions();
-    checkWinCondition(grid);
-}
-float GameLogic::getDeltaTime() {
-    return _currentDeltaTime;
-}
-
-void GameLogic::updateDeltaTime() {
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    _currentDeltaTime = std::chrono::duration<float>(currentTime
-        - _lastUpdateTime).count();
-    _lastUpdateTime = currentTime;
-}
-
-void GameLogic::tryChangePacmanDirection(std::shared_ptr<PacmanComponent>
-pacman, std::shared_ptr<GridComponent> grid) {
-    if (pacman->getNextDirection() != Direction::NONE) {
-        Direction nextDir = pacman->getNextDirection();
-        size_t x = pacman->getGridX();
-        size_t y = pacman->getGridY();
-
-        if (canMoveInDirection(nextDir, x, y, grid)) {
-            pacman->setCurrentDirection(nextDir);
-            pacman->setNextDirection(Direction::NONE);
+    
+    // Pre-cache food entities
+    _cachedFoodEntities.clear();
+    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
+        auto foodComp = std::dynamic_pointer_cast<FoodComponent>(
+            _componentManager->getComponentByType(entity,
+                static_cast<ComponentType>(1003)));
+        if (foodComp) {
+            _cachedFoodEntities.push_back({entity, foodComp});
         }
     }
+    
+    // Enable debug mode through environment variable
+    const char* debugEnv = std::getenv("PACMAN_DEBUG");
+    _debugMode = (debugEnv && std::string(debugEnv) == "1");
 }
 
-bool GameLogic::canMoveInDirection(Direction dir, size_t x, size_t y,
-std::shared_ptr<GridComponent> grid) {
-    if (!grid) return false;
-
-    size_t nextX = x;
-    size_t nextY = y;
-
-    switch (dir) {
-        case Direction::UP:
-            nextY = (y == 0) ? grid->getHeight() - 1 : y - 1;
-            break;
-        case Direction::DOWN:
-            nextY = (y == grid->getHeight() - 1) ? 0 : y + 1;
-            break;
-        case Direction::LEFT:
-            nextX = (x == 0) ? grid->getWidth() - 1 : x - 1;
-            break;
-        case Direction::RIGHT:
-            nextX = (x == grid->getWidth() - 1) ? 0 : x + 1;
-            break;
-        case Direction::NONE:
-            return false;
+void GameLogic::initializeEntityCache() {
+    if (!_cachedPacmanEntity) {
+        _cachedPacmanEntity = findPacmanEntity();
     }
-
-    return grid->getCellType(nextX, nextY) != CellType::WALL;
+    if (!_cachedGridEntity) {
+        _cachedGridEntity = findGridEntity();
+    }
+    if (_cachedPacmanEntity && !_cachedPacmanComponent) {
+        _cachedPacmanComponent = std::dynamic_pointer_cast<PacmanComponent>(
+            _componentManager->getComponentByType(_cachedPacmanEntity,
+                static_cast<ComponentType>(1001)));
+    }
+    if (_cachedGridEntity && !_cachedGridComponent) {
+        _cachedGridComponent = std::dynamic_pointer_cast<GridComponent>(
+            _componentManager->getComponentByType(_cachedGridEntity,
+                static_cast<ComponentType>(1000)));
+    }
 }
 
 std::shared_ptr<Arcade::IEntity> GameLogic::findPacmanEntity() {
@@ -575,466 +118,202 @@ std::shared_ptr<Arcade::IEntity> GameLogic::findGridEntity() {
     return nullptr;
 }
 
-std::pair<std::shared_ptr<PacmanComponent>, std::shared_ptr<GridComponent>>
-GameLogic::getPacmanAndGridComponents() {
-    std::shared_ptr<Arcade::IEntity> pacmanEntity = findPacmanEntity();
-    std::shared_ptr<Arcade::IEntity> gridEntity = findGridEntity();
-
-    std::shared_ptr<PacmanComponent> pacmanComp = nullptr;
-    std::shared_ptr<GridComponent> gridComp = nullptr;
-
-    if (pacmanEntity) {
-        pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
-            _componentManager->getComponentByType(pacmanEntity,
-                static_cast<ComponentType>(1001)));
-    }
-
-    if (gridEntity) {
-        gridComp = std::dynamic_pointer_cast<GridComponent>(
-            _componentManager->getComponentByType(gridEntity,
-                static_cast<ComponentType>(1000)));
-    }
-
-    return {pacmanComp, gridComp};
+void GameLogic::updateDeltaTime() {
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    _currentDeltaTime = std::chrono::duration<float>(currentTime - _lastUpdateTime).count();
+    _lastUpdateTime = currentTime;
 }
 
-void GameLogic::checkFoodCollision(std::shared_ptr<PacmanComponent> pacman,
-std::shared_ptr<GridComponent> grid) {
-    checkCollisionsWithFood(pacman, grid);
+float GameLogic::getDeltaTime() {
+    return _currentDeltaTime;
 }
 
-void GameLogic::movePacman() {
-    auto [pacmanComp, gridComp] = getPacmanAndGridComponents();
-    if (!pacmanComp || !gridComp)
+void GameLogic::update() {
+    // Start overall timing
+    _timer.start();
+    
+    // Update delta time only once per frame
+    updateDeltaTime();
+    float deltaTime = _currentDeltaTime;
+    
+    // Cache initialization (if needed)
+    if (!_cachedPacmanComponent || !_cachedGridComponent) {
+        _timer.start();
+        initializeEntityCache();
+        recordSectionTime("Cache Initialization", _timer.stop());
+    }
+
+    if (!_cachedPacmanEntity || !_cachedGridEntity) {
+        return;
+    }
+    
+    auto pacman = _cachedPacmanComponent;
+    auto grid = _cachedGridComponent;
+
+    if (!pacman || !grid)
         return;
 
-    Direction nextDir = pacmanComp->getNextDirection();
-    Direction currentDir = pacmanComp->getCurrentDirection();
-    Direction moveDir = Direction::NONE;
-
-    size_t x = pacmanComp->getGridX();
-    size_t y = pacmanComp->getGridY();
-
-    if (nextDir != Direction::NONE &&
-        canMoveInDirection(nextDir, x, y, gridComp)) {
-        moveDir = nextDir;
-        pacmanComp->setCurrentDirection(nextDir);
-    } else if (currentDir != Direction::NONE &&
-        canMoveInDirection(currentDir, x, y, gridComp)) {
-        moveDir = currentDir;
+    // Check for game over conditions
+    if (pacman->isDead()) {
+        grid->setGameOver(true);
     }
-
-    if (moveDir != Direction::NONE) {
-        size_t newX = x;
-        size_t newY = y;
-
-        switch (moveDir) {
-            case Direction::UP:
-                newY = (y == 0) ? gridComp->getHeight() - 1 : y - 1;
-                break;
-            case Direction::DOWN:
-                newY = (y == gridComp->getHeight() - 1) ? 0 : y + 1;
-                break;
-            case Direction::LEFT:
-                newX = (x == 0) ? gridComp->getWidth() - 1 : x - 1;
-                break;
-            case Direction::RIGHT:
-                newX = (x == gridComp->getWidth() - 1) ? 0 : x + 1;
-                break;
-            default: break;
+    
+    // If game is over, we still render but don't update game state
+    bool gameOver = grid->isGameOver();
+    
+    // Update visual positions even when game is over for smooth transitions
+    _timer.start();
+    
+    // Optimize snap distance for faster movement
+    const float snapDistance = 1.0f;
+    
+    // Update Pacman's visual position
+    if (pacman->isMoving()) {
+        pacman->updateVisualPosition(deltaTime);
+        
+        // Update the DrawableComponent position to match visual position
+        auto pacmanDrawable = std::dynamic_pointer_cast<IDrawableComponent>(
+            _componentManager->getComponentByType(_cachedPacmanEntity,
+                ComponentType::DRAWABLE));
+        if (pacmanDrawable) {
+            pacmanDrawable->setPosition(pacman->getVisualX(), pacman->getVisualY());
+            
+            // Also update dimensions for collision detection
+            pacman->setDimensions(pacmanDrawable->getWidth(), pacmanDrawable->getHeight());
         }
-
-        pacmanComp->setGridPosition(newX, newY);
-
-        std::shared_ptr<Arcade::IEntity> pacmanEntity = findPacmanEntity();
-        if (pacmanEntity) {
-            auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
-                _componentManager->getComponentByType(findGridEntity(),
-                    ComponentType::POSITION));
-            float startX = gridPosComp ? gridPosComp->x : 0;
-            float startY = gridPosComp ? gridPosComp->y : 0;
-            float cellSize = gridComp->getCellSize();
-            auto pacmanPosComp = std::dynamic_pointer_cast<PositionComponent>(
-                _componentManager->getComponentByType(pacmanEntity,
-                    ComponentType::POSITION));
-            if (pacmanPosComp) {
-                pacmanPosComp->x = startX + (newX * cellSize);
-                pacmanPosComp->y = startY + (newY * cellSize);
-            }
-            auto pacmanDrawable = std::dynamic_pointer_cast<IDrawableComponent>(
-                _componentManager->getComponentByType(pacmanEntity,
+    }
+    
+    // Update Ghost's visual positions
+    for (auto& [entity, ghostComp] : _cachedGhosts) {
+        if (ghostComp->isMoving()) {
+            ghostComp->updateVisualPosition(deltaTime);
+            
+            // Update the DrawableComponent position to match visual position
+            auto ghostDrawable = std::dynamic_pointer_cast<IDrawableComponent>(
+                _componentManager->getComponentByType(entity,
                     ComponentType::DRAWABLE));
-            if (pacmanDrawable) {
-                pacmanDrawable->setPosition(startX + (newX * cellSize),
-                    startY + (newY * cellSize));
+            if (ghostDrawable) {
+                ghostDrawable->setPosition(ghostComp->getVisualX(), ghostComp->getVisualY());
+                
+                // Also update dimensions for collision detection
+                ghostComp->setDimensions(ghostDrawable->getWidth(), ghostDrawable->getHeight());
             }
         }
-
-        pacmanComp->setCanMove(false);
-        checkFoodCollision(pacmanComp, gridComp);
     }
-}
-
-size_t calculateDistance(size_t x1, size_t y1, size_t x2, size_t y2) {
-    return std::abs(static_cast<int>(x1) - static_cast<int>(x2)) +
-           std::abs(static_cast<int>(y1) - static_cast<int>(y2));
-}
-
-void GameLogic::checkCollisions() {
-    std::shared_ptr<Arcade::IEntity> pacmanEntity = findPacmanEntity();
-    std::shared_ptr<Arcade::IEntity> gridEntity = findGridEntity();
-
-    if (!pacmanEntity || gridEntity != 0)
+    
+    recordSectionTime("Visual Position Updates", _timer.stop());
+    
+    // Stop updating game logic if game is over
+    if (gameOver) {
+        // Report performance statistics
+        recordSectionTime("Total Frame Time", _timer.stop());
+        reportPerformance();
         return;
+    }
+    
+    // Update Pacman movement timer (this is lightweight)
+    _timer.start();
+    pacman->updateMovementTimer(deltaTime);
+    pacman->addGameTime(deltaTime);
+    recordSectionTime("Pacman Timer", _timer.stop());
 
-    auto pacman = std::dynamic_pointer_cast<PacmanComponent>(
-        _componentManager->getComponentByType(pacmanEntity,
-            static_cast<ComponentType>(1001)));
-    auto grid = std::dynamic_pointer_cast<GridComponent>(
-        _componentManager->getComponentByType(gridEntity,
-            static_cast<ComponentType>(1000)));
+    // Only process movement if pacman can actually move and is not currently in transit
+    if (pacman->canMove() && !pacman->isMoving()) {
+        _timer.start();
+        _playerLogic->movePacman(pacman, grid, _cachedPacmanEntity, _cachedGridEntity);
+        recordSectionTime("Pacman Movement", _timer.stop());
+    }
 
-    if (!pacman || !grid)
-        return;
-
-    checkCollisionsWithGhosts(pacman, grid);
-    checkCollisionsWithFood(pacman, grid);
-}
-
-void GameLogic::checkCollisionsWithGhosts
-(std::shared_ptr<PacmanComponent> pacman,
-std::shared_ptr<GridComponent> grid) {
-    if (!pacman || !grid)
-        return;
-
-    size_t pacmanX = pacman->getGridX();
-    size_t pacmanY = pacman->getGridY();
-
-    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
-        if (name.find("Blinky") == std::string::npos
-        || name.find("Pinky") == std::string::npos
-        || name.find("Inky") == std::string::npos
-        || name.find("Clyde") == std::string::npos) {
+    // Update ghost states only when needed
+    static float ghostUpdateTimer = 0;
+    ghostUpdateTimer += deltaTime;
+    if (ghostUpdateTimer >= 0.1f) { // Update ghost states less frequently
+        _timer.start();
+        _ghostLogic->updateGhostStates(deltaTime * 10); // Compensate for the reduced frequency
+        ghostUpdateTimer = 0;
+        recordSectionTime("Ghost State Update", _timer.stop());
+    }
+    
+    // Refresh ghost cache periodically
+    _ghostCacheRefreshTimer += deltaTime;
+    if (_ghostCacheRefreshTimer >= 2.0f || _cachedGhosts.empty()) {
+        _timer.start();
+        _cachedGhosts.clear();
+        for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
             auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
                 _componentManager->getComponentByType(entity,
                     static_cast<ComponentType>(1002)));
-            if (ghostComp && ghostComp->getGridX() == pacmanX &&
-                ghostComp->getGridY() == pacmanY) {
-                if (ghostComp->getState() == GhostState::SCARED) {
-                    ghostComp->setState(GhostState::RETURNING);
-                    pacman->addScore(200);
-                    auto ghostSprite
-                        = std::dynamic_pointer_cast<IDrawableComponent>(
-                        _componentManager->getComponentByType(entity,
-                            ComponentType::DRAWABLE));
-                    auto eyesAsset = getDrawableAsset("ghosts.eyes");
-                    if (eyesAsset) {
-                        *ghostSprite = *eyesAsset;
-                    } else {
-                        ghostSprite->setAsTexture
-                            ("assets/pacman/eyes.png", 32, 32);
-                        ghostSprite->setAsCharacter('e');
-                    }
-                } else if (ghostComp->getState() == GhostState::NORMAL) {
-                    pacman->decrementLives();
-                    if (pacman->getLives() > 0) {
-                        reloadCurrentMap();
-                    } else {
-                        grid->setGameOver(true);
-                    }
-                    for (size_t y = 0; y < grid->getHeight(); y++) {
-                        for (size_t x = 0; x < grid->getWidth(); x++) {
-                            if (grid->getCellType(x, y) ==
-                                CellType::PACMAN_SPAWN) {
-                                pacman->setGridPosition(x, y);
-                                break;
-                            }
-                        }
-                    }
-
-                    pacman->setCurrentDirection(Direction::NONE);
-                    pacman->setNextDirection(Direction::NONE);
-                    break;
-                }
+                    
+            if (ghostComp) {
+                _cachedGhosts.push_back({entity, ghostComp});
             }
         }
+        _ghostCacheRefreshTimer = 0;
+        recordSectionTime("Ghost Cache Refresh", _timer.stop());
     }
-}
-
-void GameLogic::checkCollisionsWithFood(std::shared_ptr<PacmanComponent> pacman,
-std::shared_ptr<GridComponent> grid) {
-    size_t pacmanX = pacman->getGridX();
-    size_t pacmanY = pacman->getGridY();
-
-    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
-        auto foodComp = std::dynamic_pointer_cast<FoodComponent>(
-            _componentManager->getComponentByType(entity,
-                static_cast<ComponentType>(1003)));
-
-        if (foodComp && !foodComp->isEaten() &&
-            foodComp->getGridX() == pacmanX &&
-            foodComp->getGridY() == pacmanY) {
-            foodComp->setEaten(true);
-            pacman->addScore(foodComp->getPoints());
-            grid->decrementFoodCount();
-
-            auto spriteComp = std::dynamic_pointer_cast<IDrawableComponent>(
-                _componentManager->getComponentByType(entity,
-                    ComponentType::DRAWABLE));
-
-            if (spriteComp) {
-                // Use empty cell texture from JSON
-                auto emptyAsset = getDrawableAsset("map.empty");
-                if (emptyAsset) {
-                    *spriteComp = *emptyAsset;
-                } else {
-                    spriteComp->setAsTexture("assets/pacman/empty.png", 32, 32);
-                    spriteComp->setAsCharacter(' ');
-                }
+    
+    // Process ghost movements with cached entities
+    _timer.start();
+    for (auto& [entity, ghostComp] : _cachedGhosts) {
+        // Skip ghosts that can't leave their box yet
+        if (!ghostComp->canLeaveBox()) {
+            ghostComp->updateReleaseTimer(deltaTime);
+            continue;
+        }
+        
+        // Update ghost movement timers
+        ghostComp->updateMovementTimer(deltaTime);
+        
+        // Move ghosts that are ready and not currently in transit
+        if (ghostComp->canMove() && !ghostComp->isMoving()) {
+            if (ghostComp->getCurrentDirection() == Direction::NONE) {
+                // Choose random initial direction if needed
+                unsigned int seed = static_cast<unsigned int>(
+                    std::time(nullptr) + 
+                    reinterpret_cast<std::uintptr_t>(entity.get()));
+                Direction dirs[] = {Direction::UP, Direction::DOWN,
+                    Direction::LEFT, Direction::RIGHT};
+                ghostComp->setCurrentDirection(dirs[rand_r(&seed) % 4]);
             }
-
-            if (foodComp->getFoodType() == FoodType::POWER_PILL) {
-                for (const auto& [e, n] : _entityManager->getEntitiesMap()) {
-                    auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
-                        _componentManager->getComponentByType(e,
-                            static_cast<ComponentType>(1002)));
-
-                    if (ghostComp) {
-                        ghostComp->setState(GhostState::SCARED);
-                        ghostComp->resetStateTimer();
-
-                        auto ghostSprite
-                            = std::dynamic_pointer_cast<IDrawableComponent>(
-                            _componentManager->getComponentByType(e,
-                                ComponentType::DRAWABLE));
-                        if (ghostSprite) {
-                            auto frightenedAsset
-                                = getDrawableAsset("ghosts.frightened");
-                            if (frightenedAsset) {
-                                *ghostSprite = *frightenedAsset;
-                            } else {
-                                ghostSprite->setAsTexture
-                                    ("assets/pacman/scared_ghost.png", 32, 32);
-                                ghostSprite->setAsCharacter('s');
-                            }
-                        }
-                    }
-                }
-            }
+            _ghostLogic->moveGhost(ghostComp, entity, grid, pacman);
         }
     }
+    recordSectionTime("Ghost Movement", _timer.stop());
+
+    // Handle direction changes for Pacman
+    _timer.start();
+    _playerLogic->tryChangePacmanDirection(pacman, grid);
+    recordSectionTime("Pacman Direction", _timer.stop());
+    
+    // Check for collisions
+    _timer.start();
+    _collisionManager->checkCollisions(pacman, grid, _cachedPacmanEntity, _cachedGridEntity);
+    recordSectionTime("Collision Detection", _timer.stop());
+    
+    // Check win condition
+    _timer.start();
+    _gameStateManager->checkWinCondition(grid);
+    recordSectionTime("Win Condition", _timer.stop());
+    
+    // Report performance statistics
+    recordSectionTime("Total Frame Time", _timer.stop());
+    reportPerformance();
 }
 
 void GameLogic::reloadCurrentMap() {
-    auto gridEntity = findGridEntity();
-    auto grid = std::dynamic_pointer_cast<GridComponent>(
-        _componentManager->getComponentByType(gridEntity,
-            static_cast<ComponentType>(1000)));
-
-    if (!grid)
-        return;
-
-    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
-        auto foodComp = std::dynamic_pointer_cast<FoodComponent>(
-            _componentManager->getComponentByType(entity,
-                static_cast<ComponentType>(1003)));
-
-        if (foodComp) {
-            foodComp->setEaten(false);
-
-            auto spriteComp = std::dynamic_pointer_cast<IDrawableComponent>(
-                _componentManager->getComponentByType(entity,
-                    ComponentType::DRAWABLE));
-
-            if (spriteComp) {
-                if (foodComp->getFoodType() == FoodType::NORMAL_DOT) {
-                    auto foodAsset = getDrawableAsset("map.food");
-                    if (foodAsset) {
-                        *spriteComp = *foodAsset;
-                    } else {
-                        spriteComp->setAsTexture
-                            ("assets/pacman/dot.png", 32, 32);
-                        spriteComp->setAsCharacter('.');
-                    }
-                } else {
-                    auto powerAsset = getDrawableAsset("map.power_pellet");
-                    if (powerAsset) {
-                        *spriteComp = *powerAsset;
-                    } else {
-                        spriteComp->setAsTexture
-                            ("assets/pacman/power_pellet.png", 32, 32);
-                        spriteComp->setAsCharacter('U');
-                    }
-                }
-            }
-        }
-    }
-
-    size_t totalFoodCount = grid->getTotalFoodCount();
-    grid->setFoodCount(totalFoodCount);
-
-    auto pacmanEntity = findPacmanEntity();
-    auto pacman = std::dynamic_pointer_cast<PacmanComponent>(
-        _componentManager->getComponentByType(pacmanEntity,
-            static_cast<ComponentType>(1001)));
-
-    auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
-        _componentManager->getComponentByType(gridEntity,
-            ComponentType::POSITION));
-
-    float startX = gridPosComp ? gridPosComp->x : 0;
-    float startY = gridPosComp ? gridPosComp->y : 0;
-    float cellSize = grid->getCellSize();
-
-    for (size_t y = 0; y < grid->getHeight(); y++) {
-        for (size_t x = 0; x < grid->getWidth(); x++) {
-            if (grid->getCellType(x, y) == CellType::PACMAN_SPAWN) {
-                pacman->setGridPosition(x, y);
-                pacman->setCurrentDirection(Direction::NONE);
-                pacman->setNextDirection(Direction::NONE);
-
-                auto pacmanPosComp
-                = std::dynamic_pointer_cast<PositionComponent>(
-                    _componentManager->getComponentByType(pacmanEntity,
-                        ComponentType::POSITION));
-
-                if (pacmanPosComp) {
-                    pacmanPosComp->x = startX + (x * cellSize);
-                    pacmanPosComp->y = startY + (y * cellSize);
-                }
-                auto pacmanDrawable
-                = std::dynamic_pointer_cast<IDrawableComponent>(
-                    _componentManager->getComponentByType(pacmanEntity,
-                        ComponentType::DRAWABLE));
-                if (pacmanDrawable) {
-                    pacmanDrawable->setPosition(startX + (x * cellSize),
-                        startY + (y * cellSize));
-                }
-            }
-
-            if (grid->getCellType(x, y) == CellType::GHOST_SPAWN) {
-                for (const auto& [entity, name]
-                    : _entityManager->getEntitiesMap()) {
-                    auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
-                        _componentManager->getComponentByType(entity,
-                            static_cast<ComponentType>(1002)));
-                    if (ghostComp) {
-                        auto ghostDrawable
-                            = std::dynamic_pointer_cast<IDrawableComponent>(
-                            _componentManager->getComponentByType(entity,
-                                ComponentType::DRAWABLE));
-                        if (ghostDrawable) {
-                            std::string ghostAssetKey;
-                            switch (ghostComp->getGhostType()) {
-                                case GhostType::RED:
-                                    ghostAssetKey = "ghosts.red";
-                                    break;
-                                case GhostType::PINK:
-                                    ghostAssetKey = "ghosts.pink";
-                                    break;
-                                case GhostType::BLUE:
-                                    ghostAssetKey = "ghosts.blue";
-                                    break;
-                                case GhostType::ORANGE:
-                                    ghostAssetKey = "ghosts.orange";
-                                    break;
-                            }
-                            auto ghostAsset
-                                = getDrawableAsset(ghostAssetKey);
-                            if (ghostAsset) {
-                                *ghostDrawable = *ghostAsset;
-                            } else {
-                                switch (ghostComp->getGhostType()) {
-                                    case GhostType::RED:
-                                        ghostDrawable->setAsTexture
-                                            ("assets/pacman/ghost_red.png",
-                                                32, 32);
-                                        ghostDrawable->setAsCharacter('r');
-                                        break;
-                                    case GhostType::PINK:
-                                        ghostDrawable->setAsTexture
-                                            ("assets/pacman/ghost_pink.png",
-                                                32, 32);
-                                        ghostDrawable->setAsCharacter('i');
-                                        break;
-                                    case GhostType::BLUE:
-                                        ghostDrawable->setAsTexture
-                                            ("assets/pacman/ghost_cyan.png",
-                                                32, 32);
-                                        ghostDrawable->setAsCharacter('c');
-                                        break;
-                                    case GhostType::ORANGE:
-                                        ghostDrawable->setAsTexture
-                                            ("assets/pacman/ghost_orange.png",
-                                                32, 32);
-                                        ghostDrawable->setAsCharacter('o');
-                                        break;
-                                }
-                            }
-
-                            // Ensure visibility
-                            ghostDrawable->setVisibility(true);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    _cachedPacmanEntity = 0;
-    _cachedGridEntity = 0;
+    _gameStateManager->reloadCurrentMap();
+    
+    // After reloading, clear all caches
+    _cachedPacmanEntity = nullptr;
+    _cachedGridEntity = nullptr;
     _cachedPacmanComponent = nullptr;
     _cachedGridComponent = nullptr;
-
-    // Re-initialize entity cache
+    _cachedGhosts.clear();
+    _cachedFoodEntities.clear();
+    _ghostCacheRefreshTimer = 0.0f;
+    _foodCacheRefreshTimer = 0.0f;
+    
     initializeEntityCache();
-
-    grid->setGameOver(false);
-    grid->setGameWon(false);
-}
-
-void GameLogic::increaseGameSpeed() {
-    auto pacmanEntity = findPacmanEntity();
-    if (pacmanEntity) {
-        auto pacman = std::dynamic_pointer_cast<PacmanComponent>(
-            _componentManager->getComponentByType(pacmanEntity,
-                static_cast<ComponentType>(1001)));
-
-        if (pacman) {
-            float newThreshold = pacman->getMovementThreshold() * 0.8f;
-            pacman->setMovementThreshold(newThreshold);
-        }
-    }
-
-    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
-        auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
-            _componentManager->getComponentByType(entity,
-                static_cast<ComponentType>(1002)));
-
-        if (ghostComp) {
-            float newThreshold = ghostComp->getMovementThreshold() * 0.8f;
-            ghostComp->setMovementThreshold(newThreshold);
-        }
-    }
-}
-
-void GameLogic::checkWinCondition(std::shared_ptr<GridComponent> grid) {
-    if (grid->getFoodCount() <= 0) {
-        grid->setGameWon(true);
-        grid->setGameOver(true);
-        grid->incrementLevel();
-        reloadCurrentMap();
-        increaseGameSpeed();
-    }
-}
-
-std::shared_ptr<IDrawableComponent>
-GameLogic::getDrawableAsset(const std::string& key) const {
-    auto it = _assets.find(key);
-    if (it != _assets.end()) {
-        auto component = std::make_shared<DrawableComponent>(it->second);
-        return component;
-    }
-    return nullptr;
 }
 
 }  // namespace PacMan

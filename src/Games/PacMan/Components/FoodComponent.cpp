@@ -16,14 +16,9 @@ FoodComponent::FoodComponent(FoodType type)
 }
 
 int FoodComponent::getPoints() const {
-    switch (_foodType) {
-        case FoodType::NORMAL_DOT:
-            return 10;
-        case FoodType::POWER_PILL:
-            return 50;
-        default:
-            return 0;
-    }
+    // Use direct return values instead of switch for this simple case
+    return (_foodType == FoodType::NORMAL_DOT) ? 10 : 
+           (_foodType == FoodType::POWER_PILL) ? 50 : 0;
 }
 
 }  // namespace PacMan

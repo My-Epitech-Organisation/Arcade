@@ -90,6 +90,42 @@ class GhostComponent : public Arcade::IComponent {
     void updateReleaseTimer(float deltaTime);
     void resetReleaseTimer() { _releaseTimer = 0.0f; }
 
+    // Smooth movement additions
+    float getVisualX() const { return _visualX; }
+    float getVisualY() const { return _visualY; }
+    void setVisualPosition(float x, float y) { _visualX = x; _visualY = y; }
+    
+    // Renamed to avoid method name collision
+    float getVisualTargetX() const { return _targetVisualX; }
+    float getVisualTargetY() const { return _targetVisualY; }
+    void setTargetPosition(float x, float y) { _targetVisualX = x; _targetVisualY = y; }
+    
+    bool isMoving() const { return _isMoving; }
+    void setMoving(bool isMoving) { _isMoving = isMoving; }
+    
+    // Update visual position based on interpolation
+    void updateVisualPosition(float deltaTime);
+    
+    // Check if movement animation is complete
+    bool isAtTarget() const;
+    
+    // Get and set movement speed
+    float getMovementSpeed() const { return _movementSpeed; }
+    void setMovementSpeed(float speed) { _movementSpeed = speed; }
+
+    // Helper methods for collision detection
+    float getLeft() const;
+    float getRight() const;
+    float getTop() const;
+    float getBottom() const;
+    
+    // Set sprite dimensions for collision detection
+    void setDimensions(float width, float height);
+    
+    // Check collision with another entity
+    bool collidesWith(float otherLeft, float otherTop, 
+                     float otherWidth, float otherHeight) const;
+
  private:
     std::string _name;
     GhostType _ghostType;
@@ -116,6 +152,18 @@ class GhostComponent : public Arcade::IComponent {
 
     static constexpr float CHASE_DURATION = 20.0f;
     static constexpr float SCATTER_DURATION = 5.0f;
+
+    // Smooth movement variables
+    float _visualX;          // Current visual x position
+    float _visualY;          // Current visual y position
+    float _targetVisualX;    // Target visual x position for interpolation
+    float _targetVisualY;    // Target visual y position for interpolation
+    float _movementSpeed;    // Speed of movement interpolation
+    bool _isMoving;          // Whether entity is currently moving between cells
+
+    // Sprite dimensions for collision detection
+    float _width;
+    float _height;
 };
 
 }  // namespace PacMan

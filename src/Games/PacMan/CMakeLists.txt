@@ -14,6 +14,10 @@ set(SRC
     Components/PacmanStats.cpp
     System/EventSubSystem.cpp
     System/GameLogic.cpp
+    System/PlayerLogic.cpp
+    System/CollisionManager.cpp
+    System/GhostLogic.cpp
+    System/GameStateManager.cpp
     System/UISystem.cpp
 )
 

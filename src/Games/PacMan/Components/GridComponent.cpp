@@ -104,6 +104,8 @@ void GridComponent::loadDefaultMap() {
     _grid.clear();
     _entityGrid.clear();
     _foodCount = 0;
+    _totalFoodCount = 0;
+    
     _height = map.size();
     _width = expected_width;
     _grid.resize(_height, std::vector<CellType>(_width, CellType::EMPTY));
@@ -120,10 +122,12 @@ void GridComponent::loadDefaultMap() {
                 case 'F':
                     _grid[y][x] = CellType::FOOD;
                     _foodCount++;
+                    _totalFoodCount++;
                     break;
                 case 'P':
                     _grid[y][x] = CellType::POWER_PILL;
                     _foodCount++;
+                    _totalFoodCount++;
                     break;
                 case 'S':
                     _grid[y][x] = CellType::PACMAN_SPAWN;
@@ -137,7 +141,29 @@ void GridComponent::loadDefaultMap() {
             }
         }
     }
-    _totalFoodCount = _foodCount;
+    
+    // Debug output
+    std::cout << "Map loaded with " << _foodCount << " food items" << std::endl;
+}
+
+void GridComponent::decrementFoodCount() { 
+    if (_foodCount > 0) {
+        _foodCount--;
+        
+        // Debug output
+        if (_foodCount <= 5) {
+            std::cout << "Food count decreased to " << _foodCount << std::endl;
+        }
+    }
+}
+
+void GridComponent::setExitToMenu(bool exit) { 
+    _exitToMenu = exit; 
+    // When setting exitToMenu flag, also set gameOver for consistency
+    if (exit) {
+        _gameOver = true;
+        std::cerr << "GridComponent: Exit to menu requested, game over also set" << std::endl;
+    }
 }
 
 }  // namespace PacMan

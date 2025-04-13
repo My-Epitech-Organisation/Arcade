@@ -14,16 +14,36 @@
 #include <chrono>
 #include <string>
 #include <utility>
+#include <iostream>
+#include <iomanip>
 #include "Shared/Interface/ECS/ISystem.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "Shared/Interface/ECS/IEntityManager.hpp"
-#include "Games/PacMan/Components/PacmanComponent.hpp"
-#include "Games/PacMan/Components/GhostComponent.hpp"
-#include "Games/PacMan/Components/GridComponent.hpp"
 #include "ECS/Components/Drawable/DrawableComponent.hpp"
+#include "Games/PacMan/System/PlayerLogic.hpp"
+#include "Games/PacMan/System/GhostLogic.hpp"
+#include "Games/PacMan/System/CollisionManager.hpp"
+#include "Games/PacMan/System/GameStateManager.hpp"
 
 namespace Arcade {
 namespace PacMan {
+
+// Performance timer class to track bottlenecks
+class PerformanceTimer {
+public:
+    void start() {
+        _startTime = std::chrono::high_resolution_clock::now();
+    }
+    
+    double stop() {
+        auto endTime = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = endTime - _startTime;
+        return elapsed.count();
+    }
+    
+private:
+    std::chrono::time_point<std::chrono::high_resolution_clock> _startTime;
+};
 
 class GameLogic : public Arcade::ISystem {
  public:
@@ -34,46 +54,51 @@ class GameLogic : public Arcade::ISystem {
       void reloadCurrentMap();
 
  private:
-      std::shared_ptr<IEntity> findPacmanEntity();
-      std::shared_ptr<IEntity> findGridEntity();
-      std::pair<std::shared_ptr<PacmanComponent>,
-         std::shared_ptr<GridComponent>>
-      getPacmanAndGridComponents();
-      void checkFoodCollision(std::shared_ptr<PacmanComponent> pacman,
-         std::shared_ptr<GridComponent> grid);
       std::shared_ptr<Arcade::IComponentManager> _componentManager;
       std::shared_ptr<Arcade::IEntityManager> _entityManager;
-      std::chrono::high_resolution_clock::time_point _lastUpdateTime;
       const std::map<std::string, DrawableComponent>& _assets;
-      std::shared_ptr<IDrawableComponent>
-         getDrawableAsset(const std::string& key) const;
-
-      void movePacman();
-      void checkCollisions();
-      void increaseGameSpeed();
-      void checkCollisionsWithGhosts(std::shared_ptr<PacmanComponent> pacman,
-                                    std::shared_ptr<GridComponent> grid);
-      void checkCollisionsWithFood(std::shared_ptr<PacmanComponent> pacman,
-                                 std::shared_ptr<GridComponent> grid);
-      void checkWinCondition(std::shared_ptr<GridComponent> grid);
-      float getDeltaTime();
-      void tryChangePacmanDirection(std::shared_ptr<PacmanComponent> pacman,
-                                 std::shared_ptr<GridComponent> grid);
-      bool canMoveInDirection(Direction dir, size_t x, size_t y,
-                           std::shared_ptr<GridComponent> grid);
+      
+      // Logical components
+      std::unique_ptr<PlayerLogic> _playerLogic;
+      std::unique_ptr<GhostLogic> _ghostLogic;
+      std::unique_ptr<CollisionManager> _collisionManager;
+      std::unique_ptr<GameStateManager> _gameStateManager;
+      
+      std::chrono::high_resolution_clock::time_point _lastUpdateTime;
       float _currentDeltaTime = 0.0f;
+      
+      // Utility methods
       void updateDeltaTime();
-      void moveGhost(std::shared_ptr<GhostComponent> ghostComp,
-         std::shared_ptr<IEntity> entity,
-         std::shared_ptr<GridComponent> grid,
-         std::shared_ptr<PacmanComponent> pacman);
-
+      float getDeltaTime();
+      
+      // Entity cache
       std::shared_ptr<IEntity> _cachedPacmanEntity = 0;
       std::shared_ptr<IEntity> _cachedGridEntity = 0;
       std::shared_ptr<PacmanComponent> _cachedPacmanComponent = nullptr;
       std::shared_ptr<GridComponent> _cachedGridComponent = nullptr;
-      // Function to initialize the cached entities
+      
+      // Initialization
       void initializeEntityCache();
+      std::shared_ptr<IEntity> findPacmanEntity();
+      std::shared_ptr<IEntity> findGridEntity();
+      
+      // Add profiling utilities
+      PerformanceTimer _timer;
+      std::map<std::string, double> _sectionTimings;
+      int _frameCounter = 0;
+      void recordSectionTime(const std::string& section, double time);
+      void reportPerformance();
+      
+      // Cache for ghost entities
+      std::vector<std::pair<std::shared_ptr<IEntity>, std::shared_ptr<GhostComponent>>> _cachedGhosts;
+      float _ghostCacheRefreshTimer = 0.0f;
+      
+      // Cache for food entities
+      std::vector<std::pair<std::shared_ptr<IEntity>, std::shared_ptr<FoodComponent>>> _cachedFoodEntities;
+      float _foodCacheRefreshTimer = 0.0f;
+
+      // Optimization flags
+      bool _debugMode = false;
 };
 
 }  // namespace PacMan

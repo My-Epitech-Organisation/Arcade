@@ -60,6 +60,41 @@ class PacmanComponent : public Arcade::IComponent {
     void setMovementThreshold(float threshold) {
         _movementThreshold = threshold; }
 
+    // Smooth movement additions
+    float getVisualX() const { return _visualX; }
+    float getVisualY() const { return _visualY; }
+    void setVisualPosition(float x, float y) { _visualX = x; _visualY = y; }
+    
+    float getTargetX() const { return _targetX; }
+    float getTargetY() const { return _targetY; }
+    void setTargetPosition(float x, float y) { _targetX = x; _targetY = y; }
+    
+    bool isMoving() const { return _isMoving; }
+    void setMoving(bool isMoving) { _isMoving = isMoving; }
+    
+    // Update visual position based on interpolation
+    void updateVisualPosition(float deltaTime);
+    
+    // Check if movement animation is complete
+    bool isAtTarget() const;
+    
+    // Get and set movement speed
+    float getMovementSpeed() const { return _movementSpeed; }
+    void setMovementSpeed(float speed) { _movementSpeed = speed; }
+
+    // Helper methods for collision detection
+    float getLeft() const;
+    float getRight() const;
+    float getTop() const; 
+    float getBottom() const;
+    
+    // Set sprite dimensions for collision detection
+    void setDimensions(float width, float height);
+    
+    // Check collision with another entity
+    bool collidesWith(float otherLeft, float otherTop, 
+                     float otherWidth, float otherHeight) const;
+
  private:
     std::string _name;
     Direction _currentDirection;
@@ -73,6 +108,18 @@ class PacmanComponent : public Arcade::IComponent {
     float _movementTimer = 0.0f;
     float _movementThreshold = 0.20f;
     float _totalGameTime = 0.0f;
+
+    // Smooth movement variables
+    float _visualX;      // Current visual x position
+    float _visualY;      // Current visual y position
+    float _targetX;      // Target x position for interpolation
+    float _targetY;      // Target y position for interpolation
+    float _movementSpeed; // Speed of movement interpolation
+    bool _isMoving;      // Whether entity is currently moving between cells
+
+    // Sprite dimensions for collision detection
+    float _width;
+    float _height;
 };
 
 }  // namespace PacMan
