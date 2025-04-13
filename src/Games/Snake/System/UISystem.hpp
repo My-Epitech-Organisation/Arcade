@@ -12,6 +12,7 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <utility>
 #include "Shared/Interface/ECS/ISystem.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "Shared/Interface/ECS/IEntityManager.hpp"

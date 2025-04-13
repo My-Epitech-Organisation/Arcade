@@ -9,6 +9,8 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <map>
+#include <string>
 #include <utility>
 #include <algorithm>
 #include <random>
@@ -20,7 +22,8 @@
 namespace Arcade {
 namespace Snake {
 
-GameLogic::GameLogic(std::shared_ptr<Arcade::IComponentManager> componentManager,
+GameLogic::GameLogic(std::shared_ptr<Arcade::IComponentManager>
+componentManager,
 std::shared_ptr<Arcade::IEntityManager> entityManager,
 const std::map<std::string, DrawableComponent>& assets)
 : _componentManager(componentManager), _entityManager(entityManager),
@@ -34,14 +37,11 @@ void GameLogic::update() {
     if (!snake || !grid)
         return;
 
-    // Add game time to snake
     snake->addGameTime(getDeltaTime());
     snake->updateMovementTimer(getDeltaTime());
 
-    // Try to change snake direction based on next direction
     tryChangeDirection(snake, grid);
 
-    // Create bonus food occasionally
     _bonusFoodTimer += getDeltaTime();
     if (!_bonusFoodActive && _bonusFoodTimer > 15.0f) {
         createFood(grid, FoodType::BONUS);
@@ -49,7 +49,6 @@ void GameLogic::update() {
         _bonusFoodTimer = 0.0f;
     }
 
-    // Update bonus food timeouts
     auto foodEntities = findFoodEntities();
     for (auto entity : foodEntities) {
         auto foodComp = std::dynamic_pointer_cast<FoodComponent>(
@@ -57,7 +56,6 @@ void GameLogic::update() {
                 static_cast<ComponentType>(1002)));
         if (foodComp && foodComp->getFoodType() == FoodType::BONUS) {
             if (foodComp->updateTimeRemaining(getDeltaTime())) {
-                // Remove expired bonus food
                 grid->setCellType(foodComp->getGridX(), foodComp->getGridY(),
                     CellType::EMPTY);
                 _entityManager->destroyEntity(entity);
@@ -66,32 +64,26 @@ void GameLogic::update() {
         }
     }
 
-    // Periodically increase game difficulty
     _difficultyTimer += getDeltaTime();
     if (_difficultyTimer >= 10.0f) {
         increaseDifficulty(snake);
         _difficultyTimer = 0.0f;
     }
 
-    // Move the snake if it's time and check collisions
     if (snake->canMove()) {
         if (moveSnake(snake, grid)) {
-            // If movement was successful, update drawables
             updateDrawablePositions(snake, grid);
             snake->setCanMove(false);
             snake->resetMovementTimer();
 
-            // Check if snake ate food
             checkFoodCollision(snake, grid);
 
-            // Check for collisions with self or walls
             if (checkSnakeCollision(snake, grid)) {
                 grid->setGameOver(true);
             }
         }
     }
 
-    // Make sure there's always food on the grid
     bool foundFood = false;
     for (size_t y = 0; y < grid->getHeight(); ++y) {
         for (size_t x = 0; x < grid->getWidth(); ++x) {
@@ -166,7 +158,7 @@ GameLogic::getDrawableAsset(const std::string& key) const {
 }
 
 void GameLogic::tryChangeDirection(std::shared_ptr<SnakeHeadComponent> snake,
-                                  std::shared_ptr<GridComponent> grid) {
+std::shared_ptr<GridComponent> grid) {
     Direction nextDir = snake->getNextDirection();
     Direction currentDir = snake->getCurrentDirection();
 
@@ -185,10 +177,38 @@ void GameLogic::tryChangeDirection(std::shared_ptr<SnakeHeadComponent> snake,
     // Accept the direction change
     snake->setCurrentDirection(nextDir);
     snake->setNextDirection(Direction::NONE);
+
+    // Update snake head asset based on new direction
+    Arcade::Entity snakeEntity = findSnakeHeadEntity();
+    auto snakeDrawable = std::dynamic_pointer_cast<DrawableComponent>(
+        _componentManager->getComponentByType(snakeEntity,
+        ComponentType::DRAWABLE));
+    if (snakeDrawable) {
+        switch (nextDir) {
+            case Direction::UP:
+                snakeDrawable->setAsTexture("assets/snake/head_up.png",
+                    32, 32);
+                break;
+            case Direction::DOWN:
+                snakeDrawable->setAsTexture("assets/snake/head_down.png",
+                    32, 32);
+                break;
+            case Direction::LEFT:
+                snakeDrawable->setAsTexture("assets/snake/head_left.png",
+                    32, 32);
+                break;
+            case Direction::RIGHT:
+                snakeDrawable->setAsTexture("assets/snake/head_right.png",
+                    32, 32);
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 bool GameLogic::moveSnake(std::shared_ptr<SnakeHeadComponent> snake,
-                         std::shared_ptr<GridComponent> grid) {
+std::shared_ptr<GridComponent> grid) {
     Direction currentDir = snake->getCurrentDirection();
     if (currentDir == Direction::NONE)
         return false;
@@ -198,7 +218,6 @@ bool GameLogic::moveSnake(std::shared_ptr<SnakeHeadComponent> snake,
     size_t newX = currentX;
     size_t newY = currentY;
 
-    // Calculate new position based on direction
     switch (currentDir) {
         case Direction::UP:
             newY = (currentY > 0) ? currentY - 1 : (grid->isCyclical() ?
@@ -220,50 +239,40 @@ bool GameLogic::moveSnake(std::shared_ptr<SnakeHeadComponent> snake,
             return false;
     }
 
-    // If we hit a wall and grid is not cyclical, it's game over
     if ((newX == currentX && newY == currentY) && !grid->isCyclical()) {
         grid->setGameOver(true);
         return false;
     }
 
-    // Update the snake body segments with the new head position
     updateSnakeBody(snake, grid, newX, newY);
 
     return true;
 }
 
 void GameLogic::updateSnakeBody(std::shared_ptr<SnakeHeadComponent> snake,
-                               std::shared_ptr<GridComponent> grid,
-                               size_t newHeadX, size_t newHeadY) {
-    // Get current segments
+std::shared_ptr<GridComponent> grid,
+size_t newHeadX, size_t newHeadY) {
     auto segments = snake->getSegments();
 
-    // Clear current body cells
     for (const auto& segment : segments) {
         grid->setCellType(segment.first, segment.second, CellType::EMPTY);
     }
 
-    // Clear the current head cell
     grid->setCellType(snake->getGridX(), snake->getGridY(), CellType::EMPTY);
 
-    // Move each segment to the position of the previous one
     std::vector<std::pair<size_t, size_t>> newSegments;
     if (!segments.empty()) {
-        // First segment takes the position of the head
         newSegments.push_back(std::make_pair(snake->getGridX(),
             snake->getGridY()));
 
-        // Rest of the segments follow
         for (size_t i = 0; i < segments.size() - 1; ++i) {
             newSegments.push_back(segments[i]);
         }
     }
 
-    // Update snake head position
     snake->setGridPosition(newHeadX, newHeadY);
     grid->setCellType(newHeadX, newHeadY, CellType::SNAKE_HEAD);
 
-    // Update segments in snake and grid
     snake->clearSegments();
     for (const auto& segment : newSegments) {
         snake->addSegment(segment.first, segment.second);
@@ -271,12 +280,12 @@ void GameLogic::updateSnakeBody(std::shared_ptr<SnakeHeadComponent> snake,
     }
 }
 
-void GameLogic::updateDrawablePositions(std::shared_ptr<SnakeHeadComponent> snake,
-                                      std::shared_ptr<GridComponent> grid) {
+void GameLogic::updateDrawablePositions(std::shared_ptr<SnakeHeadComponent>
+snake,
+std::shared_ptr<GridComponent> grid) {
     Arcade::Entity snakeEntity = findSnakeHeadEntity();
     Arcade::Entity gridEntity = findGridEntity();
 
-    // Get positions
     auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
         _componentManager->getComponentByType(gridEntity,
             ComponentType::POSITION));
@@ -284,7 +293,6 @@ void GameLogic::updateDrawablePositions(std::shared_ptr<SnakeHeadComponent> snak
     float startY = gridPosComp ? gridPosComp->y : 0;
     float cellSize = grid->getCellSize();
 
-    // Update head position
     auto snakePosComp = std::dynamic_pointer_cast<PositionComponent>(
         _componentManager->getComponentByType(snakeEntity,
             ComponentType::POSITION));
@@ -293,7 +301,6 @@ void GameLogic::updateDrawablePositions(std::shared_ptr<SnakeHeadComponent> snak
         snakePosComp->y = startY + (snake->getGridY() * cellSize);
     }
 
-    // Update drawable for the head
     auto snakeDrawable = std::dynamic_pointer_cast<DrawableComponent>(
         _componentManager->getComponentByType(snakeEntity,
             ComponentType::DRAWABLE));
@@ -301,7 +308,6 @@ void GameLogic::updateDrawablePositions(std::shared_ptr<SnakeHeadComponent> snak
         snakeDrawable->posX = startX + (snake->getGridX() * cellSize);
         snakeDrawable->posY = startY + (snake->getGridY() * cellSize);
 
-        // Update head texture based on direction
         Direction dir = snake->getCurrentDirection();
         std::string directionTexture;
         switch (dir) {
@@ -324,7 +330,6 @@ void GameLogic::updateDrawablePositions(std::shared_ptr<SnakeHeadComponent> snak
 
         auto headAsset = getDrawableAsset(directionTexture);
         if (headAsset) {
-            // Keep position and visibility
             float posX = snakeDrawable->posX;
             float posY = snakeDrawable->posY;
             bool visible = snakeDrawable->isVisible;
@@ -334,10 +339,76 @@ void GameLogic::updateDrawablePositions(std::shared_ptr<SnakeHeadComponent> snak
             snakeDrawable->isVisible = visible;
         }
     }
+
+    auto segments = snake->getSegments();
+    updateBodySegmentEntities(segments, startX, startY, cellSize);
+}
+
+void GameLogic::updateBodySegmentEntities(
+const std::vector<std::pair<size_t, size_t>>& segments,
+float startX, float startY, float cellSize) {
+std::map<std::string, Arcade::Entity> existingSegmentEntitiesByName;
+    std::vector<Arcade::Entity> allSegmentEntities;
+
+    for (const auto& [entity, name] : _entityManager->getEntities()) {
+        if (name.find("SnakeSegment_") == 0) {
+            existingSegmentEntitiesByName[name] = entity;
+            allSegmentEntities.push_back(entity);
+        }
+    }
+
+    for (size_t i = 0; i < segments.size(); ++i) {
+        Arcade::Entity segmentEntity;
+        std::string segmentName = "SnakeSegment_" + std::to_string(i);
+
+        auto it = existingSegmentEntitiesByName.find(segmentName);
+        if (it != existingSegmentEntitiesByName.end()) {
+            segmentEntity = it->second;
+            existingSegmentEntitiesByName.erase(it);
+        } else {
+            segmentEntity = _entityManager->createEntity(segmentName);
+            auto positionComponent = std::make_shared<PositionComponent>(0, 0);
+            _componentManager->registerComponent(segmentEntity,
+            positionComponent);
+
+            auto drawableComponent = std::make_shared<DrawableComponent>();
+            auto bodyAsset = getDrawableAsset("snake.body");
+            if (bodyAsset) {
+                *drawableComponent = *bodyAsset;
+            } else {
+                drawableComponent->setAsTexture("assets/snake/body.png",
+                    32, 32);
+                drawableComponent->setAsCharacter('o');
+            }
+            drawableComponent->isVisible = true;
+            _componentManager->registerComponent(segmentEntity,
+                drawableComponent);
+        }
+
+        auto posComp = std::dynamic_pointer_cast<PositionComponent>(
+            _componentManager->getComponentByType(segmentEntity,
+                ComponentType::POSITION));
+        if (posComp) {
+            posComp->x = startX + (segments[i].first * cellSize);
+            posComp->y = startY + (segments[i].second * cellSize);
+        }
+
+        auto drawComp = std::dynamic_pointer_cast<DrawableComponent>(
+            _componentManager->getComponentByType(segmentEntity,
+                ComponentType::DRAWABLE));
+        if (drawComp) {
+            drawComp->posX = startX + (segments[i].first * cellSize);
+            drawComp->posY = startY + (segments[i].second * cellSize);
+            drawComp->isVisible = true;
+        }
+    }
+    for (const auto& [name, entity] : existingSegmentEntitiesByName) {
+        _entityManager->destroyEntity(entity);
+    }
 }
 
 void GameLogic::checkFoodCollision(std::shared_ptr<SnakeHeadComponent> snake,
-                                 std::shared_ptr<GridComponent> grid) {
+std::shared_ptr<GridComponent> grid) {
     size_t headX = snake->getGridX();
     size_t headY = snake->getGridY();
 
@@ -349,15 +420,12 @@ void GameLogic::checkFoodCollision(std::shared_ptr<SnakeHeadComponent> snake,
 
         if (foodComp && foodComp->getGridX() == headX &&
             foodComp->getGridY() == headY) {
-            // Add to score
             snake->addScore(foodComp->getPointValue());
 
-            // Add a new segment
             auto segments = snake->getSegments();
             size_t tailX, tailY;
-  
+
             if (segments.empty()) {
-                // If no segments yet, add one behind the head
                 Direction dir = snake->getCurrentDirection();
                 tailX = headX;
                 tailY = headY;
@@ -378,25 +446,28 @@ void GameLogic::checkFoodCollision(std::shared_ptr<SnakeHeadComponent> snake,
                         break;
                 }
             } else {
-                // Otherwise add one after the last segment
                 auto lastSegment = segments.back();
                 tailX = lastSegment.first;
                 tailY = lastSegment.second;
             }
-  
+
             snake->addSegment(tailX, tailY);
             grid->setCellType(tailX, tailY, CellType::SNAKE_BODY);
 
-            // Remove food entity
+            auto foodDrawable = std::dynamic_pointer_cast<DrawableComponent>(
+                _componentManager->getComponentByType(foodEntity,
+                ComponentType::DRAWABLE));
+            if (foodDrawable) {
+                foodDrawable->isVisible = false;
+            }
+
             _entityManager->destroyEntity(foodEntity);
             grid->setCellType(headX, headY, CellType::SNAKE_HEAD);
 
-            // If it was a bonus food, reset the timer
             if (foodComp->getFoodType() == FoodType::BONUS) {
                 _bonusFoodActive = false;
             }
-  
-            // Create new food
+
             createFood(grid, FoodType::REGULAR);
             break;
         }
@@ -404,11 +475,10 @@ void GameLogic::checkFoodCollision(std::shared_ptr<SnakeHeadComponent> snake,
 }
 
 bool GameLogic::checkSnakeCollision(std::shared_ptr<SnakeHeadComponent> snake,
-                                   std::shared_ptr<GridComponent> grid) {
+std::shared_ptr<GridComponent> grid) {
     size_t headX = snake->getGridX();
     size_t headY = snake->getGridY();
 
-    // Check for collision with snake's own body
     auto segments = snake->getSegments();
     for (const auto& segment : segments) {
         if (segment.first == headX && segment.second == headY) {
@@ -422,12 +492,11 @@ bool GameLogic::checkSnakeCollision(std::shared_ptr<SnakeHeadComponent> snake,
 void GameLogic::createFood(std::shared_ptr<GridComponent> grid, FoodType type) {
     auto pos = grid->placeFood();
     if (pos.first >= grid->getWidth() || pos.second >= grid->getHeight()) {
-        return;  // No empty cell for food
+        return;
     }
 
     float cellSize = grid->getCellSize();
 
-    // Find grid entity to get position
     Arcade::Entity gridEntity = findGridEntity();
     auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
         _componentManager->getComponentByType(gridEntity,
@@ -439,16 +508,13 @@ void GameLogic::createFood(std::shared_ptr<GridComponent> grid, FoodType type) {
     float foodX = startX + (pos.first * cellSize);
     float foodY = startY + (pos.second * cellSize);
 
-    // Create food entity
     std::string foodName = "Food_" + std::to_string(pos.first) + "_" +
         std::to_string(pos.second);
     Arcade::Entity foodEntity = _entityManager->createEntity(foodName);
 
-    // Add position component
     auto positionComponent = std::make_shared<PositionComponent>(foodX, foodY);
     _componentManager->registerComponent(foodEntity, positionComponent);
 
-    // Add drawable component
     std::string assetKey = type == FoodType::BONUS ? "snake.bonus_food" :
         "snake.regular_food";
     auto spriteComponent = getDrawableAsset(assetKey);
@@ -489,31 +555,25 @@ void GameLogic::resetGame() {
     if (!snake || !grid)
         return;
 
-    // Clear all food entities
     auto foodEntities = findFoodEntities();
     for (auto entity : foodEntities) {
         _entityManager->destroyEntity(entity);
     }
 
-    // Reset grid
     grid->resetGrid();
 
-    // Reset snake
     snake->setScore(0);
     snake->clearSegments();
     snake->setCurrentDirection(Direction::NONE);
     snake->setNextDirection(Direction::NONE);
 
-    // Center the snake
     size_t centerX = grid->getWidth() / 2;
     size_t centerY = grid->getHeight() / 2;
     snake->setGridPosition(centerX, centerY);
     grid->setCellType(centerX, centerY, CellType::SNAKE_HEAD);
 
-    // Add initial food
-    createFood(grid, FoodType::REGULAR);
+    // createFood(grid, FoodType::REGULAR);
 
-    // Reset timers
     _bonusFoodActive = false;
     _bonusFoodTimer = 0.0f;
     _difficultyTimer = 0.0f;
@@ -521,9 +581,7 @@ void GameLogic::resetGame() {
 }
 
 void GameLogic::increaseDifficulty(std::shared_ptr<SnakeHeadComponent> snake) {
-    // Increase snake speed by reducing movement threshold
     float currentThreshold = snake->getMovementThreshold();
-    // Don't let it get too fast
     if (currentThreshold > 0.05f) {
         snake->setMovementThreshold(currentThreshold * 0.9f);
     }

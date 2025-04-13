@@ -46,7 +46,7 @@ class FoodComponent : public Arcade::IComponent {
      * @return Component type
      */
     ComponentType getType() const override {
-        return static_cast<ComponentType>(1002);  // Custom component type matching GameLogic.cpp
+        return static_cast<ComponentType>(1002);
     }
 
     /**
@@ -115,14 +115,17 @@ class FoodComponent : public Arcade::IComponent {
      * @param x X position
      * @param y Y position
      */
-    void setGridPosition(size_t x, size_t y) { _gridX = x; _gridY = y; }
+    void setGridPosition(size_t x, size_t y) {
+        _gridX = x;
+        _gridY = y;
+    }
 
  private:
     std::string _name;
     FoodType _foodType;
     size_t _gridX;
     size_t _gridY;
-    float _timeRemaining = 10.0f; // Default 10 seconds for bonus food
+    float _timeRemaining = 10.0f;
 };
 
 }  // namespace Snake

@@ -171,6 +171,16 @@ class GameLogic : public Arcade::ISystem {
      * @param snake Snake head component
      */
     void increaseDifficulty(std::shared_ptr<SnakeHeadComponent> snake);
+
+    /**
+     * @brief Met à jour ou crée les entités visuelles pour chaque segment du corps
+     * @param segments Les segments du corps du serpent
+     * @param startX Position X de départ de la grille
+     * @param startY Position Y de départ de la grille
+     * @param cellSize Taille d'une cellule
+     */
+    void updateBodySegmentEntities(const std::vector<std::pair<size_t, size_t>>& segments, 
+                                  float startX, float startY, float cellSize);
 };
 
 }  // namespace Snake

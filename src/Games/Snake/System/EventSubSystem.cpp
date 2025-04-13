@@ -7,6 +7,8 @@
 */
 
 #include <iostream>
+#include <memory>
+#include <map>
 #include "Games/Snake/System/EventSubSystem.hpp"
 #include "Games/Snake/Components/GridComponent.hpp"
 #include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
@@ -17,12 +19,12 @@ namespace Arcade {
 namespace Snake {
 
 EventSubSystem::EventSubSystem(
-    std::shared_ptr<IComponentManager> componentManager,
-    std::shared_ptr<IEntityManager> entityManager,
-    std::shared_ptr<IEventManager> eventManager,
-    const std::map<std::string, DrawableComponent>& assets)
-    : _componentManager(componentManager), _entityManager(entityManager),
-      _eventManager(eventManager), _assets(assets) {
+std::shared_ptr<IComponentManager> componentManager,
+std::shared_ptr<IEntityManager> entityManager,
+std::shared_ptr<IEventManager> eventManager,
+const std::map<std::string, DrawableComponent>& assets)
+: _componentManager(componentManager), _entityManager(entityManager),
+_eventManager(eventManager), _assets(assets) {
     subscribeToEvents();
 }
 
@@ -37,22 +39,24 @@ void EventSubSystem::subscribeToEvents() {
         handleKeyUpPressed();
     });
 
-    Arcade::KeyEvent downKey(Arcade::Keys::DOWN, Arcade::EventType::KEY_PRESSED);
+    Arcade::KeyEvent downKey(Arcade::Keys::DOWN,
+        Arcade::EventType::KEY_PRESSED);
     _eventManager->subscribe(downKey, [this]() {
         handleKeyDownPressed();
     });
 
-    Arcade::KeyEvent leftKey(Arcade::Keys::LEFT, Arcade::EventType::KEY_PRESSED);
+    Arcade::KeyEvent leftKey(Arcade::Keys::LEFT,
+        Arcade::EventType::KEY_PRESSED);
     _eventManager->subscribe(leftKey, [this]() {
         handleKeyLeftPressed();
     });
 
-    Arcade::KeyEvent rightKey(Arcade::Keys::RIGHT, Arcade::EventType::KEY_PRESSED);
+    Arcade::KeyEvent rightKey(Arcade::Keys::RIGHT,
+        Arcade::EventType::KEY_PRESSED);
     _eventManager->subscribe(rightKey, [this]() {
         handleKeyRightPressed();
     });
 
-    // WASD keys for alternative movement
     Arcade::KeyEvent wKey(Arcade::Keys::W, Arcade::EventType::KEY_PRESSED);
     _eventManager->subscribe(wKey, [this]() {
         handleKeyUpPressed();
@@ -73,7 +77,6 @@ void EventSubSystem::subscribeToEvents() {
         handleKeyRightPressed();
     });
 
-    // Restart and quit
     Arcade::KeyEvent rKey(Arcade::Keys::R, Arcade::EventType::KEY_PRESSED);
     _eventManager->subscribe(rKey, [this]() {
         handleRestartPressed();

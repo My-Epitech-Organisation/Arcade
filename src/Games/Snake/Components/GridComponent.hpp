@@ -23,11 +23,11 @@ namespace Snake {
  * @brief Types of cells in the Snake grid
  */
 enum class CellType {
-    EMPTY,      // Empty cell
-    SNAKE_HEAD, // Snake head
-    SNAKE_BODY, // Snake body segment
-    FOOD,       // Food
-    WALL        // Wall
+    EMPTY,       // Empty cell
+    SNAKE_HEAD,  // Snake head
+    SNAKE_BODY,  // Snake body segment
+    FOOD,        // Food
+    WALL         // Wall
 };
 
 /**
@@ -178,7 +178,7 @@ class GridComponent : public Arcade::IComponent {
     float _cellSize;
     bool _gameOver;
     bool _gameWon;
-    bool _cyclical = true;  // Default to true for wraparound behavior
+    bool _cyclical = true;
     std::vector<std::vector<CellType>> _grid;
     std::vector<std::vector<Arcade::Entity>> _entities;
     std::mt19937 _rng;

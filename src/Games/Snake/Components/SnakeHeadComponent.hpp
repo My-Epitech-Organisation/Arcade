@@ -150,7 +150,10 @@ class SnakeHeadComponent : public Arcade::IComponent {
      * @param x X position
      * @param y Y position
      */
-    void setGridPosition(size_t x, size_t y) { _gridX = x; _gridY = y; }
+    void setGridPosition(size_t x, size_t y) {
+        _gridX = x;
+        _gridY = y;
+    }
 
     /**
      * @brief Checks if snake can move
@@ -197,7 +200,9 @@ class SnakeHeadComponent : public Arcade::IComponent {
      * @brief Sets movement threshold
      * @param threshold Threshold
      */
-    void setMovementThreshold(float threshold) { _movementThreshold = threshold; }
+    void setMovementThreshold(float threshold) {
+        _movementThreshold = threshold;
+    }
 
     /**
      * @brief Adds a segment position to the snake
@@ -210,13 +215,17 @@ class SnakeHeadComponent : public Arcade::IComponent {
      * @brief Gets segments
      * @return Segments
      */
-    const std::vector<std::pair<size_t, size_t>>& getSegments() const { return _segments; }
+    const std::vector<std::pair<size_t, size_t>>& getSegments() const {
+        return _segments;
+    }
 
     /**
      * @brief Sets segments
      * @param segments Segments
      */
-    void setSegments(const std::vector<std::pair<size_t, size_t>>& segments) { _segments = segments; }
+    void setSegments(const std::vector<std::pair<size_t, size_t>>& segments) {
+        _segments = segments;
+    }
 
     /**
      * @brief Clear all segments from the snake
@@ -246,7 +255,7 @@ class SnakeHeadComponent : public Arcade::IComponent {
     float _movementTimer;
     float _movementThreshold;
     float _totalGameTime;
-    std::vector<std::pair<size_t, size_t>> _segments;  // Snake body segments positions
+    std::vector<std::pair<size_t, size_t>> _segments;
 };
 
 }  // namespace Snake
