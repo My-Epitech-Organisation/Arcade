@@ -12,12 +12,14 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <vector>
 #include "Shared/Interface/ECS/ISystem.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
 #include "Shared/Interface/ECS/IEntityManager.hpp"
 #include "Shared/Interface/Core/IEventManager.hpp"
 #include "Games/Snake/Components/SnakeHeadComponent.hpp"
 #include "ECS/Components/Drawable/DrawableComponent.hpp"
+#include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
 
 namespace Arcade {
 namespace Snake {
@@ -49,9 +51,19 @@ class EventSubSystem : public Arcade::ISystem {
                  std::shared_ptr<GameLogic> gameLogic);
 
     /**
+     * @brief Destructor
+     */
+    ~EventSubSystem() override;
+
+    /**
      * @brief Updates the system
      */
     void update() override;
+
+    /**
+     * @brief Unsubscribes from all events
+     */
+    void unsubscribeEvents();
 
  private:
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
@@ -100,6 +112,11 @@ class EventSubSystem : public Arcade::ISystem {
      * @return Entity ID
      */
     Arcade::Entity findSnakeHeadEntity() const;
+
+    /**
+     * @brief List to store subscribed events
+     */
+    std::vector<Arcade::KeyEvent> _subscribedEvents;
 };
 
 }  // namespace Snake

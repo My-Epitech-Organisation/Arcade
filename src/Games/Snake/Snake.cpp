@@ -142,10 +142,45 @@ bool SnakeGame::hasWon() const {
 
 void SnakeGame::stop() {
     _gameOver = true;
+
+    if (_eventSystem) {
+        try {
+            _eventSystem->unsubscribeEvents();
+        } catch (const std::exception& e) {
+            std::cerr   << "Error unsubscribing Snake events: "
+                        << e.what() << std::endl;
+        } catch (...) {
+            std::cerr   << "Unknown error unsubscribing Snake events"
+                        << std::endl;
+        }
+    }
+
+    _systems.clear();
+    _gameLogicSystem.reset();
+    _eventSystem.reset();
+
+    if (_entityManager && _componentManager) {
+        try {
+            auto entities = _entityManager->getEntities();
+            for (const auto& entity : entities) {
+                auto components =
+                _componentManager->getEntityComponents(entity.first);
+                for (const auto& component : components) {
+                    _componentManager->unregisterComponent(entity.first,
+                        typeid(*component).name());
+                }
+                _entityManager->destroyEntity(entity.first);
+            }
+        } catch (const std::exception& e) {
+            std::cerr   << "Error during Snake cleanup: "
+                        << e.what() << std::endl;
+        } catch (...) {
+            std::cerr << "Unknown error during Snake cleanup" << std::endl;
+        }
+    }
     _componentManager.reset();
     _entityManager.reset();
-    _systems.clear();
-    _eventSystem.reset();
+    _eventManager.reset();
 }
 
 extern "C" {

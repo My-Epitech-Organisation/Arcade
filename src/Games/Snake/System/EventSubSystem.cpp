@@ -31,62 +31,114 @@ _eventManager(eventManager), _assets(assets), _gameLogic(gameLogic) {
     subscribeToEvents();
 }
 
+EventSubSystem::~EventSubSystem() {
+    std::cout << "Snake EventSubSystem: Destructor called" << std::endl;
+    unsubscribeEvents();
+}
+
 void EventSubSystem::update() {
 }
 
+void EventSubSystem::unsubscribeEvents() {
+    if (!_eventManager) {
+        return;
+    }
+
+    try {
+        _eventManager->unsubscribeAll();
+
+        _subscribedEvents.clear();
+    } catch (const std::exception& e) {
+        std::cerr << "Snake EventSubSystem: Error calling unsubscribeAll(): "
+                  << e.what() << std::endl;
+    } catch (...) {
+        std::cerr <<
+        "Snake EventSubSystem: Unknown error calling unsubscribeAll()"
+        << std::endl;
+    }
+}
+
 void EventSubSystem::subscribeToEvents() {
-    Arcade::KeyEvent upKey(Arcade::Keys::UP, Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(upKey, [this]() {
-        handleKeyUpPressed();
-    });
+    if (!_eventManager) {
+        return;
+    }
 
-    Arcade::KeyEvent downKey(Arcade::Keys::DOWN,
-        Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(downKey, [this]() {
-        handleKeyDownPressed();
-    });
+    _subscribedEvents.clear();
 
-    Arcade::KeyEvent leftKey(Arcade::Keys::LEFT,
-        Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(leftKey, [this]() {
-        handleKeyLeftPressed();
-    });
+    try {
+        Arcade::KeyEvent upKey(Arcade::Keys::UP,
+            Arcade::EventType::KEY_PRESSED);
+        _eventManager->subscribe(upKey, [this]() {
+            handleKeyUpPressed();
+        });
+        _subscribedEvents.push_back(upKey);
 
-    Arcade::KeyEvent rightKey(Arcade::Keys::RIGHT,
-        Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(rightKey, [this]() {
-        handleKeyRightPressed();
-    });
+        Arcade::KeyEvent zKey(Arcade::Keys::Z,
+            Arcade::EventType::KEY_PRESSED);
+        _eventManager->subscribe(zKey, [this]() {
+            handleKeyUpPressed();
+        });
+        _subscribedEvents.push_back(zKey);
 
-    Arcade::KeyEvent wKey(Arcade::Keys::Z, Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(wKey, [this]() {
-        handleKeyUpPressed();
-    });
+        Arcade::KeyEvent downKey(Arcade::Keys::DOWN,
+            Arcade::EventType::KEY_PRESSED);
+        _eventManager->subscribe(downKey, [this]() {
+            handleKeyDownPressed();
+        });
+        _subscribedEvents.push_back(downKey);
 
-    Arcade::KeyEvent sKey(Arcade::Keys::S, Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(sKey, [this]() {
-        handleKeyDownPressed();
-    });
+        Arcade::KeyEvent sKey(Arcade::Keys::S, Arcade::EventType::KEY_PRESSED);
+        _eventManager->subscribe(sKey, [this]() {
+            handleKeyDownPressed();
+        });
+        _subscribedEvents.push_back(sKey);
 
-    Arcade::KeyEvent aKey(Arcade::Keys::Q, Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(aKey, [this]() {
-        handleKeyLeftPressed();
-    });
+        Arcade::KeyEvent leftKey(Arcade::Keys::LEFT,
+            Arcade::EventType::KEY_PRESSED);
+        _eventManager->subscribe(leftKey, [this]() {
+            handleKeyLeftPressed();
+        });
+        _subscribedEvents.push_back(leftKey);
 
-    Arcade::KeyEvent dKey(Arcade::Keys::D, Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(dKey, [this]() {
-        handleKeyRightPressed();
-    });
+        Arcade::KeyEvent qKey(Arcade::Keys::Q, Arcade::EventType::KEY_PRESSED);
+        _eventManager->subscribe(qKey, [this]() {
+            handleKeyLeftPressed();
+        });
+        _subscribedEvents.push_back(qKey);
 
-    Arcade::KeyEvent rKey(Arcade::Keys::R, Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(rKey, [this]() {
-        handleRestartPressed();
-    });
+        Arcade::KeyEvent rightKey(Arcade::Keys::RIGHT,
+            Arcade::EventType::KEY_PRESSED);
+        _eventManager->subscribe(rightKey, [this]() {
+            handleKeyRightPressed();
+        });
+        _subscribedEvents.push_back(rightKey);
 
-    Arcade::KeyEvent escKey(Arcade::Keys::ESC, Arcade::EventType::KEY_PRESSED);
-    _eventManager->subscribe(escKey, [this]() {
-        handleQuitPressed();
-    });
+        Arcade::KeyEvent dKey(Arcade::Keys::D, Arcade::EventType::KEY_PRESSED);
+        _eventManager->subscribe(dKey, [this]() {
+            handleKeyRightPressed();
+        });
+        _subscribedEvents.push_back(dKey);
+
+        Arcade::KeyEvent rKey(Arcade::Keys::R, Arcade::EventType::KEY_PRESSED);
+        _eventManager->subscribe(rKey, [this]() {
+            handleRestartPressed();
+        });
+        _subscribedEvents.push_back(rKey);
+
+        Arcade::KeyEvent escKey(Arcade::Keys::ESC,
+            Arcade::EventType::KEY_PRESSED);
+        _eventManager->subscribe(escKey, [this]() {
+            handleQuitPressed();
+        });
+        _subscribedEvents.push_back(escKey);
+
+    } catch (const std::exception& e) {
+        std::cerr << "Snake EventSubSystem: Error subscribing events: "
+        << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Snake EventSubSystem: Unknown error subscribing events"
+        << std::endl;
+    }
 }
 
 void EventSubSystem::handleKeyUpPressed() {
