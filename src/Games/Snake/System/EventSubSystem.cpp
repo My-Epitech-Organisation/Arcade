@@ -15,6 +15,7 @@
 #include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
 #include "Shared/Models/EventType.hpp"
 #include "Shared/Models/KeysType.hpp"
+#include "Games/Snake/System/GameLogic.hpp"
 
 namespace Arcade {
 namespace Snake {
@@ -30,11 +31,9 @@ _eventManager(eventManager), _assets(assets) {
 }
 
 void EventSubSystem::update() {
-    // Nothing to do here, events are handled by callbacks
 }
 
 void EventSubSystem::subscribeToEvents() {
-    // Arrow keys for movement
     Arcade::KeyEvent upKey(Arcade::Keys::UP, Arcade::EventType::KEY_PRESSED);
     _eventManager->subscribe(upKey, [this]() {
         handleKeyUpPressed();
@@ -58,7 +57,7 @@ void EventSubSystem::subscribeToEvents() {
         handleKeyRightPressed();
     });
 
-    Arcade::KeyEvent wKey(Arcade::Keys::W, Arcade::EventType::KEY_PRESSED);
+    Arcade::KeyEvent wKey(Arcade::Keys::Z, Arcade::EventType::KEY_PRESSED);
     _eventManager->subscribe(wKey, [this]() {
         handleKeyUpPressed();
     });
@@ -68,7 +67,7 @@ void EventSubSystem::subscribeToEvents() {
         handleKeyDownPressed();
     });
 
-    Arcade::KeyEvent aKey(Arcade::Keys::A, Arcade::EventType::KEY_PRESSED);
+    Arcade::KeyEvent aKey(Arcade::Keys::Q, Arcade::EventType::KEY_PRESSED);
     _eventManager->subscribe(aKey, [this]() {
         handleKeyLeftPressed();
     });
@@ -142,34 +141,29 @@ void EventSubSystem::handleKeyRightPressed() {
 }
 
 void EventSubSystem::handleRestartPressed() {
-    // Find grid entity and reset game
+    Arcade::Entity gridEntity = 0;
     for (const auto& [entity, name] : _entityManager->getEntities()) {
-        auto gridComp = std::dynamic_pointer_cast<GridComponent>(
-            _componentManager->getComponentByType(entity,
-                static_cast<ComponentType>(1000)));
+        auto gridComp = _componentManager->getComponentByType(
+            entity, static_cast<ComponentType>(1000));
         if (gridComp) {
-            gridComp->resetGrid();
+            gridEntity = entity;
             break;
         }
     }
+    if (!gridEntity) return;
 
-    // Reset snake
-    Arcade::Entity snakeEntity = findSnakeHeadEntity();
-    if (snakeEntity) {
-        auto snakeComp = std::dynamic_pointer_cast<SnakeHeadComponent>(
-            _componentManager->getComponentByType(snakeEntity,
-                static_cast<ComponentType>(1001)));
-        if (snakeComp) {
-            snakeComp->setScore(0);
-            // snakeComp->clearSegments();
-            snakeComp->setCurrentDirection(Direction::NONE);
-            snakeComp->setNextDirection(Direction::NONE);
-        }
+    GameLogic tempGameLogic(_componentManager, _entityManager, _assets);
+    tempGameLogic.resetGame();
+
+    auto gridComp = std::dynamic_pointer_cast<GridComponent>(
+        _componentManager->getComponentByType(
+            gridEntity, static_cast<ComponentType>(1000)));
+    if (gridComp) {
+        gridComp->setGameOver(false);
     }
 }
 
 void EventSubSystem::handleQuitPressed() {
-    // Find grid entity and set game over
     for (const auto& [entity, name] : _entityManager->getEntities()) {
         auto gridComp = std::dynamic_pointer_cast<GridComponent>(
             _componentManager->getComponentByType(entity,

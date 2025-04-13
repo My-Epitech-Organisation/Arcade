@@ -37,6 +37,10 @@ void GameLogic::update() {
     if (!snake || !grid)
         return;
 
+    if (grid->isGameOver()) {
+        return;
+    }
+
     snake->addGameTime(getDeltaTime());
     snake->updateMovementTimer(getDeltaTime());
 
@@ -96,7 +100,7 @@ void GameLogic::update() {
             break;
     }
 
-    if (!foundFood && !grid->isGameOver()) {
+    if (!foundFood && !grid->isGameOver()) { // Ajout de la vérification ici aussi par sécurité
         createFood(grid, FoodType::REGULAR);
     }
 }
@@ -552,22 +556,70 @@ void GameLogic::resetGame() {
     if (!snake || !grid)
         return;
 
+    std::vector<Arcade::Entity> segmentsToRemove;
+    for (const auto& [entity, name] : _entityManager->getEntities()) {
+        if (name.find("SnakeSegment_") == 0) {
+            segmentsToRemove.push_back(entity);
+        }
+    }
+    for (auto entity : segmentsToRemove) {
+        _entityManager->destroyEntity(entity);
+    }
+
     auto foodEntities = findFoodEntities();
     for (auto entity : foodEntities) {
         _entityManager->destroyEntity(entity);
     }
 
     grid->resetGrid();
+    grid->setGameOver(false);
 
     snake->setScore(0);
     snake->clearSegments();
     snake->setCurrentDirection(Direction::NONE);
     snake->setNextDirection(Direction::NONE);
+    snake->setMovementThreshold(0.2f);
 
     size_t centerX = grid->getWidth() / 2;
     size_t centerY = grid->getHeight() / 2;
     snake->setGridPosition(centerX, centerY);
     grid->setCellType(centerX, centerY, CellType::SNAKE_HEAD);
+
+    Arcade::Entity snakeEntity = findSnakeHeadEntity();
+    Arcade::Entity gridEntity = findGridEntity();
+    auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
+        _componentManager->getComponentByType(
+            gridEntity, ComponentType::POSITION));
+    float startX = gridPosComp ? gridPosComp->x : 0;
+    float startY = gridPosComp ? gridPosComp->y : 0;
+    float cellSize = grid->getCellSize();
+
+    auto snakePosComp = std::dynamic_pointer_cast<PositionComponent>(
+        _componentManager->getComponentByType(
+            snakeEntity, ComponentType::POSITION));
+    if (snakePosComp) {
+        snakePosComp->x = startX + (centerX * cellSize);
+        snakePosComp->y = startY + (centerY * cellSize);
+    }
+    auto snakeDrawable = std::dynamic_pointer_cast<DrawableComponent>(
+        _componentManager->getComponentByType(
+            snakeEntity, ComponentType::DRAWABLE));
+     if (snakeDrawable) {
+        snakeDrawable->posX = startX + (centerX * cellSize);
+        snakeDrawable->posY = startY + (centerY * cellSize);
+        auto headAsset = getDrawableAsset("snake.head_right");
+         if (headAsset) {
+            float posX = snakeDrawable->posX;
+            float posY = snakeDrawable->posY;
+            bool visible = snakeDrawable->isVisible;
+            *snakeDrawable = *headAsset;
+            snakeDrawable->posX = posX;
+            snakeDrawable->posY = posY;
+            snakeDrawable->isVisible = visible;
+        } else {
+             snakeDrawable->setAsTexture("assets/snake/head_right.png", 32, 32);
+        }
+    }
 
     createFood(grid, FoodType::REGULAR);
 
