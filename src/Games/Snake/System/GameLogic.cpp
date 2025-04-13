@@ -162,11 +162,9 @@ std::shared_ptr<GridComponent> grid) {
     Direction nextDir = snake->getNextDirection();
     Direction currentDir = snake->getCurrentDirection();
 
-    // If no next direction set, do nothing
     if (nextDir == Direction::NONE)
         return;
 
-    // Check that the next direction is valid (not reverse of current)
     if ((currentDir == Direction::UP && nextDir == Direction::DOWN) ||
         (currentDir == Direction::DOWN && nextDir == Direction::UP) ||
         (currentDir == Direction::LEFT && nextDir == Direction::RIGHT) ||
@@ -174,11 +172,9 @@ std::shared_ptr<GridComponent> grid) {
         return;
     }
 
-    // Accept the direction change
     snake->setCurrentDirection(nextDir);
     snake->setNextDirection(Direction::NONE);
 
-    // Update snake head asset based on new direction
     Arcade::Entity snakeEntity = findSnakeHeadEntity();
     auto snakeDrawable = std::dynamic_pointer_cast<DrawableComponent>(
         _componentManager->getComponentByType(snakeEntity,
