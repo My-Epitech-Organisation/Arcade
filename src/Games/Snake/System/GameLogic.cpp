@@ -526,11 +526,12 @@ void GameLogic::createFood(std::shared_ptr<GridComponent> grid, FoodType type) {
     spriteComponent->isVisible = true;
     _componentManager->registerComponent(foodEntity, spriteComponent);
 
-    // Add food component
     auto foodComponent = std::make_shared<FoodComponent>(type);
     foodComponent->setName(foodName);
     foodComponent->setGridPosition(pos.first, pos.second);
     _componentManager->registerComponent(foodEntity, foodComponent);
+
+    grid->setCellType(pos.first, pos.second, CellType::FOOD);
 }
 
 std::vector<Arcade::Entity> GameLogic::findFoodEntities() {

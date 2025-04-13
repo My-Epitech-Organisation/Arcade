@@ -69,7 +69,7 @@ std::shared_ptr<IEntityManager> entityManager) {
 
 void SnakeGame::createGame() {
     SnakeFactory factory(_entityManager, _componentManager, _drawableAssets);
-    factory.initializeGame(16.0f);
+    factory.initializeGame(32.0f);
 }
 
 void SnakeGame::loadDrawableAssets() {

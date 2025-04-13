@@ -22,25 +22,17 @@ namespace Snake {
 Arcade::Entity SnakeFactory::createGrid(size_t width, size_t height) {
     Arcade::Entity gridEntity = _entityManager->createEntity("Grid");
 
-    // Calculate grid position to center it on screen
     float screenWidth = 800.0f;
     float screenHeight = 600.0f;
-    float cellSizeX = screenWidth / (width + 4);
-    float cellSizeY = screenHeight / (height + 4);
-    float cellSize = std::min(cellSizeX, cellSizeY);
-    float boardWidth = width * cellSize;
-    float boardHeight = height * cellSize;
-    float x = (screenWidth - boardWidth) / 2;
-    float y = (screenHeight - boardHeight) / 2;
 
-    // Create position component
+    float x = 50.0f;
+    float y = 50.0f;
+
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(gridEntity, positionComponent);
 
-    // Create grid component
     auto gridComponent = std::make_shared<GridComponent>(width, height);
     gridComponent->setName("SnakeGrid");
-    gridComponent->setCellSize(cellSize);
     _componentManager->registerComponent(gridEntity, gridComponent);
 
     return gridEntity;
@@ -50,11 +42,9 @@ Arcade::Entity SnakeFactory::createSnakeHead(float x, float y,
 size_t gridX, size_t gridY) {
     Arcade::Entity snakeEntity = _entityManager->createEntity("SnakeHead");
 
-    // Create position component
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(snakeEntity, positionComponent);
 
-    // Create drawable component with sprite
     auto spriteComponent = getDrawableAsset("snake.head_right");
     if (!spriteComponent) {
         spriteComponent = std::make_shared<DrawableComponent>();
@@ -66,7 +56,6 @@ size_t gridX, size_t gridY) {
     spriteComponent->isVisible = true;
     _componentManager->registerComponent(snakeEntity, spriteComponent);
 
-    // Create snake head component
     auto snakeComponent = std::make_shared<SnakeHeadComponent>();
     snakeComponent->setName("SnakeHead");
     snakeComponent->setGridPosition(gridX, gridY);
@@ -85,11 +74,9 @@ size_t gridY, FoodType type) {
 
     Arcade::Entity foodEntity = _entityManager->createEntity(foodName);
 
-    // Create position component
     auto positionComponent = std::make_shared<PositionComponent>(x, y);
     _componentManager->registerComponent(foodEntity, positionComponent);
 
-    // Create drawable component
     auto spriteComponent = getDrawableAsset(assetKey);
     if (!spriteComponent) {
         spriteComponent = std::make_shared<DrawableComponent>();
@@ -104,7 +91,6 @@ size_t gridY, FoodType type) {
     spriteComponent->isVisible = true;
     _componentManager->registerComponent(foodEntity, spriteComponent);
 
-    // Create food component
     auto foodComponent = std::make_shared<FoodComponent>(type);
     foodComponent->setName(foodName);
     foodComponent->setGridPosition(gridX, gridY);
@@ -114,37 +100,57 @@ size_t gridY, FoodType type) {
 }
 
 void SnakeFactory::initializeGame(float cellSize) {
-    // Create grid entity
-    size_t gridWidth = 20;
-    size_t gridHeight = 15;
-    Arcade::Entity gridEntity = createGrid(gridWidth, gridHeight);
+    Arcade::Entity gridEntity = createGrid(20, 15);
     auto gridComp = std::dynamic_pointer_cast<GridComponent>(
         _componentManager->getComponentByType(gridEntity,
             static_cast<ComponentType>(1000)));
-    if (!gridComp)
-        return;
+    if (!gridComp) {
+        throw std::runtime_error(
+            "Failed to create or get GridComponent in SnakeFactory");
+    }
+    gridComp->setCellSize(cellSize);
 
-    // Get grid position
-    auto posComp = std::dynamic_pointer_cast<PositionComponent>(
+    auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
         _componentManager->getComponentByType(gridEntity,
             ComponentType::POSITION));
-    float startX = posComp ? posComp->x : 0;
-    float startY = posComp ? posComp->y : 0;
+    if (gridPosComp) {
+        float screenWidth = 800.0f;
+        float screenHeight = 600.0f;
+        float boardWidth = gridComp->getWidth() * cellSize;
+        float boardHeight = gridComp->getHeight() * cellSize;
+        gridPosComp->x = (screenWidth - boardWidth) / 2;
+        gridPosComp->y = (screenHeight - boardHeight) / 2;
+    }
 
-    // Create snake at center of grid
-    size_t centerX = gridWidth / 2;
-    size_t centerY = gridHeight / 2;
+    float startX = gridPosComp ? gridPosComp->x : 0;
+    float startY = gridPosComp ? gridPosComp->y : 0;
+
+
+    size_t centerX = gridComp->getWidth() / 2;
+    size_t centerY = gridComp->getHeight() / 2;
     float snakeX = startX + (centerX * cellSize);
     float snakeY = startY + (centerY * cellSize);
     Arcade::Entity snakeEntity = createSnakeHead(
         snakeX, snakeY, centerX, centerY);
     gridComp->setCellType(centerX, centerY, CellType::SNAKE_HEAD);
 
-    // Create initial food
     auto foodPos = gridComp->placeFood();
-    float foodX = startX + (foodPos.first * cellSize);
-    float foodY = startY + (foodPos.second * cellSize);
-    createFood(foodX, foodY, foodPos.first, foodPos.second, FoodType::REGULAR);
+    if (foodPos.first < gridComp->getWidth() &&
+    foodPos.second < gridComp->getHeight()) {
+        float foodX = startX + (foodPos.first * cellSize);
+        float foodY = startY + (foodPos.second * cellSize);
+        createFood(foodX, foodY,
+            foodPos.first, foodPos.second, FoodType::REGULAR);
+        gridComp->setCellType(foodPos.first, foodPos.second, CellType::FOOD);
+        std::cout
+        << "SnakeFactory::initializeGame - Created initial food at grid ("
+        << foodPos.first << ", " << foodPos.second
+        << ")" << std::endl;
+    } else {
+         std::cerr
+         << "SnakeFactory::initializeGame - Failed to place initial food."
+         << std::endl;
+    }
 }
 
 std::shared_ptr<DrawableComponent>
