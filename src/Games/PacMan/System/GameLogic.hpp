@@ -99,6 +99,10 @@ class GameLogic : public Arcade::ISystem {
 
       // Optimization flags
       bool _debugMode = false;
+      
+      // Add helper method for Pacman sprite updates
+      void updatePacmanSprite(std::shared_ptr<IDrawableComponent> pacmanDrawable, 
+                            std::shared_ptr<PacmanComponent> pacman);
 };
 
 }  // namespace PacMan

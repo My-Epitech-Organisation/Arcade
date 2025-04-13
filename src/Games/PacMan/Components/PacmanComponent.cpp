@@ -20,7 +20,8 @@ _movementThreshold(0.05f), _totalGameTime(0.0f), // Much lower threshold = faste
 // Initialize smooth movement variables with much higher speed
 _visualX(0.0f), _visualY(0.0f), _targetX(0.0f), _targetY(0.0f),
 _movementSpeed(24.0f), _isMoving(false), // Higher speed for smoother movement
-_width(32.0f), _height(32.0f) { // Add sprite dimensions for collision detection
+_width(32.0f), _height(32.0f), // Add sprite dimensions for collision detection
+_animationEnabled(true), _animationTimer(0.0f), _animationSpeed(0.1f), _animationFrame(0), _animationFrameCount(4) {
 }
 
 void PacmanComponent::updateMovementTimer(float deltaTime) {
@@ -74,6 +75,80 @@ void PacmanComponent::updateVisualPosition(float deltaTime) {
     // Update the position based on speed and delta time
     _visualX += dx * _movementSpeed * deltaTime;
     _visualY += dy * _movementSpeed * deltaTime;
+}
+
+void PacmanComponent::updateAnimation(float deltaTime) {
+    // Only update animation if moving and animation is enabled
+    if (_isMoving && _animationEnabled) {
+        _animationTimer += deltaTime;
+        
+        // Update animation frame when timer exceeds animation speed
+        if (_animationTimer >= _animationSpeed) {
+            // Save previous frame for comparison
+            int prevFrame = _animationFrame;
+            
+            // Update animation frame with modulo
+            _animationFrame = (_animationFrame + 1) % _animationFrameCount;
+            _animationTimer -= _animationSpeed;  // Reset timer but keep remainder
+            
+            // Debug output when frame changes (only sometimes to avoid spam)
+            static int debugCounter = 0;
+            if (++debugCounter % 10 == 0) {  // Log only every 10th frame change
+                std::cout << "Pacman animation: frame " << prevFrame << " -> " 
+                          << _animationFrame << " (dir: " 
+                          << static_cast<int>(_currentDirection) << ")" << std::endl;
+            }
+        }
+    } else if (!_isMoving) {
+        // Explicitly set to frame 0 when not moving - fully open mouth
+        if (_animationFrame != 0) {
+            _animationFrame = 0;
+            _animationTimer = 0.0f;
+            
+            // Debug output when stopping
+            std::cout << "Pacman animation: stopped moving, reset to frame 0" << std::endl;
+        }
+    }
+}
+
+std::string PacmanComponent::getDirectionalSprite() const {
+    // Basic closed mouth sprite (frame 0) is the same for all directions
+    // But when not moving, always show frame 0 (closed mouth)
+    if (_animationFrame == 0 || !_isMoving) {
+        // When not moving, show direction-specific default pose
+        if (_currentDirection != Direction::NONE) {
+            switch (_currentDirection) {
+                case Direction::RIGHT: return "pacman.right.2"; // Fully open to right
+                case Direction::LEFT: return "pacman.left.2";   // Fully open to left
+                case Direction::UP: return "pacman.up.2";       // Fully open up
+                case Direction::DOWN: return "pacman.down.2";   // Fully open down
+                default: break;
+            }
+        }
+        return "pacman.default";  // Default is right-facing open mouth
+    }
+    
+    // Convert direction to string for key lookup
+    std::string dirStr;
+    switch (_currentDirection) {
+        case Direction::RIGHT:
+            dirStr = "right";
+            break;
+        case Direction::LEFT:
+            dirStr = "left";
+            break;
+        case Direction::UP:
+            dirStr = "up";
+            break;
+        case Direction::DOWN:
+            dirStr = "down";
+            break;
+        default:
+            return "pacman.default";
+    }
+    
+    // Use correct frame index
+    return "pacman." + dirStr + "." + std::to_string(_animationFrame);
 }
 
 bool PacmanComponent::isAtTarget() const {

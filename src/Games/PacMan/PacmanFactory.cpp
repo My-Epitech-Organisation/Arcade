@@ -65,6 +65,8 @@ size_t gridX, size_t gridY) {
     pacmanComponent->setVisualPosition(x, y); // Initialize visual position
     pacmanComponent->setTargetPosition(x, y); // Initialize target position
     pacmanComponent->setCurrentDirection(Direction::NONE);
+    pacmanComponent->resetAnimation(); // Initialize animation state
+    pacmanComponent->setAnimationEnabled(true); // Enable animation
     _componentManager->registerComponent(pacmanEntity, pacmanComponent);
     return pacmanEntity;
 }
@@ -229,18 +231,20 @@ grid, float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity) {
     for (size_t y = 0; y < grid->getHeight(); ++y) {
         for (size_t x = 0; x < grid->getWidth(); ++x) {
             CellType cellType = grid->getCellType(x, y);
-            if (cellType == CellType::FOOD) {
-                float foodX = startX + (x * cellSize);
-                float foodY = startY + (y * cellSize);
-                std::shared_ptr<Arcade::IEntity> foodEntity = createFood(foodX,
-                    foodY, x, y, FoodType::NORMAL_DOT);
-                grid->setEntityAtCell(x, y, foodEntity);
-            } else if (cellType == CellType::POWER_PILL) {
-                float foodX = startX + (x * cellSize);
-                float foodY = startY + (y * cellSize);
-                std::shared_ptr<Arcade::IEntity> foodEntity
-                    = createFood(foodX, foodY,
-                    x, y, FoodType::POWER_PILL);
+            if (cellType == CellType::FOOD || cellType == CellType::POWER_PILL) {
+                float xPos = startX + (x * cellSize);
+                float yPos = startY + (y * cellSize);
+                
+                // Explicitly set the correct food type based on cell type
+                FoodType foodType = (cellType == CellType::POWER_PILL) ? 
+                                   FoodType::POWER_PILL : FoodType::NORMAL_DOT;
+                
+                // Debug output for power pills
+                if (foodType == FoodType::POWER_PILL) {
+                    std::cout << "Creating POWER PILL at grid position: " << x << "," << y << std::endl;
+                }
+                
+                auto foodEntity = createFood(xPos, yPos, x, y, foodType);
                 grid->setEntityAtCell(x, y, foodEntity);
             }
         }

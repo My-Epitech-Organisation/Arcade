@@ -218,12 +218,9 @@ void EventSubSystem::handleKeyR() {
 
     if (!gridComp) return;
     
-    std::cout << "Handling R key press - restarting game" << std::endl;
-
-    gridComp->setGameOver(false);
-    gridComp->setGameWon(false);
+    std::cout << "Handling R key press - FULL GAME RESET (including score)" << std::endl;
     
-    // Reset Pacman state
+    // First explicitly reset score for pacman entity
     for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Pacman") {
             auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
@@ -231,44 +228,20 @@ void EventSubSystem::handleKeyR() {
                     static_cast<ComponentType>(1001)));
 
             if (pacmanComp) {
-                pacmanComp->setLives(3);
+                std::cout << "R key: Explicitly resetting score from " << pacmanComp->getScore() << " to 0" << std::endl;
                 pacmanComp->setScore(0);
-                pacmanComp->setCurrentDirection(Direction::NONE);
-                pacmanComp->setNextDirection(Direction::NONE);
-                pacmanComp->setMoving(false); // Make sure Pacman is not moving
-            }
-            
-            // Make sure Pacman sprite is visible
-            auto pacmanDrawable = std::dynamic_pointer_cast<IDrawableComponent>(
-                _componentManager->getComponentByType(entity,
-                    ComponentType::DRAWABLE));
-            if (pacmanDrawable) {
-                pacmanDrawable->setVisibility(true);
-                // Reset to default sprite
-                auto pacmanAsset = _drawableAssets.find("pacman.default");
-                if (pacmanAsset != _drawableAssets.end()) {
-                    *pacmanDrawable = pacmanAsset->second;
-                } else {
-                    pacmanDrawable->
-                        setAsTexture("assets/pacman/pacman.png", 32, 32);
-                    pacmanDrawable->setAsCharacter('C');
-                }
+                pacmanComp->setLives(3);
             }
             break;
         }
     }
 
-    auto gameLogic = std::make_shared<GameLogic>(_componentManager,
-        _entityManager, _drawableAssets);
-    gameLogic->reloadCurrentMap();
+    // Then do the full game reset via GameStateManager
+    auto gameStateManager = std::make_shared<GameStateManager>(
+        _componentManager, _entityManager, _drawableAssets);
     
-    // Make sure to set food count
-    for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
-        if (name == "Grid") {
-            gridComp->setFoodCount(gridComp->getTotalFoodCount());
-            break;
-        }
-    }
+    // Use resetEntireGame for full reset when pressing R
+    gameStateManager->resetEntireGame();
 }
 
 bool EventSubSystem::areEventsSubscribed() const {

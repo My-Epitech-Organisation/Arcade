@@ -6,6 +6,7 @@
 ** Food Component implementation
 */
 
+#include <iostream>
 #include "Games/PacMan/Components/FoodComponent.hpp"
 
 namespace Arcade {
@@ -13,12 +14,24 @@ namespace PacMan {
 
 FoodComponent::FoodComponent(FoodType type)
 : _foodType(type), _eaten(false), _gridX(0), _gridY(0) {
+    // Add debug output when creating a power pill
+    if (type == FoodType::POWER_PILL) {
+        std::cout << "Created a POWER_PILL food component" << std::endl;
+    }
 }
 
 int FoodComponent::getPoints() const {
-    // Use direct return values instead of switch for this simple case
-    return (_foodType == FoodType::NORMAL_DOT) ? 10 : 
-           (_foodType == FoodType::POWER_PILL) ? 50 : 0;
+    // Replace conditional operators with a clearer switch statement
+    switch (_foodType) {
+        case FoodType::NORMAL_DOT:
+            return 10;
+        case FoodType::POWER_PILL:
+            // Debug output to verify this is called
+            std::cout << "Power pill points requested: 50" << std::endl;
+            return 50;
+        default:
+            return 0;
+    }
 }
 
 }  // namespace PacMan

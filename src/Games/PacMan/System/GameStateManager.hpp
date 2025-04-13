@@ -29,7 +29,8 @@ class GameStateManager {
     
     void checkWinCondition(std::shared_ptr<GridComponent> grid);
     void reloadCurrentMap();
-    void resetPositions(); // New method to reset entity positions
+    void resetPositions(); // Method for resetting positions after life loss
+    void resetEntireGame(); // New method for complete game reset
     void increaseGameSpeed();
     std::shared_ptr<IDrawableComponent> getDrawableAsset(const std::string& key) const;
     

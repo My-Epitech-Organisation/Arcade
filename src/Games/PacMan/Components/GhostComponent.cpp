@@ -19,13 +19,14 @@ namespace PacMan {
 GhostComponent::GhostComponent(GhostType type)
 : _ghostType(type), _state(GhostState::NORMAL),
 _currentDirection(Direction::NONE), _gridX(0), _gridY(0),
-_stateTimer(0), _scaredDuration(SCARED_DURATION),
+_stateTimer(0), _scaredDuration(SCARED_DURATION), // Make sure this is explicitly set
 _canMove(true), _movementTimer(0), _movementCooldown(0.3f),
 _mode(GhostMode::SCATTER), _homeCornerX(0), _homeCornerY(0),
 _targetX(0), _targetY(0), _modeTimer(0.0f), _movementThreshold(0.08f), // Decreased for faster movement
 _releaseTimer(0.0f),
 // Initialize smooth movement variables with much higher speed
 _visualX(0.0f), _visualY(0.0f), _targetVisualX(0.0f), _targetVisualY(0.0f),
+// Use slower movement speed when scared to make it more noticeable
 _movementSpeed(22.0f), _isMoving(false), // Increased for faster movement
 _width(32.0f), _height(32.0f) { // Add dimensions for collision detection
     switch (type) {
@@ -46,6 +47,10 @@ _width(32.0f), _height(32.0f) { // Add dimensions for collision detection
             _homeCornerY = 30;
             break;
     }
+    
+    // Debug output to confirm constructor settings
+    std::cout << "Ghost " << static_cast<int>(_ghostType) << " created with scared duration: " 
+              << _scaredDuration << "s" << std::endl;
 }
 
 Direction GhostComponent::getOppositeDirection() const {
@@ -95,7 +100,17 @@ GhostComponent* self) {
 void GhostComponent::updateStateTimer(float deltaTime) {
     if (_state == GhostState::SCARED) {
         _stateTimer += deltaTime;
+        
+        // More detailed debug output every second
+        if (static_cast<int>(_stateTimer) != static_cast<int>(_stateTimer - deltaTime) && 
+            static_cast<int>(_stateTimer) % 3 == 0) {
+            std::cout << "Ghost " << _name << " scared state timer: " 
+                      << _stateTimer << "/" << _scaredDuration << "s" << std::endl;
+        }
+        
         if (_stateTimer >= _scaredDuration) {
+            std::cout << "Ghost " << _name << " returning to NORMAL state from SCARED after "
+                      << _stateTimer << "s" << std::endl;
             _state = GhostState::NORMAL;
             _stateTimer = 0;
         }

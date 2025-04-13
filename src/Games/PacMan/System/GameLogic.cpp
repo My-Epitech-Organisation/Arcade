@@ -16,6 +16,7 @@
 #include "Games/PacMan/System/GameStateManager.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "Games/PacMan/Components/PacmanComponent.hpp"
+#include "Games/PacMan/Utils/AnimationDebugger.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -77,6 +78,11 @@ GameLogic::GameLogic(std::shared_ptr<Arcade::IComponentManager> componentManager
     // Enable debug mode through environment variable
     const char* debugEnv = std::getenv("PACMAN_DEBUG");
     _debugMode = (debugEnv && std::string(debugEnv) == "1");
+
+    // Dump all asset keys to help with debugging
+    if (_debugMode) {
+        AnimationDebugger::dumpAssetKeys(_assets);
+    }
 }
 
 void GameLogic::initializeEntityCache() {
@@ -164,22 +170,40 @@ void GameLogic::update() {
     // Update visual positions even when game is over for smooth transitions
     _timer.start();
     
-    // Optimize snap distance for faster movement
-    const float snapDistance = 1.0f;
+    // Update Pacman's animation state - more aggressively update when moving
+    if (pacman->isMoving()) {
+        pacman->updateAnimation(deltaTime * 1.2f); // Boost animation speed while moving
+    } else {
+        pacman->updateAnimation(deltaTime);
+    }
     
     // Update Pacman's visual position
     if (pacman->isMoving()) {
         pacman->updateVisualPosition(deltaTime);
         
-        // Update the DrawableComponent position to match visual position
+        // Update the DrawableComponent position and appearance to match visual position and animation
         auto pacmanDrawable = std::dynamic_pointer_cast<IDrawableComponent>(
             _componentManager->getComponentByType(_cachedPacmanEntity,
                 ComponentType::DRAWABLE));
         if (pacmanDrawable) {
             pacmanDrawable->setPosition(pacman->getVisualX(), pacman->getVisualY());
             
+            // Update the sprite based on direction and animation frame
+            updatePacmanSprite(pacmanDrawable, pacman);
+            
             // Also update dimensions for collision detection
             pacman->setDimensions(pacmanDrawable->getWidth(), pacmanDrawable->getHeight());
+        }
+    } else {
+        // Even when not moving, update animation and sprite occasionally to ensure we show the correct facing
+        static int staticUpdateCounter = 0;
+        if (++staticUpdateCounter % 10 == 0) {
+            auto pacmanDrawable = std::dynamic_pointer_cast<IDrawableComponent>(
+                _componentManager->getComponentByType(_cachedPacmanEntity,
+                    ComponentType::DRAWABLE));
+            if (pacmanDrawable) {
+                updatePacmanSprite(pacmanDrawable, pacman);
+            }
         }
     }
     
@@ -229,7 +253,9 @@ void GameLogic::update() {
     ghostUpdateTimer += deltaTime;
     if (ghostUpdateTimer >= 0.1f) { // Update ghost states less frequently
         _timer.start();
-        _ghostLogic->updateGhostStates(deltaTime * 10); // Compensate for the reduced frequency
+        // Use a fixed time step instead of multiplying deltaTime
+        // This ensures the scared state doesn't end too quickly
+        _ghostLogic->updateGhostStates(0.1f); 
         ghostUpdateTimer = 0;
         recordSectionTime("Ghost State Update", _timer.stop());
     }
@@ -300,8 +326,99 @@ void GameLogic::update() {
     reportPerformance();
 }
 
+// Add new helper method to update Pacman's sprite based on animation state
+void GameLogic::updatePacmanSprite(std::shared_ptr<IDrawableComponent> pacmanDrawable, 
+                                 std::shared_ptr<PacmanComponent> pacman) {
+    if (!pacmanDrawable || !pacman)
+        return;
+        
+    std::string assetKey = pacman->getDirectionalSprite();
+    
+    // Debug output
+    static std::string lastKey = "";
+    static int missingKeyCounter = 0;
+    bool keyMissing = false;
+    
+    // Step 1: Try the exact key from getDirectionalSprite
+    auto asset = _assets.find(assetKey);
+    
+    // Step 2: If not found, try alternative formats
+    if (asset == _assets.end()) {
+        keyMissing = true;
+        
+        // Parse the direction from the key (e.g., "pacman.right.1" => "right")
+        size_t firstDot = assetKey.find('.');
+        size_t secondDot = assetKey.find('.', firstDot + 1);
+        
+        if (firstDot != std::string::npos && secondDot != std::string::npos) {
+            std::string direction = assetKey.substr(firstDot + 1, secondDot - firstDot - 1);
+            std::string frameStr = assetKey.substr(secondDot + 1);
+            int frame = std::stoi(frameStr);
+            
+            // Try different key formats
+            std::vector<std::string> keyFormats = {
+                // Format 1: pacman.direction.index
+                "pacman." + direction + "." + std::to_string(frame),
+                
+                // Format 2: pacman.direction_index
+                "pacman." + direction + "_" + std::to_string(frame),
+                
+                // Format 3: textures.pacman.direction.index 
+                "textures.pacman." + direction + "." + std::to_string(frame-1),
+                
+                // Format 4: object.array[index]
+                "pacman." + direction + "[" + std::to_string(frame-1) + "]"
+            };
+            
+            for (const auto& format : keyFormats) {
+                asset = _assets.find(format);
+                if (asset != _assets.end()) {
+                    if (_debugMode) {
+                        std::cout << "Found sprite with alternative key format: " << format << std::endl;
+                    }
+                    assetKey = format; // Update the key for use below
+                    keyMissing = false;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Always log when we miss keys - something is wrong with our key format
+    if (keyMissing && lastKey != assetKey) {
+        lastKey = assetKey;
+        missingKeyCounter++;
+        
+        if (_debugMode || missingKeyCounter % 10 == 1) { // Don't spam too much
+            std::cout << "Sprite key not found: " << assetKey << std::endl;
+            
+            // Print all available pacman-related keys to help debug
+            std::cout << "Available pacman keys:" << std::endl;
+            for (const auto& [key, _] : _assets) {
+                if (key.find("pacman") != std::string::npos) {
+                    std::cout << " - " << key << std::endl;
+                }
+            }
+        }
+            
+        // Fall back to default sprite
+        asset = _assets.find("pacman.default");
+    }
+    
+    // Apply the sprite if found
+    if (asset != _assets.end()) {
+        float x = pacmanDrawable->getPositionX();
+        float y = pacmanDrawable->getPositionY();
+        *pacmanDrawable = asset->second;
+        pacmanDrawable->setPosition(x, y);
+    }
+}
+
 void GameLogic::reloadCurrentMap() {
-    _gameStateManager->reloadCurrentMap();
+    std::cout << "Reloading PacMan game map (full reset)..." << std::endl;
+    
+    // Use resetEntireGame for consistency
+    _gameStateManager->resetEntireGame();
     
     // After reloading, clear all caches
     _cachedPacmanEntity = nullptr;

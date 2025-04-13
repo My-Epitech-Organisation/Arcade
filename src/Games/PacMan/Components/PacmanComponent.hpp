@@ -95,6 +95,24 @@ class PacmanComponent : public Arcade::IComponent {
     bool collidesWith(float otherLeft, float otherTop, 
                      float otherWidth, float otherHeight) const;
 
+    // Animation methods
+    void updateAnimation(float deltaTime);
+    int getAnimationFrame() const { return _animationFrame; }
+    bool isAnimating() const { return _isMoving && _animationEnabled; }
+    void setAnimationEnabled(bool enabled) { _animationEnabled = enabled; }
+    void resetAnimation() { _animationFrame = 0; _animationTimer = 0.0f; }
+    std::string getDirectionalSprite() const;
+    
+    // Add helper method to force animation update on direction change
+    void updateDirectionAndAnimation(Direction newDirection) {
+        if (_currentDirection != newDirection) {
+            _currentDirection = newDirection;
+            // Reset animation to ensure we show frame 1 immediately upon direction change
+            _animationFrame = 1;  // Start with mouth open in new direction
+            _animationTimer = 0.0f;
+        }
+    }
+
  private:
     std::string _name;
     Direction _currentDirection;
@@ -120,6 +138,13 @@ class PacmanComponent : public Arcade::IComponent {
     // Sprite dimensions for collision detection
     float _width;
     float _height;
+
+    // Animation properties
+    int _animationFrame = 0;
+    int _animationFrameCount = 4;  // Number of animation frames
+    float _animationTimer = 0.0f;  // Timer for animation
+    float _animationSpeed = 0.15f; // Slower animation (was 0.12f) for more visible chomping
+    bool _animationEnabled = true; // Whether animation is enabled
 };
 
 }  // namespace PacMan

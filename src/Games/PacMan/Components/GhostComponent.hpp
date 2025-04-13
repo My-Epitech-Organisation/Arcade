@@ -138,7 +138,7 @@ class GhostComponent : public Arcade::IComponent {
     bool _canMove;
     float _movementTimer;
     float _movementCooldown;
-    static constexpr float SCARED_DURATION = 10.0f;
+    static constexpr float SCARED_DURATION = 15.0f;  // Increased from 10.0f
     GhostMode _mode;
     size_t _homeCornerX;
     size_t _homeCornerY;

@@ -31,6 +31,9 @@ CollisionManager::CollisionManager(std::shared_ptr<Arcade::IComponentManager> co
     _cachedAssets["map.empty"] = getDrawableAsset("map.empty");
     _cachedAssets["ghosts.frightened"] = getDrawableAsset("ghosts.frightened");
     
+    // IMPORTANT: Initialize GameStateManager in constructor instead of on-demand
+    _cachedGameStateManager = std::make_shared<GameStateManager>(_componentManager, _entityManager, _assets);
+    
     // Initialize collision grid for faster lookups
     _rebuildCollisionGridTimer = 0.0f;
     rebuildCollisionGrid();
@@ -179,27 +182,106 @@ void CollisionManager::checkCollisions(std::shared_ptr<PacmanComponent> pacman,
                 ghostComp->setState(GhostState::RETURNING);
                 pacman->addScore(200);
                 
+                std::cout << "Pacman ate ghost " << ghostComp->getName() << "! Changing to eyes sprite." << std::endl;
+                
                 auto ghostSprite = std::dynamic_pointer_cast<IDrawableComponent>(
                     _componentManager->getComponentByType(entity,
                         ComponentType::DRAWABLE));
                         
-                auto eyesAsset = _cachedAssets["ghosts.eyes"];
-                if (eyesAsset) {
-                    *ghostSprite = *eyesAsset;
-                } else {
-                    ghostSprite->setAsTexture("assets/pacman/eyes.png", 32, 32);
-                    ghostSprite->setAsCharacter('e');
+                if (ghostSprite) {
+                    // Save current properties for debugging
+                    std::string oldPath = ghostSprite->getPath();
+                    char oldChar = ghostSprite->getCharacter();
+                    
+                    // Reset ALL sprite properties - very important!
+                    ghostSprite->setVisibility(true);
+                    ghostSprite->setScale(1.0f);
+                    ghostSprite->setRotation(0.0f);
+                    ghostSprite->setColor(Color::WHITE); // Reset color to default
+                    ghostSprite->setPath("");  // Clear path before setting new one
+                    ghostSprite->setText("");  // Clear any text
+                    ghostSprite->setFont("");  // Clear any font
+                    
+                    // Store current position
+                    float visualX = ghostComp->getVisualX();
+                    float visualY = ghostComp->getVisualY();
+                    
+                    auto eyesAsset = _cachedAssets["ghosts.eyes"];
+                    if (eyesAsset) {
+                        // Copy all properties from the eyes asset
+                        ghostSprite->setPath(eyesAsset->getPath());
+                        ghostSprite->setDimensions(eyesAsset->getWidth(), eyesAsset->getHeight());
+                        ghostSprite->setAsCharacter(eyesAsset->getCharacter());
+                    } else {
+                        // Fallback with hardcoded values
+                        ghostSprite->setAsTexture("assets/pacman/eyes.png", 32, 32);
+                        ghostSprite->setAsCharacter('e');
+                    }
+                    
+                    // Ensure position matches ghost's current position
+                    ghostSprite->setPosition(visualX, visualY);
+                    
+                    std::cout << "Changed ghost sprite from " << oldPath << "(" << oldChar << ") to " 
+                              << ghostSprite->getPath() << "(" << ghostSprite->getCharacter() << ")" << std::endl;
                 }
             } else if (ghostComp->getState() == GhostState::NORMAL) {
                 // Lose a life
                 pacman->decrementLives();
                 
                 if (pacman->getLives() > 0) {
-                    // Reset positions but keep playing
-                    _cachedGameStateManager = 
-                        _cachedGameStateManager ? _cachedGameStateManager :
-                        std::make_shared<GameStateManager>(_componentManager, _entityManager, _assets);
+                    // IMPORTANT: Log positions before reset for debugging
+                    std::cout << "LIFE LOST! Resetting positions..." << std::endl;
+                    std::cout << "Pacman before reset - Grid: (" << pacman->getGridX() << "," 
+                              << pacman->getGridY() << "), Visual: (" 
+                              << pacman->getVisualX() << "," << pacman->getVisualY() << ")" << std::endl;
+                    
+                    // Force pacman and ghosts to stop moving
+                    pacman->setMoving(false);
+                    for (const auto& [e, n] : _entityManager->getEntitiesMap()) {
+                        auto ghost = std::dynamic_pointer_cast<GhostComponent>(
+                            _componentManager->getComponentByType(e, static_cast<ComponentType>(1002)));
+                        if (ghost) {
+                            std::cout << "Ghost " << ghost->getName() << " before reset - Grid: (" 
+                                      << ghost->getGridX() << "," << ghost->getGridY() << ")" << std::endl;
+                            ghost->setMoving(false);
+                        }
+                    }
+                    
+                    // Use our pre-initialized GameStateManager to reset positions
                     _cachedGameStateManager->resetPositions();
+                    
+                    // IMPORTANT: Verify positions were reset by logging after reset
+                    std::cout << "Pacman after reset - Grid: (" << pacman->getGridX() << "," 
+                              << pacman->getGridY() << "), Visual: (" 
+                              << pacman->getVisualX() << "," << pacman->getVisualY() << ")" << std::endl;
+                    
+                    // Force all entities to stop movement and snap to grid positions
+                    for (const auto& [e, n] : _entityManager->getEntitiesMap()) {
+                        // Update Pacman's movement state
+                        if (n == "Pacman") {
+                            auto p = std::dynamic_pointer_cast<PacmanComponent>(
+                                _componentManager->getComponentByType(e, static_cast<ComponentType>(1001)));
+                            if (p) {
+                                p->setMoving(false);
+                                p->setCanMove(true);
+                                p->resetMovementTimer();
+                                p->setCurrentDirection(Direction::NONE);
+                                p->setNextDirection(Direction::NONE);
+                            }
+                        }
+                        
+                        // Update Ghost's movement state
+                        auto ghost = std::dynamic_pointer_cast<GhostComponent>(
+                            _componentManager->getComponentByType(e, static_cast<ComponentType>(1002)));
+                        if (ghost) {
+                            std::cout << "Ghost " << ghost->getName() << " after reset - Grid: (" 
+                                      << ghost->getGridX() << "," << ghost->getGridY() << ")" << std::endl;
+                            ghost->setMoving(false);
+                            ghost->setCanMove(true);
+                            ghost->resetMovementTimer();
+                            ghost->setCurrentDirection(Direction::NONE);
+                        }
+                    }
                 } else {
                     // Game over
                     std::cout << "Game over - setting game over state" << std::endl;
@@ -269,6 +351,13 @@ void CollisionManager::checkCollisions(std::shared_ptr<PacmanComponent> pacman,
               hitboxLeft > foodHitboxLeft + foodHitboxWidth ||
               hitboxTop + hitboxHeight < foodHitboxTop ||
               hitboxTop > foodHitboxTop + foodHitboxHeight)) {
+            
+            // Critical debug: Print info about the food being eaten
+            std::cout << "Food collision detected at grid position: " 
+                      << foodComp->getGridX() << "," << foodComp->getGridY() 
+                      << " - Type: " << (foodComp->getFoodType() == FoodType::POWER_PILL ? "POWER PILL" : "NORMAL DOT")
+                      << std::endl;
+            
             // Food collision logic
             foodComp->setEaten(true);
             pacman->addScore(foodComp->getPoints());
@@ -298,8 +387,10 @@ void CollisionManager::checkCollisions(std::shared_ptr<PacmanComponent> pacman,
                 rebuildCollisionGrid();
             }
             
-            // Handle power pill effect
+            // Handle power pill effect - moved BEFORE rebuildCollisionGrid
+            // This is important - process power pill before modifying the entity
             if (foodComp->getFoodType() == FoodType::POWER_PILL) {
+                std::cout << "POWER PILL eaten! Activating frightened mode..." << std::endl;
                 updateGhostsForPowerPill();
             }
             
@@ -310,7 +401,9 @@ void CollisionManager::checkCollisions(std::shared_ptr<PacmanComponent> pacman,
 }
 
 void CollisionManager::updateGhostsForPowerPill() {
-    // Get all ghosts from the cache
+    std::cout << "Power pill eaten! Activating frightened state for ghosts" << std::endl;
+    
+    // Get all ghosts (recreate cache if empty)
     if (_cachedGhostEntities.empty()) {
         for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
             auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
@@ -319,12 +412,22 @@ void CollisionManager::updateGhostsForPowerPill() {
                     
             if (ghostComp) {
                 _cachedGhostEntities.push_back(entity);
+                std::cout << "Found ghost: " << ghostComp->getName() 
+                          << " (type: " << static_cast<int>(ghostComp->getGhostType()) << ")" << std::endl;
             }
         }
     }
     
-    auto frightenedAsset = _cachedAssets["ghosts.frightened"];
+    // IMPORTANT: Always do a fresh lookup for the frightened asset to avoid stale cache issues
+    auto frightenedAsset = _assets.find("ghosts.frightened");
+    bool assetFound = frightenedAsset != _assets.end();
+    std::cout << "Frightened ghost asset " << (assetFound ? "found" : "NOT FOUND") 
+              << " with path: " << (assetFound ? frightenedAsset->second.getPath() : "null") << std::endl;
     
+    // Count how many ghosts we're changing
+    int ghostCount = 0;
+    
+    // Apply frightened state to all ghosts
     for (const auto& ghostEntity : _cachedGhostEntities) {
         auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
             _componentManager->getComponentByType(ghostEntity,
@@ -332,22 +435,81 @@ void CollisionManager::updateGhostsForPowerPill() {
                 
         if (!ghostComp) continue;
         
+        // Increment counter
+        ghostCount++;
+        
+        // Get the current state before changing it
+        GhostState previousState = ghostComp->getState();
+        
+        // Set the new state
         ghostComp->setState(GhostState::SCARED);
         ghostComp->resetStateTimer();
 
+        std::cout << "Ghost #" << ghostCount << " (" << ghostComp->getName() 
+                  << ") state changed: " << static_cast<int>(previousState)
+                  << " -> " << static_cast<int>(GhostState::SCARED) << std::endl;
+
+        // CRITICAL FIX: Force recreate the drawable component from scratch, not just modifying existing one
         auto ghostSprite = std::dynamic_pointer_cast<IDrawableComponent>(
             _componentManager->getComponentByType(ghostEntity,
                 ComponentType::DRAWABLE));
                 
         if (ghostSprite) {
-            if (frightenedAsset) {
-                *ghostSprite = *frightenedAsset;
+            // Save original position and current properties for debugging
+            float ghostX = ghostComp->getVisualX();
+            float ghostY = ghostComp->getVisualY();
+            std::string prevTexture = ghostSprite->getPath();
+            std::string prevChar = std::string(1, ghostSprite->getCharacter());
+            
+            // 1. Reset ALL sprite properties to known clean state
+            ghostSprite->setPath("");
+            ghostSprite->setText("");
+            ghostSprite->setFont("");
+            ghostSprite->setColor(Color::BLUE);
+            ghostSprite->setScale(1.0f);
+            ghostSprite->setRotation(0.0f);
+            ghostSprite->setVisibility(true);
+            ghostSprite->setAsCharacter('S');
+            
+            // 2. Set exact dimensions
+            ghostSprite->setDimensions(32, 32);
+            
+            // 3. Apply correct texture
+            if (assetFound) {
+                // Use direct asset access instead of cached version
+                ghostSprite->setPath(frightenedAsset->second.getPath());
+                ghostSprite->setDimensions(frightenedAsset->second.getWidth(), 
+                                          frightenedAsset->second.getHeight());
             } else {
+                // Fallback with distinctive appearance
                 ghostSprite->setAsTexture("assets/pacman/scared_ghost.png", 32, 32);
-                ghostSprite->setAsCharacter('s');
+            }
+            
+            // 4. Force position to be correct
+            ghostSprite->setPosition(ghostX, ghostY);
+            
+            std::cout << "Ghost sprite hard-reset: " << prevTexture << "(" << prevChar << ")"
+                      << " -> " << ghostSprite->getPath() << "('S' in BLUE)" << std::endl;
+                      
+            // 5. Add verification to check sprite was properly updated
+            if (ghostSprite->getColor() != Color::BLUE || 
+                ghostSprite->getPath().find("scared") == std::string::npos) {
+                std::cerr << "CRITICAL: Ghost sprite failed to update correctly! "
+                          << "Current path: " << ghostSprite->getPath()
+                          << ", Color: " << static_cast<int>(ghostSprite->getColor()) << std::endl;
+                          
+                // Force a last resort direct texture setting
+                ghostSprite->setAsTexture("assets/pacman/scared_ghost.png", 32, 32);
+                ghostSprite->setColor(Color::BLUE);
+                ghostSprite->setPosition(ghostX, ghostY);
+                
+                std::cerr << "Applied emergency texture override." << std::endl;
             }
         }
     }
+    
+    // Final confirmation for debugging
+    std::cout << "Updated " << ghostCount << " ghosts to frightened state." << std::endl;
 }
 
 void CollisionManager::findAndSetPacmanSpawn(std::shared_ptr<PacmanComponent> pacman,

@@ -150,8 +150,12 @@ void PlayerLogic::tryChangePacmanDirection(std::shared_ptr<PacmanComponent> pacm
         size_t y = pacman->getGridY();
 
         if (canMoveInDirection(nextDir, x, y, grid)) {
-            pacman->setCurrentDirection(nextDir);
+            // Use the new method that handles animation correctly
+            pacman->updateDirectionAndAnimation(nextDir);
             pacman->setNextDirection(Direction::NONE);
+            
+            // Debug when direction changes
+            std::cout << "Pacman direction changed to: " << static_cast<int>(nextDir) << std::endl;
         }
     }
 }
