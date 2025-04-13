@@ -47,7 +47,7 @@ Arcade::Entity SnakeFactory::createGrid(size_t width, size_t height) {
 }
 
 Arcade::Entity SnakeFactory::createSnakeHead(float x, float y,
-                                           size_t gridX, size_t gridY) {
+size_t gridX, size_t gridY) {
     Arcade::Entity snakeEntity = _entityManager->createEntity("SnakeHead");
 
     // Create position component
@@ -77,7 +77,7 @@ Arcade::Entity SnakeFactory::createSnakeHead(float x, float y,
 }
 
 Arcade::Entity SnakeFactory::createFood(float x, float y, size_t gridX,
-                                      size_t gridY, FoodType type) {
+size_t gridY, FoodType type) {
     std::string foodName = type == FoodType::BONUS ? "BonusFood" : "Food";
     std::string assetKey = type == FoodType::BONUS ? "snake.bonus_food" :
                                                     "snake.regular_food";
@@ -136,7 +136,8 @@ void SnakeFactory::initializeGame(float cellSize) {
     size_t centerY = gridHeight / 2;
     float snakeX = startX + (centerX * cellSize);
     float snakeY = startY + (centerY * cellSize);
-    Arcade::Entity snakeEntity = createSnakeHead(snakeX, snakeY, centerX, centerY);
+    Arcade::Entity snakeEntity = createSnakeHead(
+        snakeX, snakeY, centerX, centerY);
     gridComp->setCellType(centerX, centerY, CellType::SNAKE_HEAD);
 
     // Create initial food

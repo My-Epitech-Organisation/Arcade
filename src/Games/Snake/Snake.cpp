@@ -69,7 +69,7 @@ std::shared_ptr<IEntityManager> entityManager) {
 
 void SnakeGame::createGame() {
     SnakeFactory factory(_entityManager, _componentManager, _drawableAssets);
-    factory.initializeGame(16.0f); // Taille de cellule de 16 pixels
+    factory.initializeGame(16.0f);
 }
 
 void SnakeGame::loadDrawableAssets() {
@@ -90,30 +90,25 @@ const std::string& key) const {
 }
 
 void SnakeGame::update() {
-    // Mise à jour de l'état du jeu
     checkGameStatus();
-    
-    // Mise à jour des systèmes
+
     for (const auto& system : _systems) {
         system->update();
     }
 }
 
 void SnakeGame::checkGameStatus() {
-    // Recherche de l'entité GridComponent pour vérifier l'état du jeu
     for (const auto& entity : _entityManager->getEntities()) {
         auto gridComp = std::dynamic_pointer_cast<GridComponent>(
             _componentManager->getComponentByType(entity.first,
                 static_cast<ComponentType>(1000)));
-        
+
         if (gridComp && gridComp->isGameOver()) {
             _gameOver = true;
             break;
         }
     }
-    
-    // Vérifier si le joueur a gagné (score élevé ou autre condition)
-    // Pour l'instant, le jeu Snake n'a pas de condition de victoire définie
+
     _gameWon = false;
 }
 
@@ -123,12 +118,11 @@ int SnakeGame::getScore() const {
         auto snakeComp = std::dynamic_pointer_cast<SnakeHeadComponent>(
             _componentManager->getComponentByType(entity.first,
                 static_cast<ComponentType>(1001)));
-        
         if (snakeComp) {
             return snakeComp->getScore();
         }
     }
-    
+
     return 0;
 }
 
@@ -148,7 +142,6 @@ void SnakeGame::stop() {
     _eventSystem.reset();
 }
 
-// Entry points pour le chargement dynamique
 extern "C" {
     Arcade::IArcadeModule* entryPoint(void) {
         try {
