@@ -69,6 +69,6 @@ The project documentation is available in the `docs` directory. You can find the
 
 ### Groupe 3
 
-- Samuel Giret (<samuelgiret@epitech.eu>)
+- Samuel Giret (<samuel.giret@epitech.eu>)
 - Paul Chaillaud (<paul.chaillaud@epitech.eu>)
 - Quentin Gerard (<quentin.gerard@epitech.eu>)
