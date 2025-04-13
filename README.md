@@ -65,3 +65,10 @@ The project documentation is available in the `docs` directory. You can find the
 - Marin Lamy (<marin.lamy@epitech.eu>)
 - Tristan Masse (<tristan.masse@epitech.eu>)
 - Santiago Pidcova (<santiago.pidcova@epitech.eu>)
+
+
+### Groupe 3
+
+- Samuel Giret (<samuelgiret@epitech.eu>)
+- Paul Chaillaud (<paul.chaillaud@epitech.eu>)
+- Quentin Gerard (<quentin.gerard@epitech.eu>)
