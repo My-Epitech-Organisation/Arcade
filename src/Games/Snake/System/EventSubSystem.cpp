@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <memory>
+#include <string>
 #include <map>
 #include "Games/Snake/System/EventSubSystem.hpp"
 #include "Games/Snake/Components/GridComponent.hpp"

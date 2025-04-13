@@ -179,8 +179,8 @@ class GameLogic : public Arcade::ISystem {
      * @param startY Position Y de départ de la grille
      * @param cellSize Taille d'une cellule
      */
-    void updateBodySegmentEntities(const std::vector<std::pair<size_t, size_t>>& segments, 
-                                  float startX, float startY, float cellSize);
+    void updateBodySegmentEntities(const std::vector<std::pair<size_t,
+        size_t>>& segments, float startX, float startY, float cellSize);
 };
 
 }  // namespace Snake

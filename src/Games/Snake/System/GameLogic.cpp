@@ -572,7 +572,7 @@ void GameLogic::resetGame() {
     snake->setGridPosition(centerX, centerY);
     grid->setCellType(centerX, centerY, CellType::SNAKE_HEAD);
 
-    // createFood(grid, FoodType::REGULAR);
+    createFood(grid, FoodType::REGULAR);
 
     _bonusFoodActive = false;
     _bonusFoodTimer = 0.0f;
