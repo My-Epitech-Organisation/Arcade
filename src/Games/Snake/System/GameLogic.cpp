@@ -554,8 +554,6 @@ std::vector<Arcade::Entity> GameLogic::findFoodEntities() {
 void GameLogic::resetGame() {
     auto [snake, grid] = getSnakeAndGridComponents();
     if (!snake || !grid) {
-        std::cerr <<
-        "ResetGame Error: Snake or Grid component not found." << std::endl;
         return;
     }
 

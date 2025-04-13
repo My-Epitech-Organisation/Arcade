@@ -143,7 +143,6 @@ void EventSubSystem::handleKeyRightPressed() {
 
 void EventSubSystem::handleRestartPressed() {
     if (_gameLogic) {
-        std::cout << "EventSubSystem: Calling resetGame()" << std::endl;
         _gameLogic->resetGame();
     }
 }
