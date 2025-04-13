@@ -110,17 +110,9 @@ void GameLoop::handleEvents(std::shared_ptr<bool> running) {
 void GameLoop::handleState() {
     // Mark component cache for refresh when state changes
     static auto previousState = MAIN_MENU;
-    
     if (_state != previousState) {
-        std::cout << "GameLoop: State changed from " << previousState << " to " << _state << std::endl;
         _needComponentRefresh = true;
-        
-        // Don't unsubscribe all when entering or staying in GAME_PLAYING
         if (previousState == GAME_PLAYING) {
-            // We're leaving the game state
-            std::cout << "GameLoop: Leaving game state, stopping current game" << std::endl;
-            
-            // More aggressive cleanup when leaving game state
             if (_currentGame) {
                 try {
                     _currentGame->stop();
@@ -129,8 +121,6 @@ void GameLoop::handleState() {
                     std::cerr << "Error stopping current game" << std::endl;
                 }
             }
-            
-            // Unsubscribe all events to start fresh
             _eventManager->unsubscribeAll();
         }
 
@@ -142,7 +132,7 @@ void GameLoop::handleState() {
                 subscribeEvents();
                 subscribeNavEvents();
                 subscribeMouseEvents();
-                subscribeEscEvent();             // Subscribe to all main events first         // Graphics switching
+                subscribeEscEvent();
                 break;
             case GAME_SELECTION:
                 subscribeEvents();
@@ -155,10 +145,8 @@ void GameLoop::handleState() {
                 subscribeMouseEvents();
                 break;
             case GAME_PLAYING:
-                // IMPORTANT FIX: Subscribe to all relevant game events explicitly
                 subscribeEvents();
-                subscribeEscEvent();             // Subscribe to all main events first         // Graphics switching
-                std::cout << "GameLoop: All game events subscribed" << std::endl;
+                subscribeEscEvent();
                 break;
             default:
                 subscribeNavEvents();
@@ -167,8 +155,6 @@ void GameLoop::handleState() {
         }
         previousState = _state;
     }
-
-    // Handle the current state using switch rather than specific code blocks
     switch (_state) {
         case MAIN_MENU:
             displayMainMenu();
@@ -182,11 +168,9 @@ void GameLoop::handleState() {
         case GAME_PLAYING:
             updateGame();
             break;
-            
         case NAME_INPUT:
             displayNameInput();
             break;
-            
         default:
             break;
     }
@@ -211,15 +195,9 @@ void GameLoop::updateGame() {
         _gameSwitch = false;
         return;
     }
-    
     if (_currentGame) {
-        // Update game logic
         _currentGame->update(0);
-        
-        // Update drawable cache if needed
         updateDrawableCache();
-        
-        // Render cached components
         renderCachedComponents();
     }
 }
@@ -344,13 +322,10 @@ void GameLoop::loadAndStartGame() {
             _currentGame->stop();
             _currentGame.reset();
         }
-        
-        // Reset component cache when loading a new game
         _needComponentRefresh = true;
         _cachedTextComponents.clear();
         _cachedTextureComponents.clear();
         _cachedCharacterComponents.clear();
-        
         subscribeEvents();
         subscribeNavEvents();
         subscribeMouseEvents();
@@ -517,25 +492,21 @@ void GameLoop::changeState(std::shared_ptr<IGameState> newState) {
 }
 
 void GameLoop::updateDrawableCache() {
-    // Always refresh cache when a game is running to ensure latest sprites are shown
     if (_state == GAME_PLAYING) {
         _needComponentRefresh = true;
     }
-    
     if (!_needComponentRefresh) {
         return;
     }
-    
     _cachedTextComponents.clear();
     _cachedTextureComponents.clear();
     _cachedCharacterComponents.clear();
-    
-    auto drawableComponents = _componentManager->getAllComponentsByType(ComponentType::DRAWABLE);
-    
+    auto drawableComponents
+        = _componentManager->getAllComponentsByType(ComponentType::DRAWABLE);
     for (const auto& component : drawableComponents) {
-        auto drawableComp = std::dynamic_pointer_cast<IDrawableComponent>(component);
+        auto drawableComp
+            = std::dynamic_pointer_cast<IDrawableComponent>(component);
         if (!drawableComp || !drawableComp->isRenderable()) continue;
-        
         if (drawableComp->shouldRenderAsText()) {
             _cachedTextComponents.push_back(drawableComp);
         } else if (drawableComp->shouldRenderAsTexture()) {
@@ -544,43 +515,28 @@ void GameLoop::updateDrawableCache() {
             _cachedCharacterComponents.push_back(drawableComp);
         }
     }
-    
     _needComponentRefresh = false;
 }
 
 void GameLoop::renderCachedComponents() {
-    // Render in the correct order: textures, then characters, then text
     for (const auto& texture : _cachedTextureComponents) {
         _currentGraphics->drawDrawable(texture);
     }
-    
     for (const auto& character : _cachedCharacterComponents) {
         _currentGraphics->drawDrawable(character);
     }
-    
     for (const auto& text : _cachedTextComponents) {
         _currentGraphics->drawDrawable(text);
     }
 }
 
 void GameLoop::subscribeEscEvent() {
-    std::cout << "GameLoop: Subscribing ESC key for navigation" << std::endl;
-    
     KeyEvent escEvent(Arcade::Keys::ESC, Arcade::EventType::KEY_PRESSED);
-    
     _eventManager->subscribe(escEvent, [this](const IEvent& event) {
         (void)event;
-        std::cout << "GameLoop: ESC key pressed in state " << _state << std::endl;
-        
-        // Handle ESC based on current state
         switch (_state) {
             case GAME_PLAYING:
-                std::cout << "GameLoop: Returning to menu from game" << std::endl;
-                
-                // Force immediate state change
                 _state = MAIN_MENU;
-                
-                // Stop the current game
                 if (_currentGame) {
                     try {
                         _currentGame->stop();
@@ -590,31 +546,22 @@ void GameLoop::subscribeEscEvent() {
                     _currentGame = nullptr;
                 }
                 _needComponentRefresh = true;
-                
-                // Re-subscribe menu events
                 subscribeEvents();
                 subscribeNavEvents();
                 subscribeMouseEvents();
                 break;
-                
             case GRAPHICS_SELECTION:
             case GAME_SELECTION:
-                std::cout << "GameLoop: Returning to menu from selection screen" << std::endl;
                 _state = MAIN_MENU;
                 break;
-                
             case NAME_INPUT:
-                // Already handled in subscribeNameInputEvents()
                 break;
-                
             default:
-                // No action for other states
                 break;
         }
     });
 }
 
-// Add this new flag to track menu refresh needs
 bool _needMenuRefresh = false;
 
 void GameLoop::run() {
@@ -624,15 +571,13 @@ void GameLoop::run() {
     subscribeNavEvents();
     subscribeMouseEvents();
     subscribeEscEvent();
-    
     _state = MAIN_MENU;
-    
     auto lastFrameTime = std::chrono::high_resolution_clock::now();
     auto running = std::make_shared<bool>(true);
-    
     while (*running) {
         auto currentTime = std::chrono::high_resolution_clock::now();
-        float deltaTime = std::chrono::duration<float>(currentTime - lastFrameTime).count();
+        float deltaTime = std::chrono::duration<float>(currentTime
+            - lastFrameTime).count();
         lastFrameTime = currentTime;
 
 
@@ -647,7 +592,7 @@ void GameLoop::run() {
             _currentGraphics->refreshScreen();
 
         // Cap frame rate
-        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
     cleanup();
 }

@@ -73,9 +73,7 @@ void UISystem::update() {
             break;
         }
     }
-    
     if (!boardEntity) return;
-    
     auto statsComp = _componentManager->getComponentByType(
         boardEntity, ComponentType::CUSTOM_BASE);
     auto gameStats = std::dynamic_pointer_cast
@@ -141,24 +139,22 @@ void UISystem::update() {
         // Make game over text more visible and centered
         if (gameOverText) {
             if (board->isGameWon()) {
-                gameOverText->setAsText("YOU WIN!!!", 
+                gameOverText->setAsText("YOU WIN!!!",
                     "./assets/fonts/Arial.ttf", 36);
                 gameOverText->setColor(Color::GREEN);
             } else {
-                gameOverText->setAsText("GAME OVER", 
+                gameOverText->setAsText("GAME OVER",
                     "./assets/fonts/Arial.ttf", 36);
                 gameOverText->setColor(Color::RED);
             }
-            
-            // Center the text on screen
-            auto width = 200; // Approximate text width
+            auto width = 200;
             gameOverText->setPosition(350 - width/2, 250);
             gameOverText->setVisibility(true);
         }
 
         if (resultText) {
             if (board->isGameWon()) {
-                resultText->setAsText("Final Score: " 
+                resultText->setAsText("Final Score: "
                     + std::to_string(gameStats->getScore()),
                     "./assets/fonts/Arial.ttf", 24);
                 resultText->setPosition(330, 300);
@@ -170,7 +166,7 @@ void UISystem::update() {
         }
 
         if (restartText) {
-            restartText->setAsText("Press 'R' to restart or ESC for menu", 
+            restartText->setAsText("Press 'R' to restart or ESC for menu",
                 "./assets/fonts/Arial.ttf", 20);
             restartText->setPosition(250, 350);
             restartText->setColor(Color::WHITE);

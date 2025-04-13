@@ -45,13 +45,10 @@ class UISystem : public Arcade::ISystem {
     std::shared_ptr<IEntity> _gameWinTextEntity;
     std::shared_ptr<IEntity> _restartTextEntity;
     std::vector<std::shared_ptr<IEntity>> _livesIconEntities;
-
     void createUIEntities();
     void updateUITexts();
     void updateLivesIcons();
     void updateGameOverState();
-    
-    // Cached entities for better performance
     std::shared_ptr<IEntity> _cachedPacmanEntity;
     std::shared_ptr<IEntity> _cachedGridEntity;
     std::shared_ptr<PacmanComponent> _cachedPacmanComponent;

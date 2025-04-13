@@ -10,31 +10,31 @@
 #include <memory>
 #include <unordered_map>
 #include <utility>
+#include <string>
+#include <map>
 #include "Games/PacMan/System/CollisionManager.hpp"
 #include "Games/PacMan/System/GameStateManager.hpp"
 #include "Games/PacMan/Components/PacmanComponent.hpp"
 #include "Games/PacMan/Components/GridComponent.hpp"
 #include "Games/PacMan/Components/FoodComponent.hpp"
 #include "Games/PacMan/Components/GhostComponent.hpp"
-#include "ECS/Components/Position/PositionComponent.hpp" // Add this include for PositionComponent
-
+#include "ECS/Components/Position/PositionComponent.hpp"
 namespace Arcade {
 namespace PacMan {
 
-CollisionManager::CollisionManager(std::shared_ptr<Arcade::IComponentManager> componentManager,
-                                  std::shared_ptr<Arcade::IEntityManager> entityManager,
-                                  const std::map<std::string, DrawableComponent>& assets)
-    : _componentManager(componentManager), _entityManager(entityManager), _assets(assets) {
-    
-    // Pre-cache asset lookups
+CollisionManager::CollisionManager(
+std::shared_ptr<Arcade::IComponentManager> componentManager,
+std::shared_ptr<Arcade::IEntityManager> entityManager,
+const std::map<std::string, DrawableComponent>& assets)
+: _componentManager(componentManager),
+_entityManager(entityManager),
+_assets(assets) {
     _cachedAssets["ghosts.eyes"] = getDrawableAsset("ghosts.eyes");
     _cachedAssets["map.empty"] = getDrawableAsset("map.empty");
     _cachedAssets["ghosts.frightened"] = getDrawableAsset("ghosts.frightened");
-    
-    // IMPORTANT: Initialize GameStateManager in constructor instead of on-demand
-    _cachedGameStateManager = std::make_shared<GameStateManager>(_componentManager, _entityManager, _assets);
-    
-    // Initialize collision grid for faster lookups
+    _cachedGameStateManager
+        = std::make_shared<GameStateManager>(_componentManager,
+            _entityManager, _assets);
     _rebuildCollisionGridTimer = 0.0f;
     rebuildCollisionGrid();
 }
@@ -51,8 +51,6 @@ CollisionManager::getDrawableAsset(const std::string& key) const {
 
 void CollisionManager::rebuildCollisionGrid() {
     _entityGrid.clear();
-    
-    // Get the grid entity for reference positions
     std::shared_ptr<IEntity> gridEntity = nullptr;
     for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Grid") {
@@ -60,49 +58,41 @@ void CollisionManager::rebuildCollisionGrid() {
             break;
         }
     }
-    
     if (!gridEntity) return;
-    
     auto gridComp = std::dynamic_pointer_cast<GridComponent>(
         _componentManager->getComponentByType(gridEntity,
             static_cast<ComponentType>(1000)));
-            
     if (!gridComp) return;
-    
     float cellSize = gridComp->getCellSize();
     auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
-        _componentManager->getComponentByType(gridEntity, ComponentType::POSITION));
+        _componentManager->getComponentByType(gridEntity,
+            ComponentType::POSITION));
     float gridStartX = gridPosComp ? gridPosComp->x : 0.0f;
     float gridStartY = gridPosComp ? gridPosComp->y : 0.0f;
-    
-    // Only add entities that are NOT eaten to the collision grid
     for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
-        // Add ghosts to the collision grid based on their visual positions
         auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
             _componentManager->getComponentByType(entity,
                 static_cast<ComponentType>(1002)));
-                
         if (ghostComp) {
-            // Convert visual position to grid coordinates
-            size_t gridX = static_cast<size_t>((ghostComp->getVisualX() - gridStartX) / cellSize);
-            size_t gridY = static_cast<size_t>((ghostComp->getVisualY() - gridStartY) / cellSize);
+            size_t gridX = static_cast<size_t>((ghostComp->getVisualX()
+                - gridStartX) / cellSize);
+            size_t gridY = static_cast<size_t>((ghostComp->getVisualY()
+                - gridStartY) / cellSize);
             std::pair<size_t, size_t> pos = {gridX, gridY};
             _entityGrid[pos].push_back({entity, EntityType::GHOST});
             continue;
         }
-        
-        // Only add non-eaten food to the collision grid
         auto foodComp = std::dynamic_pointer_cast<FoodComponent>(
             _componentManager->getComponentByType(entity,
                 static_cast<ComponentType>(1003)));
-                
+
         if (foodComp && !foodComp->isEaten()) {
             auto spriteComp = std::dynamic_pointer_cast<IDrawableComponent>(
                 _componentManager->getComponentByType(entity,
                     ComponentType::DRAWABLE));
-            
             if (spriteComp && spriteComp->isRenderable()) {
-                std::pair<size_t, size_t> pos = {foodComp->getGridX(), foodComp->getGridY()};
+                std::pair<size_t, size_t> pos
+                    = {foodComp->getGridX(), foodComp->getGridY()};
                 _entityGrid[pos].push_back({entity, EntityType::FOOD});
             }
         }
@@ -110,157 +100,110 @@ void CollisionManager::rebuildCollisionGrid() {
 }
 
 void CollisionManager::checkCollisions(std::shared_ptr<PacmanComponent> pacman,
-                                      std::shared_ptr<GridComponent> grid,
-                                      std::shared_ptr<IEntity> pacmanEntity,
-                                      std::shared_ptr<IEntity> gridEntity) {
+std::shared_ptr<GridComponent> grid,
+std::shared_ptr<IEntity> pacmanEntity,
+std::shared_ptr<IEntity> gridEntity) {
     if (!pacman || !grid || !pacmanEntity || !gridEntity)
         return;
-    
-    // Get pacman's visual position and dimensions for collision check
     float pacmanLeft = pacman->getVisualX();
     float pacmanTop = pacman->getVisualY();
-    float pacmanWidth = 32.0f;  // Default sprite size, should match actual sprite
+    float pacmanWidth = 32.0f;
     float pacmanHeight = 32.0f;
-    
-    // Apply a hitbox reduction factor - make hitbox ~60% of sprite size
     float pacmanHitboxScale = 0.6f;
-    float pacmanHitboxPadding = (1.0f - pacmanHitboxScale) * 0.5f * pacmanWidth; 
+    float pacmanHitboxPadding = (1.0f - pacmanHitboxScale)
+        * 0.5f * pacmanWidth;
     float hitboxLeft = pacmanLeft + pacmanHitboxPadding;
     float hitboxTop = pacmanTop + pacmanHitboxPadding;
     float hitboxWidth = pacmanWidth * pacmanHitboxScale;
     float hitboxHeight = pacmanHeight * pacmanHitboxScale;
-    
-    // For optimization: Calculate a region of interest around Pacman for narrowing collision checks
-    constexpr float collisionMargin = 32.0f; // Check slightly beyond Pacman's position
+    constexpr float collisionMargin = 32.0f;
     float checkLeft = pacmanLeft - collisionMargin;
     float checkTop = pacmanTop - collisionMargin;
     float checkRight = pacmanLeft + pacmanWidth + collisionMargin;
     float checkBottom = pacmanTop + pacmanHeight + collisionMargin;
-    
-    // Update collision grid periodically, not every frame
-    _rebuildCollisionGridTimer += 1.0f / 60.0f; // Assuming 60fps
+    _rebuildCollisionGridTimer += 1.0f / 60.0f;
     if (_rebuildCollisionGridTimer >= COLLISION_GRID_REFRESH_TIME) {
         rebuildCollisionGrid();
         _rebuildCollisionGridTimer = 0.0f;
     }
-    
-    // Check collisions with ghosts using bounding boxes
     for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
             _componentManager->getComponentByType(entity,
                 static_cast<ComponentType>(1002)));
-                
         if (!ghostComp) continue;
-        
-        // Get ghost's visual position
         float ghostLeft = ghostComp->getVisualX();
         float ghostTop = ghostComp->getVisualY();
-        float ghostWidth = 32.0f;  // Default sprite size
+        float ghostWidth = 32.0f;
         float ghostHeight = 32.0f;
-        
-        // Apply the same hitbox reduction to ghosts
         float ghostHitboxScale = 0.6f;
-        float ghostHitboxPadding = (1.0f - ghostHitboxScale) * 0.5f * ghostWidth;
+        float ghostHitboxPadding = (1.0f - ghostHitboxScale)
+            * 0.5f * ghostWidth;
         float ghostHitboxLeft = ghostLeft + ghostHitboxPadding;
         float ghostHitboxTop = ghostTop + ghostHitboxPadding;
         float ghostHitboxWidth = ghostWidth * ghostHitboxScale;
         float ghostHitboxHeight = ghostHeight * ghostHitboxScale;
-        
-        // Skip ghosts outside the region of interest
         if (ghostLeft > checkRight || ghostLeft + ghostWidth < checkLeft ||
             ghostTop > checkBottom || ghostTop + ghostHeight < checkTop) {
             continue;
         }
-        
-        // Check for collision using reduced-size bounding boxes
         if (!(hitboxLeft + hitboxWidth < ghostHitboxLeft ||
               hitboxLeft > ghostHitboxLeft + ghostHitboxWidth ||
               hitboxTop + hitboxHeight < ghostHitboxTop ||
               hitboxTop > ghostHitboxTop + ghostHitboxHeight)) {
             if (ghostComp->getState() == GhostState::SCARED) {
-                // Eat ghost logic
                 ghostComp->setState(GhostState::RETURNING);
                 pacman->addScore(200);
-                
-                std::cout << "Pacman ate ghost " << ghostComp->getName() << "! Changing to eyes sprite." << std::endl;
-                
-                auto ghostSprite = std::dynamic_pointer_cast<IDrawableComponent>(
+                auto ghostSprite
+                    = std::dynamic_pointer_cast<IDrawableComponent>(
                     _componentManager->getComponentByType(entity,
                         ComponentType::DRAWABLE));
-                        
                 if (ghostSprite) {
-                    // Save current properties for debugging
                     std::string oldPath = ghostSprite->getPath();
                     char oldChar = ghostSprite->getCharacter();
-                    
-                    // Reset ALL sprite properties - very important!
                     ghostSprite->setVisibility(true);
                     ghostSprite->setScale(1.0f);
                     ghostSprite->setRotation(0.0f);
-                    ghostSprite->setColor(Color::WHITE); // Reset color to default
-                    ghostSprite->setPath("");  // Clear path before setting new one
-                    ghostSprite->setText("");  // Clear any text
-                    ghostSprite->setFont("");  // Clear any font
-                    
-                    // Store current position
+                    ghostSprite->setColor(Color::WHITE);
+                    ghostSprite->setPath("");
+                    ghostSprite->setText("");
+                    ghostSprite->setFont("");
                     float visualX = ghostComp->getVisualX();
                     float visualY = ghostComp->getVisualY();
-                    
                     auto eyesAsset = _cachedAssets["ghosts.eyes"];
                     if (eyesAsset) {
-                        // Copy all properties from the eyes asset
                         ghostSprite->setPath(eyesAsset->getPath());
-                        ghostSprite->setDimensions(eyesAsset->getWidth(), eyesAsset->getHeight());
+                        ghostSprite->setDimensions(eyesAsset->getWidth(),
+                            eyesAsset->getHeight());
                         ghostSprite->setAsCharacter(eyesAsset->getCharacter());
                     } else {
-                        // Fallback with hardcoded values
-                        ghostSprite->setAsTexture("assets/pacman/eyes.png", 32, 32);
+                        ghostSprite->setAsTexture("assets/pacman/eyes.png",
+                            32, 32);
                         ghostSprite->setAsCharacter('e');
                     }
-                    
-                    // Ensure position matches ghost's current position
                     ghostSprite->setPosition(visualX, visualY);
-                    
-                    std::cout << "Changed ghost sprite from " << oldPath << "(" << oldChar << ") to " 
-                              << ghostSprite->getPath() << "(" << ghostSprite->getCharacter() << ")" << std::endl;
                 }
             } else if (ghostComp->getState() == GhostState::NORMAL) {
-                // Lose a life
                 pacman->decrementLives();
-                
                 if (pacman->getLives() > 0) {
-                    // IMPORTANT: Log positions before reset for debugging
-                    std::cout << "LIFE LOST! Resetting positions..." << std::endl;
-                    std::cout << "Pacman before reset - Grid: (" << pacman->getGridX() << "," 
-                              << pacman->getGridY() << "), Visual: (" 
-                              << pacman->getVisualX() << "," << pacman->getVisualY() << ")" << std::endl;
-                    
-                    // Force pacman and ghosts to stop moving
                     pacman->setMoving(false);
-                    for (const auto& [e, n] : _entityManager->getEntitiesMap()) {
-                        auto ghost = std::dynamic_pointer_cast<GhostComponent>(
-                            _componentManager->getComponentByType(e, static_cast<ComponentType>(1002)));
+                    for (const auto& [e, n] :
+                        _entityManager->getEntitiesMap()) {
+                        auto ghost
+                        = std::dynamic_pointer_cast<GhostComponent>(
+                            _componentManager->getComponentByType
+                                (e, static_cast<ComponentType>(1002)));
                         if (ghost) {
-                            std::cout << "Ghost " << ghost->getName() << " before reset - Grid: (" 
-                                      << ghost->getGridX() << "," << ghost->getGridY() << ")" << std::endl;
                             ghost->setMoving(false);
                         }
                     }
-                    
-                    // Use our pre-initialized GameStateManager to reset positions
                     _cachedGameStateManager->resetPositions();
-                    
-                    // IMPORTANT: Verify positions were reset by logging after reset
-                    std::cout << "Pacman after reset - Grid: (" << pacman->getGridX() << "," 
-                              << pacman->getGridY() << "), Visual: (" 
-                              << pacman->getVisualX() << "," << pacman->getVisualY() << ")" << std::endl;
-                    
-                    // Force all entities to stop movement and snap to grid positions
-                    for (const auto& [e, n] : _entityManager->getEntitiesMap()) {
-                        // Update Pacman's movement state
+
+                    for (const auto& [e, n]
+                        : _entityManager->getEntitiesMap()) {
                         if (n == "Pacman") {
                             auto p = std::dynamic_pointer_cast<PacmanComponent>(
-                                _componentManager->getComponentByType(e, static_cast<ComponentType>(1001)));
+                                _componentManager->getComponentByType
+                                    (e, static_cast<ComponentType>(1001)));
                             if (p) {
                                 p->setMoving(false);
                                 p->setCanMove(true);
@@ -269,13 +212,10 @@ void CollisionManager::checkCollisions(std::shared_ptr<PacmanComponent> pacman,
                                 p->setNextDirection(Direction::NONE);
                             }
                         }
-                        
-                        // Update Ghost's movement state
                         auto ghost = std::dynamic_pointer_cast<GhostComponent>(
-                            _componentManager->getComponentByType(e, static_cast<ComponentType>(1002)));
+                            _componentManager->getComponentByType
+                            (e, static_cast<ComponentType>(1002)));
                         if (ghost) {
-                            std::cout << "Ghost " << ghost->getName() << " after reset - Grid: (" 
-                                      << ghost->getGridX() << "," << ghost->getGridY() << ")" << std::endl;
                             ghost->setMoving(false);
                             ghost->setCanMove(true);
                             ghost->resetMovementTimer();
@@ -283,185 +223,116 @@ void CollisionManager::checkCollisions(std::shared_ptr<PacmanComponent> pacman,
                         }
                     }
                 } else {
-                    // Game over
-                    std::cout << "Game over - setting game over state" << std::endl;
                     grid->setGameOver(true);
-                    
-                    // Make ghosts visible after death
-                    for (const auto& [ghostEntity, name] : _entityManager->getEntitiesMap()) {
+                    for (const auto& [ghostEntity, name]
+                        : _entityManager->getEntitiesMap()) {
                         auto ghost = std::dynamic_pointer_cast<GhostComponent>(
                             _componentManager->getComponentByType(ghostEntity,
                                 static_cast<ComponentType>(1002)));
-                                
                         if (ghost) {
-                            auto ghostDrawable = std::dynamic_pointer_cast<IDrawableComponent>(
-                                _componentManager->getComponentByType(ghostEntity,
+                            auto ghostDrawable
+                                = std::dynamic_pointer_cast<IDrawableComponent>(
+                                _componentManager->getComponentByType
+                                    (ghostEntity,
                                     ComponentType::DRAWABLE));
-                                    
                             if (ghostDrawable) {
                                 ghostDrawable->setVisibility(true);
                             }
                         }
                     }
                 }
-                
-                // Always break after ghost collision
                 return;
             }
         }
     }
-    
-    // Check collisions with food using visual positions
-    // First, get grid cell size and position for reference
     float cellSize = grid->getCellSize();
     auto gridPosComp = std::dynamic_pointer_cast<PositionComponent>(
-        _componentManager->getComponentByType(gridEntity, ComponentType::POSITION));
+        _componentManager->getComponentByType
+        (gridEntity, ComponentType::POSITION));
     float gridStartX = gridPosComp ? gridPosComp->x : 0.0f;
     float gridStartY = gridPosComp ? gridPosComp->y : 0.0f;
-    
-    // Check collisions with food dots
     for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         auto foodComp = std::dynamic_pointer_cast<FoodComponent>(
             _componentManager->getComponentByType(entity,
                 static_cast<ComponentType>(1003)));
-                
         if (!foodComp || foodComp->isEaten()) continue;
-        
-        // Calculate food's visual position based on its grid position
         float foodLeft = gridStartX + (foodComp->getGridX() * cellSize);
         float foodTop = gridStartY + (foodComp->getGridY() * cellSize);
         float foodWidth = cellSize;
         float foodHeight = cellSize;
-        
-        // Skip food outside the region of interest
         if (foodLeft > checkRight || foodLeft + foodWidth < checkLeft ||
             foodTop > checkBottom || foodTop + foodHeight < checkTop) {
             continue;
         }
-        
-        // Check for collision using a smaller hitbox for the food (15% of cell size)
-        float foodHitboxScale = 0.15f;  // Even smaller food hitbox
+        float foodHitboxScale = 0.15f;
         float hitboxPadding = (1.0f - foodHitboxScale) * 0.5f * cellSize;
         float foodHitboxLeft = foodLeft + hitboxPadding;
         float foodHitboxTop = foodTop + hitboxPadding;
         float foodHitboxWidth = cellSize * foodHitboxScale;
         float foodHitboxHeight = cellSize * foodHitboxScale;
-        
         if (!(hitboxLeft + hitboxWidth < foodHitboxLeft ||
               hitboxLeft > foodHitboxLeft + foodHitboxWidth ||
               hitboxTop + hitboxHeight < foodHitboxTop ||
               hitboxTop > foodHitboxTop + foodHitboxHeight)) {
-            
-            // Critical debug: Print info about the food being eaten
-            std::cout << "Food collision detected at grid position: " 
-                      << foodComp->getGridX() << "," << foodComp->getGridY() 
-                      << " - Type: " << (foodComp->getFoodType() == FoodType::POWER_PILL ? "POWER PILL" : "NORMAL DOT")
-                      << std::endl;
-            
-            // Food collision logic
             foodComp->setEaten(true);
             pacman->addScore(foodComp->getPoints());
             grid->decrementFoodCount();
-            
-            // Get and update the sprite component
             auto spriteComp = std::dynamic_pointer_cast<IDrawableComponent>(
-                _componentManager->getComponentByType(entity, ComponentType::DRAWABLE));
-            
+                _componentManager->getComponentByType
+                (entity, ComponentType::DRAWABLE));
             if (spriteComp) {
-                // Set visibility to false
                 spriteComp->setVisibility(false);
-                
-                // Use the empty sprite texture for the cell
                 auto emptyAsset = _cachedAssets["map.empty"];
                 if (emptyAsset) {
-                    // Copy properties from the empty asset
                     spriteComp->setPath(emptyAsset->getPath());
-                    spriteComp->setDimensions(emptyAsset->getWidth(), emptyAsset->getHeight());
+                    spriteComp->setDimensions(emptyAsset->getWidth(),
+                        emptyAsset->getHeight());
                     spriteComp->setAsCharacter(' ');
                 } else {
                     spriteComp->setAsTexture("assets/pacman/empty.png", 32, 32);
                     spriteComp->setAsCharacter(' ');
                 }
-                
-                // Remove the entity from the collision grid
                 rebuildCollisionGrid();
             }
-            
-            // Handle power pill effect - moved BEFORE rebuildCollisionGrid
-            // This is important - process power pill before modifying the entity
             if (foodComp->getFoodType() == FoodType::POWER_PILL) {
-                std::cout << "POWER PILL eaten! Activating frightened mode..." << std::endl;
                 updateGhostsForPowerPill();
             }
-            
-            // Force a collision grid rebuild next frame
             _rebuildCollisionGridTimer = COLLISION_GRID_REFRESH_TIME;
         }
     }
 }
 
 void CollisionManager::updateGhostsForPowerPill() {
-    std::cout << "Power pill eaten! Activating frightened state for ghosts" << std::endl;
-    
-    // Get all ghosts (recreate cache if empty)
     if (_cachedGhostEntities.empty()) {
         for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
             auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
                 _componentManager->getComponentByType(entity,
                     static_cast<ComponentType>(1002)));
-                    
             if (ghostComp) {
                 _cachedGhostEntities.push_back(entity);
-                std::cout << "Found ghost: " << ghostComp->getName() 
-                          << " (type: " << static_cast<int>(ghostComp->getGhostType()) << ")" << std::endl;
             }
         }
     }
-    
-    // IMPORTANT: Always do a fresh lookup for the frightened asset to avoid stale cache issues
     auto frightenedAsset = _assets.find("ghosts.frightened");
     bool assetFound = frightenedAsset != _assets.end();
-    std::cout << "Frightened ghost asset " << (assetFound ? "found" : "NOT FOUND") 
-              << " with path: " << (assetFound ? frightenedAsset->second.getPath() : "null") << std::endl;
-    
-    // Count how many ghosts we're changing
     int ghostCount = 0;
-    
-    // Apply frightened state to all ghosts
     for (const auto& ghostEntity : _cachedGhostEntities) {
         auto ghostComp = std::dynamic_pointer_cast<GhostComponent>(
             _componentManager->getComponentByType(ghostEntity,
                 static_cast<ComponentType>(1002)));
-                
         if (!ghostComp) continue;
-        
-        // Increment counter
         ghostCount++;
-        
-        // Get the current state before changing it
         GhostState previousState = ghostComp->getState();
-        
-        // Set the new state
         ghostComp->setState(GhostState::SCARED);
         ghostComp->resetStateTimer();
-
-        std::cout << "Ghost #" << ghostCount << " (" << ghostComp->getName() 
-                  << ") state changed: " << static_cast<int>(previousState)
-                  << " -> " << static_cast<int>(GhostState::SCARED) << std::endl;
-
-        // CRITICAL FIX: Force recreate the drawable component from scratch, not just modifying existing one
         auto ghostSprite = std::dynamic_pointer_cast<IDrawableComponent>(
             _componentManager->getComponentByType(ghostEntity,
                 ComponentType::DRAWABLE));
-                
         if (ghostSprite) {
-            // Save original position and current properties for debugging
             float ghostX = ghostComp->getVisualX();
             float ghostY = ghostComp->getVisualY();
             std::string prevTexture = ghostSprite->getPath();
             std::string prevChar = std::string(1, ghostSprite->getCharacter());
-            
-            // 1. Reset ALL sprite properties to known clean state
             ghostSprite->setPath("");
             ghostSprite->setText("");
             ghostSprite->setFont("");
@@ -470,55 +341,33 @@ void CollisionManager::updateGhostsForPowerPill() {
             ghostSprite->setRotation(0.0f);
             ghostSprite->setVisibility(true);
             ghostSprite->setAsCharacter('S');
-            
-            // 2. Set exact dimensions
             ghostSprite->setDimensions(32, 32);
-            
-            // 3. Apply correct texture
             if (assetFound) {
-                // Use direct asset access instead of cached version
                 ghostSprite->setPath(frightenedAsset->second.getPath());
-                ghostSprite->setDimensions(frightenedAsset->second.getWidth(), 
+                ghostSprite->setDimensions(frightenedAsset->second.getWidth(),
                                           frightenedAsset->second.getHeight());
             } else {
-                // Fallback with distinctive appearance
-                ghostSprite->setAsTexture("assets/pacman/scared_ghost.png", 32, 32);
+                ghostSprite->setAsTexture
+                    ("assets/pacman/scared_ghost.png", 32, 32);
             }
-            
-            // 4. Force position to be correct
             ghostSprite->setPosition(ghostX, ghostY);
-            
-            std::cout << "Ghost sprite hard-reset: " << prevTexture << "(" << prevChar << ")"
-                      << " -> " << ghostSprite->getPath() << "('S' in BLUE)" << std::endl;
-                      
-            // 5. Add verification to check sprite was properly updated
-            if (ghostSprite->getColor() != Color::BLUE || 
+            if (ghostSprite->getColor() != Color::BLUE ||
                 ghostSprite->getPath().find("scared") == std::string::npos) {
-                std::cerr << "CRITICAL: Ghost sprite failed to update correctly! "
-                          << "Current path: " << ghostSprite->getPath()
-                          << ", Color: " << static_cast<int>(ghostSprite->getColor()) << std::endl;
-                          
-                // Force a last resort direct texture setting
-                ghostSprite->setAsTexture("assets/pacman/scared_ghost.png", 32, 32);
+                ghostSprite->setAsTexture("assets/pacman/scared_ghost.png",
+                    32, 32);
                 ghostSprite->setColor(Color::BLUE);
                 ghostSprite->setPosition(ghostX, ghostY);
-                
-                std::cerr << "Applied emergency texture override." << std::endl;
             }
         }
     }
-    
-    // Final confirmation for debugging
-    std::cout << "Updated " << ghostCount << " ghosts to frightened state." << std::endl;
 }
 
-void CollisionManager::findAndSetPacmanSpawn(std::shared_ptr<PacmanComponent> pacman,
-                                           std::shared_ptr<GridComponent> grid) {
-    // We'll cache the spawn point to avoid searching the grid every time
+void CollisionManager::findAndSetPacmanSpawn
+(std::shared_ptr<PacmanComponent> pacman,
+std::shared_ptr<GridComponent> grid) {
     static bool spawnPointFound = false;
     static size_t spawnX = 0;
     static size_t spawnY = 0;
-    
     if (!spawnPointFound) {
         for (size_t y = 0; y < grid->getHeight(); y++) {
             for (size_t x = 0; x < grid->getWidth(); x++) {
@@ -532,26 +381,24 @@ void CollisionManager::findAndSetPacmanSpawn(std::shared_ptr<PacmanComponent> pa
             if (spawnPointFound) break;
         }
     }
-    
-    // Set pacman to spawn position
     pacman->setGridPosition(spawnX, spawnY);
     pacman->setCurrentDirection(Direction::NONE);
     pacman->setNextDirection(Direction::NONE);
 }
 
-void CollisionManager::checkCollisionsWithGhosts(std::shared_ptr<PacmanComponent> pacman,
-                                               std::shared_ptr<GridComponent> grid) {
-    // This function is replaced by the optimized checkCollisions method
+void CollisionManager::checkCollisionsWithGhosts(
+std::shared_ptr<PacmanComponent> pacman,
+std::shared_ptr<GridComponent> grid) {
 }
 
-void CollisionManager::checkCollisionsWithFood(std::shared_ptr<PacmanComponent> pacman,
-                                             std::shared_ptr<GridComponent> grid) {
-    // This function is replaced by the optimized checkCollisions method
+void CollisionManager::checkCollisionsWithFood
+(std::shared_ptr<PacmanComponent> pacman,
+std::shared_ptr<GridComponent> grid) {
 }
 
-void CollisionManager::checkFoodCollision(std::shared_ptr<PacmanComponent> pacman,
-                                        std::shared_ptr<GridComponent> grid) {
-    // This function is replaced by the optimized checkCollisions method
+void CollisionManager::checkFoodCollision
+(std::shared_ptr<PacmanComponent> pacman,
+std::shared_ptr<GridComponent> grid) {
 }
 
 }  // namespace PacMan

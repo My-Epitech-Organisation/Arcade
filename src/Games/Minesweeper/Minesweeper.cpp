@@ -109,8 +109,7 @@ void MinesweeperGame::update(float deltaTime) {
             break;
         }
     }
-    if (!boardEntity) return;  // Safety check
-    
+    if (!boardEntity) return;
     auto comp = _componentManager->getComponentByType(boardEntity,
         ComponentType::BOARD);
     auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>
@@ -119,9 +118,7 @@ void MinesweeperGame::update(float deltaTime) {
         ComponentType::CUSTOM_BASE);
     auto gameStats = std::dynamic_pointer_cast
         <Arcade::Minesweeper::GameStats>(statsComp);
-    
     if (board && gameStats) {
-        // If game is not over, update timers and check win/lose conditions
         if (!board->isGameOver()) {
             gameStats->updateTime();
 
@@ -132,8 +129,6 @@ void MinesweeperGame::update(float deltaTime) {
                 _gameOver = true;
                 _gameWon = false;
             }
-            
-            // Check for victory
             _gameWon = checkVictory(boardEntity);
             if (_gameWon) {
                 std::cout << "Game won!" << std::endl;
@@ -225,13 +220,11 @@ bool MinesweeperGame::checkVictory(std::shared_ptr<IEntity> boardEntity) {
         ComponentType::BOARD);
     auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>(comp);
     if (!board) return false;
-    
     size_t width = board->getWidth();
     size_t height = board->getHeight();
     size_t totalCells = width * height;
     size_t revealedCells = 0;
     size_t mineCells = 0;
-    
     for (size_t y = 0; y < height; y++) {
         for (size_t x = 0; x < width; x++) {
             std::shared_ptr<IEntity> cellEntity = board->getCellEntity(x, y);
@@ -240,7 +233,6 @@ bool MinesweeperGame::checkVictory(std::shared_ptr<IEntity> boardEntity) {
             auto cell = std::dynamic_pointer_cast<Arcade::Minesweeper::Cell>
                 (comp2);
             if (!cell) continue;
-            
             if (cell->hasMine()) {
                 mineCells++;
             } else if (cell->isRevealed()) {
@@ -248,8 +240,6 @@ bool MinesweeperGame::checkVictory(std::shared_ptr<IEntity> boardEntity) {
             }
         }
     }
-    
-    // Victory condition: all non-mine cells revealed
     return revealedCells == (totalCells - mineCells);
 }
 

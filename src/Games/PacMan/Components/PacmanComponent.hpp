@@ -63,52 +63,42 @@ class PacmanComponent : public Arcade::IComponent {
     // Smooth movement additions
     float getVisualX() const { return _visualX; }
     float getVisualY() const { return _visualY; }
-    void setVisualPosition(float x, float y) { _visualX = x; _visualY = y; }
-    
+    void setVisualPosition(float x, float y) {
+        _visualX = x;
+        _visualY = y;
+    }
     float getTargetX() const { return _targetX; }
     float getTargetY() const { return _targetY; }
-    void setTargetPosition(float x, float y) { _targetX = x; _targetY = y; }
-    
+    void setTargetPosition(float x, float y) {
+        _targetX = x;
+        _targetY = y;
+    }
     bool isMoving() const { return _isMoving; }
     void setMoving(bool isMoving) { _isMoving = isMoving; }
-    
-    // Update visual position based on interpolation
     void updateVisualPosition(float deltaTime);
-    
-    // Check if movement animation is complete
     bool isAtTarget() const;
-    
-    // Get and set movement speed
     float getMovementSpeed() const { return _movementSpeed; }
     void setMovementSpeed(float speed) { _movementSpeed = speed; }
-
-    // Helper methods for collision detection
     float getLeft() const;
     float getRight() const;
-    float getTop() const; 
+    float getTop() const;
     float getBottom() const;
-    
-    // Set sprite dimensions for collision detection
     void setDimensions(float width, float height);
-    
-    // Check collision with another entity
-    bool collidesWith(float otherLeft, float otherTop, 
-                     float otherWidth, float otherHeight) const;
-
-    // Animation methods
+    bool collidesWith(float otherLeft, float otherTop,
+        float otherWidth, float otherHeight) const;
     void updateAnimation(float deltaTime);
     int getAnimationFrame() const { return _animationFrame; }
     bool isAnimating() const { return _isMoving && _animationEnabled; }
     void setAnimationEnabled(bool enabled) { _animationEnabled = enabled; }
-    void resetAnimation() { _animationFrame = 0; _animationTimer = 0.0f; }
+    void resetAnimation() {
+        _animationFrame = 0;
+        _animationTimer = 0.0f;
+    }
     std::string getDirectionalSprite() const;
-    
-    // Add helper method to force animation update on direction change
     void updateDirectionAndAnimation(Direction newDirection) {
         if (_currentDirection != newDirection) {
             _currentDirection = newDirection;
-            // Reset animation to ensure we show frame 1 immediately upon direction change
-            _animationFrame = 1;  // Start with mouth open in new direction
+            _animationFrame = 1;
             _animationTimer = 0.0f;
         }
     }
@@ -132,7 +122,7 @@ class PacmanComponent : public Arcade::IComponent {
     float _visualY;      // Current visual y position
     float _targetX;      // Target x position for interpolation
     float _targetY;      // Target y position for interpolation
-    float _movementSpeed; // Speed of movement interpolation
+    float _movementSpeed;  // Speed of movement interpolation
     bool _isMoving;      // Whether entity is currently moving between cells
 
     // Sprite dimensions for collision detection
@@ -143,8 +133,8 @@ class PacmanComponent : public Arcade::IComponent {
     int _animationFrame = 0;
     int _animationFrameCount = 4;  // Number of animation frames
     float _animationTimer = 0.0f;  // Timer for animation
-    float _animationSpeed = 0.15f; // Slower animation (was 0.12f) for more visible chomping
-    bool _animationEnabled = true; // Whether animation is enabled
+    float _animationSpeed = 0.15f;  // Speed of animation
+    bool _animationEnabled = true;  // Whether animation is enabled
 };
 
 }  // namespace PacMan

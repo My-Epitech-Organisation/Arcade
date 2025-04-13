@@ -39,20 +39,19 @@ _drawableAssets(drawableAssets) {
 }
 
 EventSubSystem::~EventSubSystem() {
-    std::cerr << "EventSubSystem: Destructor called, unsubscribing events" << std::endl;
-    
-    // Safely unregister all event handlers
     if (_eventManager) {
         try {
             _eventManager->unsubscribeAll();
         } catch (const std::exception& e) {
-            std::cerr << "Error unsubscribing events in ~EventSubSystem(): " << e.what() << std::endl;
+            std::cerr
+                << "Error unsubscribing events in ~EventSubSystem(): "
+                << e.what() << std::endl;
         } catch (...) {
-            std::cerr << "Unknown error unsubscribing events in ~EventSubSystem()" << std::endl;
+            std::cerr
+                << "Unknown error unsubscribing events in ~EventSubSystem()"
+                << std::endl;
         }
     }
-    
-    // Explicitly clear member pointers to prevent further use
     _componentManager.reset();
     _entityManager.reset();
     _eventManager.reset();
@@ -60,11 +59,14 @@ EventSubSystem::~EventSubSystem() {
 
 void EventSubSystem::subscribeToEvents() {
     if (!_eventManager) {
-        std::cerr << "EventSubSystem: Cannot subscribe, event manager is null" << std::endl;
+        std::cerr
+            << "EventSubSystem: Cannot subscribe, event manager is null"
+            << std::endl;
         return;
     }
     try {
-        Arcade::KeyEvent upKey(Arcade::Keys::UP, Arcade::EventType::KEY_PRESSED);
+        Arcade::KeyEvent upKey(Arcade::Keys::UP,
+            Arcade::EventType::KEY_PRESSED);
         Arcade::KeyEvent downKey(Arcade::Keys::DOWN,
             Arcade::EventType::KEY_PRESSED);
         Arcade::KeyEvent leftKey(Arcade::Keys::LEFT,
@@ -194,8 +196,6 @@ void EventSubSystem::handleKeyRight() {
 }
 
 void EventSubSystem::handleKeyEsc() {
-    // No-op implementation - ESC handling is now managed by GameLoop
-    std::cout << "PacMan ESC handler is disabled - using GameLoop handler instead" << std::endl;
 }
 
 void EventSubSystem::handleKeyR() {
@@ -217,10 +217,6 @@ void EventSubSystem::handleKeyR() {
             static_cast<ComponentType>(1000)));
 
     if (!gridComp) return;
-    
-    std::cout << "Handling R key press - FULL GAME RESET (including score)" << std::endl;
-    
-    // First explicitly reset score for pacman entity
     for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
         if (name == "Pacman") {
             auto pacmanComp = std::dynamic_pointer_cast<PacmanComponent>(
@@ -228,35 +224,26 @@ void EventSubSystem::handleKeyR() {
                     static_cast<ComponentType>(1001)));
 
             if (pacmanComp) {
-                std::cout << "R key: Explicitly resetting score from " << pacmanComp->getScore() << " to 0" << std::endl;
                 pacmanComp->setScore(0);
                 pacmanComp->setLives(3);
             }
             break;
         }
     }
-
-    // Then do the full game reset via GameStateManager
     auto gameStateManager = std::make_shared<GameStateManager>(
         _componentManager, _entityManager, _drawableAssets);
-    
-    // Use resetEntireGame for full reset when pressing R
     gameStateManager->resetEntireGame();
 }
 
 bool EventSubSystem::areEventsSubscribed() const {
     try {
-        // Use isKeyPressed instead of isEventSubscribed which doesn't exist
         bool upSubscribed = _eventManager->isKeyPressed(Arcade::Keys::UP);
         bool downSubscribed = _eventManager->isKeyPressed(Arcade::Keys::DOWN);
         bool leftSubscribed = _eventManager->isKeyPressed(Arcade::Keys::LEFT);
         bool rightSubscribed = _eventManager->isKeyPressed(Arcade::Keys::RIGHT);
         bool rSubscribed = _eventManager->isKeyPressed(Arcade::Keys::R);
         bool escSubscribed = _eventManager->isKeyPressed(Arcade::Keys::ESC);
-            
-        // If any key is detected as pressed, we consider it subscribed
-        // This isn't perfect but should work as a proxy check
-        return upSubscribed || downSubscribed || leftSubscribed || 
+        return upSubscribed || downSubscribed || leftSubscribed ||
                rightSubscribed || rSubscribed || escSubscribed;
     } catch (...) {
         return false;
@@ -264,48 +251,30 @@ bool EventSubSystem::areEventsSubscribed() const {
 }
 
 void EventSubSystem::update() {
-    // Always print a message on first update
     static bool firstUpdate = true;
     if (firstUpdate) {
         std::cerr << "EventSubSystem: First update executed" << std::endl;
-        // IMPORTANT: Log event registration status on first update
         firstUpdate = false;
     }
-    
-    // Check for subscriptions less frequently - only check every 30 frames
     static int checkCounter = 0;
     checkCounter = (checkCounter + 1) % 30;
-    
     if (checkCounter == 0) {
-        // IMPORTANT: Use a separate flag to track if we need to resubscribe
         bool needResubscribe = false;
-        
         try {
-            // Only spot check one key - if UP works, assume the others do too
             bool upSubscribed = _eventManager->isKeyPressed(Arcade::Keys::UP);
             if (!upSubscribed) {
                 needResubscribe = true;
-                std::cerr << "EventSubSystem: UP key not subscribed, needs resubscription" << std::endl;
             }
         } catch (const std::exception& e) {
             needResubscribe = true;
-            std::cerr << "EventSubSystem: Exception checking subscriptions: " << e.what() << std::endl;
         } catch (...) {
             needResubscribe = true;
-            std::cerr << "EventSubSystem: Unknown exception checking subscriptions" << std::endl;
         }
-        
-        // If we determined subscriptions need refreshing
+
         if (needResubscribe) {
-            std::cout << "Resubscribing PacMan events due to lost subscriptions" << std::endl << std::flush;
-            std::cerr << "Resubscribing PacMan events due to lost subscriptions" << std::endl;
-            
-            // First subscribe to ESC key with GameLoop's handler
             try {
                 subscribeToEvents();
-                std::cerr << "EventSubSystem: Events resubscribed successfully" << std::endl;
             } catch (const std::exception& e) {
-                std::cerr << "EventSubSystem: Error resubscribing events: " << e.what() << std::endl;
             }
         }
     }

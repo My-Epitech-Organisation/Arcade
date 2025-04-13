@@ -23,17 +23,18 @@ namespace PacMan {
 
 class GameStateManager {
  public:
-    GameStateManager(std::shared_ptr<Arcade::IComponentManager> componentManager,
-                    std::shared_ptr<Arcade::IEntityManager> entityManager,
-                    const std::map<std::string, DrawableComponent>& assets);
-    
+    GameStateManager(
+      std::shared_ptr<Arcade::IComponentManager> componentManager,
+      std::shared_ptr<Arcade::IEntityManager> entityManager,
+      const std::map<std::string, DrawableComponent>& assets);
     void checkWinCondition(std::shared_ptr<GridComponent> grid);
     void reloadCurrentMap();
-    void resetPositions(); // Method for resetting positions after life loss
-    void resetEntireGame(); // New method for complete game reset
+    void resetPositions();
+    void resetEntireGame();
     void increaseGameSpeed();
-    std::shared_ptr<IDrawableComponent> getDrawableAsset(const std::string& key) const;
-    
+    std::shared_ptr<IDrawableComponent>
+      getDrawableAsset(const std::string& key) const;
+
  private:
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
     std::shared_ptr<Arcade::IEntityManager> _entityManager;

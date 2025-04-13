@@ -20,10 +20,10 @@ namespace Arcade {
 namespace PacMan {
 
 enum class GhostType {
-    RED,   // Blinky - pursues PacMan
-    PINK,  // Pinky - ambushes in front of PacMan
-    BLUE,  // Inky - unpredictable
-    ORANGE  // Clyde - random movement
+    RED,
+    PINK,
+    BLUE,
+    ORANGE
 };
 
 enum class GhostState {
@@ -44,7 +44,7 @@ class GhostComponent : public Arcade::IComponent {
     ~GhostComponent() = default;
 
     ComponentType getType() const override {
-        return static_cast<ComponentType>(1002);  // Custom component type
+        return static_cast<ComponentType>(1002);
     }
 
     GhostType getGhostType() const { return _ghostType; }
@@ -89,41 +89,30 @@ class GhostComponent : public Arcade::IComponent {
         _movementThreshold = threshold; }
     void updateReleaseTimer(float deltaTime);
     void resetReleaseTimer() { _releaseTimer = 0.0f; }
-
-    // Smooth movement additions
     float getVisualX() const { return _visualX; }
     float getVisualY() const { return _visualY; }
-    void setVisualPosition(float x, float y) { _visualX = x; _visualY = y; }
-    
-    // Renamed to avoid method name collision
+    void setVisualPosition(float x, float y) {
+        _visualX = x;
+        _visualY = y;
+    }
     float getVisualTargetX() const { return _targetVisualX; }
     float getVisualTargetY() const { return _targetVisualY; }
-    void setTargetPosition(float x, float y) { _targetVisualX = x; _targetVisualY = y; }
-    
+    void setTargetPosition(float x, float y) {
+        _targetVisualX = x;
+        _targetVisualY = y;
+    }
     bool isMoving() const { return _isMoving; }
     void setMoving(bool isMoving) { _isMoving = isMoving; }
-    
-    // Update visual position based on interpolation
     void updateVisualPosition(float deltaTime);
-    
-    // Check if movement animation is complete
     bool isAtTarget() const;
-    
-    // Get and set movement speed
     float getMovementSpeed() const { return _movementSpeed; }
     void setMovementSpeed(float speed) { _movementSpeed = speed; }
-
-    // Helper methods for collision detection
     float getLeft() const;
     float getRight() const;
     float getTop() const;
     float getBottom() const;
-    
-    // Set sprite dimensions for collision detection
     void setDimensions(float width, float height);
-    
-    // Check collision with another entity
-    bool collidesWith(float otherLeft, float otherTop, 
+    bool collidesWith(float otherLeft, float otherTop,
                      float otherWidth, float otherHeight) const;
 
  private:

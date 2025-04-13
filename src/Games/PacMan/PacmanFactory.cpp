@@ -62,11 +62,11 @@ size_t gridX, size_t gridY) {
     auto pacmanComponent = std::make_shared<PacmanComponent>();
     pacmanComponent->setName("Pacman");
     pacmanComponent->setGridPosition(gridX, gridY);
-    pacmanComponent->setVisualPosition(x, y); // Initialize visual position
-    pacmanComponent->setTargetPosition(x, y); // Initialize target position
+    pacmanComponent->setVisualPosition(x, y);
+    pacmanComponent->setTargetPosition(x, y);
     pacmanComponent->setCurrentDirection(Direction::NONE);
-    pacmanComponent->resetAnimation(); // Initialize animation state
-    pacmanComponent->setAnimationEnabled(true); // Enable animation
+    pacmanComponent->resetAnimation();
+    pacmanComponent->setAnimationEnabled(true);
     _componentManager->registerComponent(pacmanEntity, pacmanComponent);
     return pacmanEntity;
 }
@@ -110,8 +110,8 @@ float y, size_t gridX, size_t gridY, GhostType type) {
     auto ghostComponent = std::make_shared<GhostComponent>(type);
     ghostComponent->setName(ghostName);
     ghostComponent->setGridPosition(gridX, gridY);
-    ghostComponent->setVisualPosition(x, y); // Initialize visual position
-    ghostComponent->setTargetPosition(x, y); // Initialize target position
+    ghostComponent->setVisualPosition(x, y);
+    ghostComponent->setTargetPosition(x, y);
     ghostComponent->setState(GhostState::NORMAL);
     _componentManager->registerComponent(ghostEntity, ghostComponent);
 
@@ -231,19 +231,12 @@ grid, float cellSize, std::shared_ptr<Arcade::IEntity> gridEntity) {
     for (size_t y = 0; y < grid->getHeight(); ++y) {
         for (size_t x = 0; x < grid->getWidth(); ++x) {
             CellType cellType = grid->getCellType(x, y);
-            if (cellType == CellType::FOOD || cellType == CellType::POWER_PILL) {
+            if (cellType == CellType::FOOD
+                || cellType == CellType::POWER_PILL) {
                 float xPos = startX + (x * cellSize);
                 float yPos = startY + (y * cellSize);
-                
-                // Explicitly set the correct food type based on cell type
-                FoodType foodType = (cellType == CellType::POWER_PILL) ? 
-                                   FoodType::POWER_PILL : FoodType::NORMAL_DOT;
-                
-                // Debug output for power pills
-                if (foodType == FoodType::POWER_PILL) {
-                    std::cout << "Creating POWER PILL at grid position: " << x << "," << y << std::endl;
-                }
-                
+                FoodType foodType = (cellType == CellType::POWER_PILL) ?
+                 FoodType::POWER_PILL : FoodType::NORMAL_DOT;
                 auto foodEntity = createFood(xPos, yPos, x, y, foodType);
                 grid->setEntityAtCell(x, y, foodEntity);
             }

@@ -105,7 +105,6 @@ void GridComponent::loadDefaultMap() {
     _entityGrid.clear();
     _foodCount = 0;
     _totalFoodCount = 0;
-    
     _height = map.size();
     _width = expected_width;
     _grid.resize(_height, std::vector<CellType>(_width, CellType::EMPTY));
@@ -141,28 +140,18 @@ void GridComponent::loadDefaultMap() {
             }
         }
     }
-    
-    // Debug output
-    std::cout << "Map loaded with " << _foodCount << " food items" << std::endl;
 }
 
-void GridComponent::decrementFoodCount() { 
+void GridComponent::decrementFoodCount() {
     if (_foodCount > 0) {
         _foodCount--;
-        
-        // Debug output
-        if (_foodCount <= 5) {
-            std::cout << "Food count decreased to " << _foodCount << std::endl;
-        }
     }
 }
 
-void GridComponent::setExitToMenu(bool exit) { 
-    _exitToMenu = exit; 
-    // When setting exitToMenu flag, also set gameOver for consistency
+void GridComponent::setExitToMenu(bool exit) {
+    _exitToMenu = exit;
     if (exit) {
         _gameOver = true;
-        std::cerr << "GridComponent: Exit to menu requested, game over also set" << std::endl;
     }
 }
 

@@ -19,16 +19,14 @@ namespace PacMan {
 GhostComponent::GhostComponent(GhostType type)
 : _ghostType(type), _state(GhostState::NORMAL),
 _currentDirection(Direction::NONE), _gridX(0), _gridY(0),
-_stateTimer(0), _scaredDuration(SCARED_DURATION), // Make sure this is explicitly set
+_stateTimer(0), _scaredDuration(SCARED_DURATION),
 _canMove(true), _movementTimer(0), _movementCooldown(0.3f),
 _mode(GhostMode::SCATTER), _homeCornerX(0), _homeCornerY(0),
-_targetX(0), _targetY(0), _modeTimer(0.0f), _movementThreshold(0.08f), // Decreased for faster movement
+_targetX(0), _targetY(0), _modeTimer(0.0f), _movementThreshold(0.08f),
 _releaseTimer(0.0f),
-// Initialize smooth movement variables with much higher speed
 _visualX(0.0f), _visualY(0.0f), _targetVisualX(0.0f), _targetVisualY(0.0f),
-// Use slower movement speed when scared to make it more noticeable
-_movementSpeed(22.0f), _isMoving(false), // Increased for faster movement
-_width(32.0f), _height(32.0f) { // Add dimensions for collision detection
+_movementSpeed(22.0f), _isMoving(false),
+_width(32.0f), _height(32.0f) {
     switch (type) {
         case GhostType::RED:
             _homeCornerX = 25;
@@ -47,10 +45,6 @@ _width(32.0f), _height(32.0f) { // Add dimensions for collision detection
             _homeCornerY = 30;
             break;
     }
-    
-    // Debug output to confirm constructor settings
-    std::cout << "Ghost " << static_cast<int>(_ghostType) << " created with scared duration: " 
-              << _scaredDuration << "s" << std::endl;
 }
 
 Direction GhostComponent::getOppositeDirection() const {
@@ -100,17 +94,7 @@ GhostComponent* self) {
 void GhostComponent::updateStateTimer(float deltaTime) {
     if (_state == GhostState::SCARED) {
         _stateTimer += deltaTime;
-        
-        // More detailed debug output every second
-        if (static_cast<int>(_stateTimer) != static_cast<int>(_stateTimer - deltaTime) && 
-            static_cast<int>(_stateTimer) % 3 == 0) {
-            std::cout << "Ghost " << _name << " scared state timer: " 
-                      << _stateTimer << "/" << _scaredDuration << "s" << std::endl;
-        }
-        
         if (_stateTimer >= _scaredDuration) {
-            std::cout << "Ghost " << _name << " returning to NORMAL state from SCARED after "
-                      << _stateTimer << "s" << std::endl;
             _state = GhostState::NORMAL;
             _stateTimer = 0;
         }
@@ -119,12 +103,9 @@ void GhostComponent::updateStateTimer(float deltaTime) {
 
 void GhostComponent::updateMovementTimer(float deltaTime) {
     _movementTimer += deltaTime;
-    
-    // Add a safety mechanism to prevent getting stuck
     static float stuckTimer = 0.0f;
     if (!_canMove && !_isMoving) {
         stuckTimer += deltaTime;
-        // If stuck for more than 0.5 seconds, force enable movement
         if (stuckTimer > 0.5f) {
             _canMove = true;
             stuckTimer = 0.0f;
@@ -133,7 +114,6 @@ void GhostComponent::updateMovementTimer(float deltaTime) {
     } else {
         stuckTimer = 0.0f;
     }
-    
     if (_movementTimer >= _movementThreshold) {
         _canMove = true;
         _movementTimer = 0;
@@ -162,35 +142,23 @@ void GhostComponent::chooseNextDirection() {
 void GhostComponent::updateVisualPosition(float deltaTime) {
     if (!_isMoving)
         return;
-        
-    // Calculate the direction vector to the target
     float dx = _targetVisualX - _visualX;
     float dy = _targetVisualY - _visualY;
-    
-    // Calculate the distance to the target
     float distance = std::sqrt(dx*dx + dy*dy);
-    
-    // If we're close enough to the target, snap to it and enable movement again
     if (distance < 0.5f) {
         _visualX = _targetVisualX;
         _visualY = _targetVisualY;
         _isMoving = false;
-        _canMove = true;  // Explicitly enable movement when reaching target
-        return;
+        _canMove = true;
     }
-    
-    // Normalize the direction vector
     float invDistance = 1.0f / distance;
     dx *= invDistance;
     dy *= invDistance;
-    
-    // Update the position based on speed and delta time
     _visualX += dx * _movementSpeed * deltaTime;
     _visualY += dy * _movementSpeed * deltaTime;
 }
 
 bool GhostComponent::isAtTarget() const {
-    // Consider entity at target if visual position is very close to target position
     float dx = _targetVisualX - _visualX;
     float dy = _targetVisualY - _visualY;
     return (dx*dx + dy*dy < 0.25f);
@@ -209,11 +177,11 @@ void GhostComponent::setDimensions(float width, float height) {
 }
 
 // Check for bounding box collision with another entity
-bool GhostComponent::collidesWith(float otherLeft, float otherTop, 
-                                float otherWidth, float otherHeight) const {
-    return !(getRight() < otherLeft || 
+bool GhostComponent::collidesWith(float otherLeft, float otherTop,
+float otherWidth, float otherHeight) const {
+    return !(getRight() < otherLeft ||
             getLeft() > otherLeft + otherWidth ||
-            getBottom() < otherTop || 
+            getBottom() < otherTop ||
             getTop() > otherTop + otherHeight);
 }
 

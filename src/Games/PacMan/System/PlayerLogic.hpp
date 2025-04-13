@@ -27,15 +27,12 @@ class PlayerLogic {
     PlayerLogic(std::shared_ptr<Arcade::IComponentManager> componentManager,
                std::shared_ptr<Arcade::IEntityManager> entityManager,
                const std::map<std::string, DrawableComponent>& assets);
-    
-    void movePacman(std::shared_ptr<PacmanComponent> pacman, 
-                   std::shared_ptr<GridComponent> grid, 
+    void movePacman(std::shared_ptr<PacmanComponent> pacman,
+                   std::shared_ptr<GridComponent> grid,
                    std::shared_ptr<IEntity> pacmanEntity,
                    std::shared_ptr<IEntity> gridEntity);
-                   
     void tryChangePacmanDirection(std::shared_ptr<PacmanComponent> pacman,
                                 std::shared_ptr<GridComponent> grid);
-                                
     bool canMoveInDirection(Direction dir, size_t x, size_t y,
                           std::shared_ptr<GridComponent> grid);
 

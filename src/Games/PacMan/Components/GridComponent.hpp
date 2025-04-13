@@ -50,7 +50,7 @@ class GridComponent : public Arcade::IComponent {
     size_t getFoodCount() const { return _foodCount; }
     size_t getTotalFoodCount() const { return _totalFoodCount; }
     void setFoodCount(size_t count) { _foodCount = count; }
-    void decrementFoodCount(); // Remove inline implementation, just declare the method
+    void decrementFoodCount();
     void setGameOver(bool state) { _gameOver = state; }
     bool isGameOver() const { return _gameOver; }
     void setGameWon(bool state) { _gameWon = state; }
@@ -60,9 +60,7 @@ class GridComponent : public Arcade::IComponent {
     float getCellSize() const { return _cellSize; }
     int getLevel() const {return _level;}
     void incrementLevel() { _level++; }
-    
-    // Add new method to support ESC to menu 
-    void setExitToMenu(bool exit); // Remove implementation here, just declare
+    void setExitToMenu(bool exit);
     bool isExitToMenu() const { return _exitToMenu; }
 
  private:
@@ -77,9 +75,8 @@ class GridComponent : public Arcade::IComponent {
     std::vector<std::vector<std::shared_ptr<Arcade::IEntity>>> _entityGrid;
     float _cellSize;
     int _level = 1;
-    bool _exitToMenu = false; // New flag to distinguish menu exit from game over
+    bool _exitToMenu = false;
 };
-
 }  // namespace PacMan
 }  // namespace Arcade
 

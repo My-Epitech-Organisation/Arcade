@@ -321,23 +321,18 @@ void EventSubSystem::handleLeftClick() {
     // Check if board is in game over state
     auto boardComp = _componentManager->getComponentByType(boardEntity,
         ComponentType::BOARD);
-    auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>(boardComp);
-    
+    auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>
+        (boardComp);
     if (!board) return;
-    
-    // If game is over, clicking anywhere should restart the game
     if (board->isGameOver()) {
-        handleKeyR();  // Use existing reset functionality
+        handleKeyR();
         return;
     }
-    
-    // Proceed with normal click handling
     auto posComp = _componentManager->getComponentByType(boardEntity,
         ComponentType::POSITION);
     auto boardPos = std::dynamic_pointer_cast<PositionComponent>(posComp);
 
     if (!boardPos) return;
-    
     size_t boardWidth = board->getWidth();
     size_t boardHeight = board->getHeight();
 
@@ -370,12 +365,11 @@ void EventSubSystem::handleLeftClick() {
         }
 
         cell->setState(Arcade::Minesweeper::Cell::REVEALED);
-
-        // IMPORTANT: Remove any existing drawable component before adding a new one
-        auto existingDrawable = _componentManager->getComponentByType(cellEntity,
+        auto existingDrawable = _componentManager->getComponentByType
+            (cellEntity,
             ComponentType::DRAWABLE);
         if (existingDrawable) {
-            _componentManager->unregisterComponent(cellEntity, 
+            _componentManager->unregisterComponent(cellEntity,
                 typeid(*existingDrawable).name());
         }
 
@@ -485,12 +479,11 @@ void EventSubSystem::handleRightClick() {
             ComponentType::CUSTOM_BASE);
         auto gameStats = std::dynamic_pointer_cast
             <Arcade::Minesweeper::GameStats> (statsComp);
-
-        // IMPORTANT: Remove any existing drawable component first
-        auto existingDrawable = _componentManager->getComponentByType(cellEntity,
+        auto existingDrawable = _componentManager->getComponentByType
+            (cellEntity,
             ComponentType::DRAWABLE);
         if (existingDrawable) {
-            _componentManager->unregisterComponent(cellEntity, 
+            _componentManager->unregisterComponent(cellEntity,
                 typeid(*existingDrawable).name());
         }
 
@@ -591,7 +584,6 @@ void EventSubSystem::handleKeyR() {
 void EventSubSystem::update() {
     // Check if we need to resubscribe events
     static bool wasGameOver = false;
-    
     std::shared_ptr<Arcade::IEntity> boardEntity = nullptr;
     for (const auto& entity : _entityManager->getEntitiesMap()) {
         if (entity.second == "Board") {
@@ -599,23 +591,20 @@ void EventSubSystem::update() {
             break;
         }
     }
-    
     if (boardEntity) {
         auto boardComp = _componentManager->getComponentByType(boardEntity,
             ComponentType::BOARD);
-        auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>(boardComp);
-        
+        auto board = std::dynamic_pointer_cast<Arcade::Minesweeper::Board>
+            (boardComp);
         if (board) {
             bool isGameOver = board->isGameOver();
-            
-            // If game state changed, ensure events are properly subscribed
             if (wasGameOver != isGameOver) {
                 wasGameOver = isGameOver;
-                // Keep subscriptions active even in game over state
                 if (isGameOver) {
-                    // When game ends, ensure R key is still subscribed
-                    Arcade::KeyEvent rKey(Arcade::Keys::R, Arcade::EventType::KEY_PRESSED);
-                    _eventManager->subscribe(rKey, [this](const IEvent& event) {
+                    Arcade::KeyEvent rKey(Arcade::Keys::R,
+                        Arcade::EventType::KEY_PRESSED);
+                        _eventManager->subscribe(rKey,
+                        [this](const IEvent& event) {
                         (void)event;
                         handleKeyR();
                     });

@@ -210,15 +210,11 @@ void UISystem::updateUITexts() {
 
 void UISystem::updateLivesIcons() {
     if (!_cachedPacmanComponent) return;
-
-    // Only update if lives have changed
     static int lastLives = -1;
     int lives = _cachedPacmanComponent->getLives();
-    
     if (lastLives == lives) {
         return;
     }
-    
     lastLives = lives;
 
     for (size_t i = 0; i < _livesIconEntities.size(); i++) {
@@ -233,15 +229,11 @@ void UISystem::updateLivesIcons() {
 }
 
 void UISystem::update() {
-    // Only update UI every few frames to reduce overhead
     static int frameCounter = 0;
-    frameCounter = (frameCounter + 1) % 5; // Update UI only every 5 frames
-    
+    frameCounter = (frameCounter + 1) % 5;
     if (frameCounter != 0) {
         return;
     }
-    
-    // Cache Pacman entity lookup
     if (!_cachedPacmanEntity) {
         for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
             if (name == "Pacman") {
@@ -250,8 +242,6 @@ void UISystem::update() {
             }
         }
     }
-    
-    // Cache Grid entity lookup
     if (!_cachedGridEntity) {
         for (const auto& [entity, name] : _entityManager->getEntitiesMap()) {
             if (name == "Grid") {
@@ -260,8 +250,6 @@ void UISystem::update() {
             }
         }
     }
-    
-    // Check if entities are still valid
     if (!_cachedPacmanEntity || !_cachedGridEntity) {
         return;
     }
@@ -272,14 +260,11 @@ void UISystem::update() {
             _componentManager->getComponentByType(_cachedPacmanEntity,
                 static_cast<ComponentType>(1001)));
     }
-    
     if (!_cachedGridComponent) {
         _cachedGridComponent = std::dynamic_pointer_cast<GridComponent>(
             _componentManager->getComponentByType(_cachedGridEntity,
                 static_cast<ComponentType>(1000)));
     }
-    
-    // Early exit if components aren't available
     if (!_cachedPacmanComponent || !_cachedGridComponent) {
         return;
     }
@@ -292,18 +277,13 @@ void UISystem::update() {
 
 void UISystem::updateGameOverState() {
     if (!_cachedGridComponent) return;
-
-    // Only update if game state has changed
     static bool lastGameOver = false;
     static bool lastGameWon = false;
-    
     bool gameOver = _cachedGridComponent->isGameOver();
     bool gameWon = _cachedGridComponent->isGameWon();
-    
     if (lastGameOver == gameOver && lastGameWon == gameWon) {
         return;
     }
-    
     lastGameOver = gameOver;
     lastGameWon = gameWon;
 

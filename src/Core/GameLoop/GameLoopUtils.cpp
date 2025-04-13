@@ -32,12 +32,6 @@ void GameLoop:: subscribeEvents() {
 }
 
 void GameLoop::logEventSubscriptionStatus() {
-    std::cout << "GameLoop: Event subscription verification:" << std::endl;
-    std::cout << "  G Key: " << (_eventManager->isKeyPressed(Keys::G) ? "Subscribed" : "Not subscribed") << std::endl;
-    std::cout << "  H Key: " << (_eventManager->isKeyPressed(Keys::H) ? "Subscribed" : "Not subscribed") << std::endl;
-    std::cout << "  N Key: " << (_eventManager->isKeyPressed(Keys::N) ? "Subscribed" : "Not subscribed") << std::endl;
-    std::cout << "  P Key: " << (_eventManager->isKeyPressed(Keys::P) ? "Subscribed" : "Not subscribed") << std::endl;
-    std::cout << "  ESC Key: " << (_eventManager->isKeyPressed(Keys::ESC) ? "Subscribed" : "Not subscribed") << std::endl;
 }
 
 void GameLoop::subscribeGKeyEvent() {
@@ -45,7 +39,6 @@ void GameLoop::subscribeGKeyEvent() {
     _eventManager->subscribe(gKeyEvent, [this](const IEvent& event) {
         (void)event;
         if (_state == GAME_PLAYING && _gameLibs.size() > 1 && !_gameSwitch) {
-            std::cout << "GameLoop: G key pressed - switching to next game" << std::endl;
             _selectedGame = (_selectedGame + 1) % _gameLibs.size();
             _gameSwitch = true;
         }
@@ -236,61 +229,6 @@ void GameLoop::subscribeEnterEvent() {
         }
     });
 }
-
-// void GameLoop::subscribeEscEvent() {
-//     // Prevent recursive subscription - only run if we need to
-//     static bool isSubscribing = false;
-//     if (isSubscribing) {
-//         return;
-//     }
-//     isSubscribing = true;
-    
-//     // Log only once, not repeatedly
-//     static bool firstRun = true;
-//     if (firstRun) {
-//         std::cout << "GameLoop: Subscribing ESC key for menu access" << std::endl;
-//         firstRun = false;
-//     }
-    
-//     KeyEvent escEvent(Arcade::Keys::ESC, Arcade::EventType::KEY_PRESSED);
-    
-//     // Use a unique handler for ESC key with immediate state change
-//     _eventManager->subscribe(escEvent, [this](const IEvent& event) {
-//         (void)event;
-        
-//         // Only handle ESC if we're in game playing state
-//         if (_state == GAME_PLAYING) {
-//             std::cout << "GameLoop: ESC key pressed - immediately returning to menu" << std::endl;
-            
-//             // Force immediate state change
-//             _state = MAIN_MENU;
-            
-//             try {
-//                 // Stop the current game safely
-//                 if (_currentGame) {
-//                     _currentGame->stop();
-//                 }
-//             } catch (const std::exception& e) {
-//                 std::cerr << "Error stopping game: " << e.what() << std::endl;
-//             }
-            
-//             // Force full cleanup
-//             try {
-//                 _eventManager->unsubscribeAll();
-//                 _needComponentRefresh = true;
-                
-//                 // Re-subscribe essential events
-//                 subscribeEvents();
-//                 subscribeNavEvents();
-//                 subscribeMouseEvents();
-//             } catch (const std::exception& e) {
-//                 std::cerr << "Error during ESC cleanup: " << e.what() << std::endl;
-//             }
-//         }
-//     });
-    
-//     isSubscribing = false;
-// }
 
 void GameLoop::subscribeMouseEvents() {
     subscribeMouseMoveEvent();

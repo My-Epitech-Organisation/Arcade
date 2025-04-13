@@ -66,15 +66,12 @@ ComponentType type) {
 std::vector<std::shared_ptr<IComponent>>
 ComponentManager::getAllComponentsByType(ComponentType type) {
     std::vector<std::shared_ptr<IComponent>> result;
-    
-    // Search through all entities and their components
     for (const auto& [entity, componentMap] : _componentsByType) {
         auto it = componentMap.find(type);
         if (it != componentMap.end() && it->second) {
             result.push_back(it->second);
         }
     }
-    
     return result;
 }
 
