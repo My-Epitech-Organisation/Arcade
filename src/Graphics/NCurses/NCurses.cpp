@@ -143,7 +143,9 @@ void NCursesModule::drawEntity(int x, int y, char symbol) {
 void NCursesModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
     if (!drawable.isVisible)
         return;
-    if (drawable.text.size() == 1) {
+    if (drawable.shouldRenderAsText()) {
+        drawText(drawable.text, drawable.posX, drawable.posY, drawable.color);
+    } else if (drawable.shouldRenderAsCharacter()) {
         drawEntity(drawable.posX, drawable.posY, drawable.character);
     }
 }
