@@ -15,7 +15,7 @@ env:
   MIRROR_URL: https://github.com/EpitechPromo2028/B-OOP-400-NAN-4-1-arcade-samuel.tesson.git
   GITHUB_URL: git@github.com:EpitechPromo2028/B-OOP-400-NAN-4-1-arcade-samuel.tesson.git
   EXECUTABLE: arcade
-  LIBRARY: "arcade_ncurses.so,arcade_sfml.so,arcade_sdl2.so,arcade_minesweeper.so,arcade_pacman.so,arcade_allegro5.so,arcade_game1.so,arcade_game2.so,arcade_game3.so"
+  LIBRARY: "arcade_ncurses.so,arcade_sfml.so,arcade_sdl2.so,arcade_minesweeper.so,arcade_pacman.so,arcade_allegro5.so"
 
 jobs:
   cancel-if-mirror:
