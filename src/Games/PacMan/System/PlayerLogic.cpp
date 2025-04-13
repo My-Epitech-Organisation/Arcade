@@ -130,6 +130,23 @@ std::shared_ptr<IEntity> gridEntity) {
     }
 }
 
+void PlayerLogic::tryChangePacmanDirection(
+    std::shared_ptr<PacmanComponent> pacman,
+std::shared_ptr<GridComponent> grid) {
+    if (!pacman || !grid)
+        return;
+    if (pacman->getNextDirection() != Direction::NONE) {
+        Direction nextDir = pacman->getNextDirection();
+        size_t x = pacman->getGridX();
+        size_t y = pacman->getGridY();
+
+        if (canMoveInDirection(nextDir, x, y, grid)) {
+            pacman->updateDirectionAndAnimation(nextDir);
+            pacman->setNextDirection(Direction::NONE);
+        }
+    }
+}
+
 bool PlayerLogic::canMoveInDirection(Direction dir, size_t x, size_t y,
 std::shared_ptr<GridComponent> grid) {
     if (!grid) return false;

@@ -47,6 +47,7 @@ _gameSwitch(false),
 _needComponentRefresh(true),
 _lastFrameTime(std::chrono::high_resolution_clock::now()),
 _lastPerformanceReport(std::chrono::high_resolution_clock::now()),
+_lastKeyNavigation(std::chrono::high_resolution_clock::now()), // Add this line
 _frameCount(0),
 _totalFrameTime(0) {
     _eventManager = std::make_shared<EventManager>();
@@ -186,6 +187,11 @@ void GameLoop::displayGameSelection() {
 }
 
 void GameLoop::displayGraphicsSelection() {
+    // First, ensure the selection is within bounds
+    if (!_graphicsLibs.empty() && _selectedGraphics >= _graphicsLibs.size()) {
+        _selectedGraphics = _graphicsLibs.size() - 1;
+    }
+    
     _menu->displayGraphicsSelection(_graphicsLibs, _selectedGraphics);
 }
 void GameLoop::updateGame() {
@@ -562,6 +568,8 @@ void GameLoop::subscribeEscEvent() {
     });
 }
 
+
+
 bool _needMenuRefresh = false;
 
 void GameLoop::run() {
@@ -574,12 +582,12 @@ void GameLoop::run() {
     _state = MAIN_MENU;
     auto lastFrameTime = std::chrono::high_resolution_clock::now();
     auto running = std::make_shared<bool>(true);
+    _lastGraphicsSwitch = std::chrono::high_resolution_clock::now();
     while (*running) {
         auto currentTime = std::chrono::high_resolution_clock::now();
         float deltaTime = std::chrono::duration<float>(currentTime
             - lastFrameTime).count();
         lastFrameTime = currentTime;
-
 
         // Process events
         handleEvents(running);
