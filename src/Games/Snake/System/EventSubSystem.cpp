@@ -12,10 +12,10 @@
 #include <map>
 #include "Games/Snake/System/EventSubSystem.hpp"
 #include "Games/Snake/Components/GridComponent.hpp"
+#include "Games/Snake/System/GameLogic.hpp"
 #include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
 #include "Shared/Models/EventType.hpp"
 #include "Shared/Models/KeysType.hpp"
-#include "Games/Snake/System/GameLogic.hpp"
 
 namespace Arcade {
 namespace Snake {
@@ -24,9 +24,10 @@ EventSubSystem::EventSubSystem(
 std::shared_ptr<IComponentManager> componentManager,
 std::shared_ptr<IEntityManager> entityManager,
 std::shared_ptr<IEventManager> eventManager,
-const std::map<std::string, DrawableComponent>& assets)
+const std::map<std::string, DrawableComponent>& assets,
+std::shared_ptr<GameLogic> gameLogic)
 : _componentManager(componentManager), _entityManager(entityManager),
-_eventManager(eventManager), _assets(assets) {
+_eventManager(eventManager), _assets(assets), _gameLogic(gameLogic) {
     subscribeToEvents();
 }
 
@@ -141,25 +142,9 @@ void EventSubSystem::handleKeyRightPressed() {
 }
 
 void EventSubSystem::handleRestartPressed() {
-    Arcade::Entity gridEntity = 0;
-    for (const auto& [entity, name] : _entityManager->getEntities()) {
-        auto gridComp = _componentManager->getComponentByType(
-            entity, static_cast<ComponentType>(1000));
-        if (gridComp) {
-            gridEntity = entity;
-            break;
-        }
-    }
-    if (!gridEntity) return;
-
-    GameLogic tempGameLogic(_componentManager, _entityManager, _assets);
-    tempGameLogic.resetGame();
-
-    auto gridComp = std::dynamic_pointer_cast<GridComponent>(
-        _componentManager->getComponentByType(
-            gridEntity, static_cast<ComponentType>(1000)));
-    if (gridComp) {
-        gridComp->setGameOver(false);
+    if (_gameLogic) {
+        std::cout << "EventSubSystem: Calling resetGame()" << std::endl;
+        _gameLogic->resetGame();
     }
 }
 

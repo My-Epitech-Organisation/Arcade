@@ -18,12 +18,17 @@
 #include "Shared/Interface/ECS/IEntityManager.hpp"
 #include "Shared/Interface/ECS/ISystem.hpp"
 #include "Shared/Interface/Core/IEventManager.hpp"
-#include "Games/Snake/System/EventSubSystem.hpp"
-#include "Games/Snake/System/GameLogic.hpp"
 #include "Games/Snake/Components/GridComponent.hpp"
 #include "Games/Snake/Components/SnakeHeadComponent.hpp"
 #include "Games/Snake/SnakeFactory.hpp"
 #include "ECS/Components/Drawable/DrawableComponent.hpp"
+
+namespace Arcade {
+namespace Snake {
+class EventSubSystem;
+class GameLogic;
+}
+}
 
 namespace Arcade {
 namespace Snake {
@@ -53,6 +58,7 @@ class SnakeGame : public IGameModule {
     std::shared_ptr<IComponentManager> _componentManager;
     std::shared_ptr<IEntityManager> _entityManager;
     std::shared_ptr<EventSubSystem> _eventSystem;
+    std::shared_ptr<GameLogic> _gameLogicSystem;
     std::vector<std::shared_ptr<ISystem>> _systems;
     bool _gameOver;
     bool _gameWon;

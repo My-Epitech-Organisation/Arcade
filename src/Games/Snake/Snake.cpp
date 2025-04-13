@@ -15,6 +15,8 @@
 #include "Games/Snake/Components/GridComponent.hpp"
 #include "Games/Snake/Components/FoodComponent.hpp"
 #include "Games/Snake/System/UISystem.hpp"
+#include "Games/Snake/System/GameLogic.hpp"
+#include "Games/Snake/System/EventSubSystem.hpp"
 #include "ECS/Components/Position/PositionComponent.hpp"
 #include "ECS/Components/Sprite/SpriteComponent.hpp"
 #include "ECS/Components/Drawable/DrawableComponent.hpp"
@@ -27,6 +29,7 @@ namespace Snake {
 SnakeGame::~SnakeGame() {
     _systems.clear();
     _eventSystem.reset();
+    _gameLogicSystem.reset();
 
     if (_entityManager && _componentManager) {
         auto entities = _entityManager->getEntities();
@@ -58,12 +61,16 @@ std::shared_ptr<IEntityManager> entityManager) {
     loadDrawableAssets();
     createGame();
 
-    _eventSystem = std::make_shared<EventSubSystem>(
-        _componentManager, _entityManager, _eventManager, _drawableAssets);
-    _systems.push_back(std::make_shared<GameLogic>(_componentManager,
-        _entityManager, _drawableAssets));
+    _gameLogicSystem = std::make_shared<GameLogic>(_componentManager,
+        _entityManager, _drawableAssets);
+    _systems.push_back(_gameLogicSystem);
+
     _systems.push_back(std::make_shared<UISystem>(_componentManager,
         _entityManager, _drawableAssets));
+
+    _eventSystem = std::make_shared<EventSubSystem>(
+        _componentManager, _entityManager,
+        _eventManager, _drawableAssets, _gameLogicSystem);
     _systems.push_back(_eventSystem);
 }
 
@@ -113,7 +120,6 @@ void SnakeGame::checkGameStatus() {
 }
 
 int SnakeGame::getScore() const {
-    // Recherche du composant SnakeHeadComponent pour obtenir le score
     for (const auto& entity : _entityManager->getEntities()) {
         auto snakeComp = std::dynamic_pointer_cast<SnakeHeadComponent>(
             _componentManager->getComponentByType(entity.first,

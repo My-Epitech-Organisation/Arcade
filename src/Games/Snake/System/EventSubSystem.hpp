@@ -21,6 +21,12 @@
 
 namespace Arcade {
 namespace Snake {
+class GameLogic;
+}
+}
+
+namespace Arcade {
+namespace Snake {
 
 /**
  * @class EventSubSystem
@@ -34,11 +40,13 @@ class EventSubSystem : public Arcade::ISystem {
      * @param entityManager Entity manager
      * @param eventManager Event manager
      * @param assets Game assets
+     * @param gameLogic Pointer to the GameLogic system
      */
     EventSubSystem(std::shared_ptr<Arcade::IComponentManager> componentManager,
                  std::shared_ptr<Arcade::IEntityManager> entityManager,
                  std::shared_ptr<Arcade::IEventManager> eventManager,
-                 const std::map<std::string, DrawableComponent>& assets);
+                 const std::map<std::string, DrawableComponent>& assets,
+                 std::shared_ptr<GameLogic> gameLogic);
 
     /**
      * @brief Updates the system
@@ -50,6 +58,7 @@ class EventSubSystem : public Arcade::ISystem {
     std::shared_ptr<Arcade::IEntityManager> _entityManager;
     std::shared_ptr<Arcade::IEventManager> _eventManager;
     const std::map<std::string, DrawableComponent>& _assets;
+    std::shared_ptr<GameLogic> _gameLogic;
 
     /**
      * @brief Subscribes to relevant events
