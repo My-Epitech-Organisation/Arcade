@@ -145,6 +145,8 @@ void NCursesModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
         return;
     if (drawable.shouldRenderAsText()) {
         drawText(drawable.text, drawable.posX, drawable.posY, drawable.color);
+    } else if (drawable.shouldRenderAsTexture()) {
+        drawEntity(drawable.posX, drawable.posY, drawable.character);
     } else if (drawable.shouldRenderAsCharacter()) {
         drawEntity(drawable.posX, drawable.posY, drawable.character);
     }
