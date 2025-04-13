@@ -89,16 +89,6 @@ class Window : public IWindowModule {
     void refreshScreen();
 
     /**
-     * @brief Draws text on the screen at the specified position with the given color.
-     *
-     * @param text The text to be drawn.
-     * @param x The x-coordinate of the text's position.
-     * @param y The y-coordinate of the text's position.
-     * @param color The color of the text.
-     */
-    void drawText(const std::string &text, int x, int y, Color color);
-
-    /**
      * @brief Polls and processes input events.
      */
     void pollEvents();
@@ -145,6 +135,7 @@ class Window : public IWindowModule {
      * @return A shared pointer to the event manager.
      */
     std::shared_ptr<IEventManager> getEventManager() const;
+    void drawDrawable(const DrawableComponent& drawable);
 
  private:
     std::shared_ptr<IDisplayModule> _displayModule;

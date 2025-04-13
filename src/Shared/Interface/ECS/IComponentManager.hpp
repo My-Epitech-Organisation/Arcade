@@ -25,9 +25,6 @@ class IComponentManager {
     // Get component by entity and component type
     virtual std::shared_ptr<IComponent> getComponentByType(Entity entity,
         ComponentType type) = 0;
-    // Get component by entity and type name (for backward compatibility)
-    virtual std::shared_ptr<IComponent> getComponentBase(Entity entity,
-        const std::string& typeName) = 0;
     // Get all components of a specific type
     virtual std::vector<std::shared_ptr<IComponent>> getAllComponentsByType(
         ComponentType type) = 0;

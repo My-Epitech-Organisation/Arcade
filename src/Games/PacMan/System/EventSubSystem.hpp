@@ -10,6 +10,8 @@
 #define SRC_GAMES_PACMAN_SYSTEM_EVENTSUBSYSTEM_HPP_
 
 #include <memory>
+#include <string>
+#include <map>
 #include <utility>
 #include "Shared/Interface/ECS/ISystem.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
@@ -17,6 +19,7 @@
 #include "Shared/Interface/Core/IEventManager.hpp"
 #include "Games/PacMan/Components/PacmanComponent.hpp"
 #include "Games/PacMan/Components/GridComponent.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -25,7 +28,9 @@ class EventSubSystem : public Arcade::ISystem {
  public:
     EventSubSystem(std::shared_ptr<Arcade::IComponentManager> componentManager,
                   std::shared_ptr<Arcade::IEntityManager> entityManager,
-                  std::shared_ptr<Arcade::IEventManager> eventManager);
+                  std::shared_ptr<Arcade::IEventManager> eventManager,
+                  const std::map<std::string, Arcade::DrawableComponent>&
+                     drawableAssets);
     ~EventSubSystem() override;
     void update() override;
     void subscribeToEvents();
@@ -34,6 +39,7 @@ class EventSubSystem : public Arcade::ISystem {
     std::shared_ptr<Arcade::IComponentManager> _componentManager;
     std::shared_ptr<Arcade::IEntityManager> _entityManager;
     std::shared_ptr<Arcade::IEventManager> _eventManager;
+    const std::map<std::string, Arcade::DrawableComponent>& _drawableAssets;
     void handleKeyUp();
     void handleKeyDown();
     void handleKeyLeft();

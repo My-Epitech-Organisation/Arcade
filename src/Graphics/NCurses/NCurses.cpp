@@ -11,6 +11,7 @@
 #include <string>
 #include <iostream>
 #include <map>
+#include <cstring>
 #include "NCurses/NCurses.hpp"
 #include "NCurses/NCursesColor.hpp"
 #include "Interface/IArcadeModule.hpp"
@@ -137,6 +138,14 @@ void NCursesModule::drawEntity(int x, int y, char symbol) {
     int colorPair = _entity.getEntityColor(symbol);
 
     _entity.drawEntity(win, charX, charY, symbol, colorPair);
+}
+
+void NCursesModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
+    if (!drawable.isVisible)
+        return;
+    if (drawable.text.size() == 1) {
+        drawEntity(drawable.posX, drawable.posY, drawable.character);
+    }
 }
 
 void NCursesModule::drawTexture(int x, int y, const std::string &textureId) {

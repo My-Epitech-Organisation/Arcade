@@ -11,7 +11,8 @@ set(INC
 )
 
 add_library(arcade_parser STATIC ${SRC} ${INC})
-target_include_directories(arcade_parser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src/Shared)
+target_include_directories(arcade_parser PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/.. ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+set_target_properties(arcade_parser PROPERTIES POSITION_INDEPENDENT_CODE ON)
 if(ENABLE_COVERAGE)
     target_compile_options(arcade_parser PRIVATE -O0 -g --coverage -fprofile-arcs -ftest-coverage)
     target_link_libraries(arcade_parser PRIVATE --coverage)

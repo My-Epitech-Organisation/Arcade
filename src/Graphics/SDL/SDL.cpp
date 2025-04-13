@@ -67,29 +67,36 @@ void SDLModule::refreshScreen() {
     _renderer.refreshScreen();
 }
 
-void SDLModule::drawEntity(int x, int y, char symbol) {}
-
-
-void SDLModule::drawTexture(int x, int y, const std::string &texturePath) {
-    auto renderer = _renderer.getRenderer();
-
-    auto surface = _surface.loadSurface(texturePath);
-    if (!surface)
+void SDLModule::drawDrawable(const Arcade::DrawableComponent& drawable) {
+    if (!drawable.isVisible)
         return;
 
-    auto texture = _texture.createTexture(renderer.get(),
-        surface.get(), texturePath);
-    if (!texture)
-        return;
+    if (drawable.shouldRenderAsText()) {
+        auto renderer = _renderer.getRenderer();
+        int fontSize = static_cast<int>(drawable.scale);
+        if (fontSize <= 0) fontSize = 24;
+        _text.drawText(renderer.get(), drawable.text,
+                      static_cast<int>(drawable.posX),
+                      static_cast<int>(drawable.posY),
+                      fontSize, drawable.color);
+    } else if (drawable.shouldRenderAsTexture()) {
+        auto renderer = _renderer.getRenderer();
 
-    _texture.renderTexture(renderer.get(), texture.get(),
-        x, y);
-}
-
-void SDLModule::drawText(const std::string &text,
-int x, int y, Arcade::Color color) {
-    auto renderer = _renderer.getRenderer();
-    _text.drawText(renderer.get(), text, x, y, 24, color);
+        auto surface = _surface.loadSurface(drawable.path);
+        if (!surface)
+            return;
+        auto texture = _texture.createTexture(renderer.get(),
+            surface.get(), drawable.path);
+        if (!texture)
+            return;
+        _texture.renderTexture(renderer.get(), texture.get(),
+            drawable.posX,
+            drawable.posY);
+    } else if (drawable.shouldRenderAsCharacter()) {
+        auto renderer = _renderer.getRenderer();
+        _text.drawText(renderer.get(), drawable.text, drawable.posX,
+            drawable.posY, 24, drawable.color);
+    }
 }
 
 void SDLModule::pollEvents() {

@@ -17,6 +17,7 @@ enum class ComponentType {
     CELL,
     BOARD,
     TEXT,
+    DRAWABLE,
     CUSTOM_BASE = 1000
 };
 

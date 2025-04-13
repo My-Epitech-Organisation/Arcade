@@ -18,6 +18,7 @@ set_target_properties(arcade_allegro5 PROPERTIES PREFIX "" OUTPUT_NAME "arcade_a
 target_include_directories(arcade_allegro5 PUBLIC
     ${ALLEGRO5_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../..
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_ROOT}/src/Shared
 )

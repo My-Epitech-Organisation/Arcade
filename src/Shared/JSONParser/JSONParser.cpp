@@ -239,7 +239,7 @@ std::string JSONParser::extractFontPath
     if (assets->hasKey("fonts") && assets->get("fonts")->hasKey("default")) {
         return assets->get("fonts")->get("default")->asString();
     }
-    return "";
+    return "./assets/fonts/Arial.ttf";
 }
 
 // Helper to validate assets structure
@@ -256,10 +256,10 @@ void JSONParser::validateAssetsStructure
     return;
 }
 
-std::map<std::string, graphical_element_t>
+std::map<std::string, DrawableComponent>
 JSONParser::convertAssetsToGraphicalElements
 (const std::string& jsonFilePath) {
-    std::map<std::string, graphical_element_t> elements;
+    std::map<std::string, DrawableComponent> elements;
     try {
         auto jsonRoot = parseFile(jsonFilePath);
         validateAssetsStructure(jsonRoot);
@@ -278,7 +278,7 @@ JSONParser::convertAssetsToGraphicalElements
 
 void JSONParser::processTextures(
 const std::shared_ptr<JSONValue>& textures,
-std::map<std::string, graphical_element_t>& elements,
+std::map<std::string, DrawableComponent>& elements,
 const std::string& fontPath) {
     if (!textures->isObject()) {
         throw std::runtime_error("'textures' is not an object");
@@ -290,25 +290,28 @@ const std::string& fontPath) {
 }
 
 // Create a graphical element from a texture node
-graphical_element_t JSONParser::createGraphicalElement(
+DrawableComponent JSONParser::createGraphicalElement(
 const std::shared_ptr<JSONValue>& node, const std::string& fontPath) {
-    graphical_element_t element;
+    DrawableComponent element;
     element.path = node->get("path")->asString();
     element.font = fontPath;
     element.character = node->get("char")->asString()[0];
-    element.isText = false;
-    element.isVisible = true;
-    element.scale = 1.0f;
-    element.rotation = 0.0f;
-    element.width = 0.0f;
-    element.height = 0.0f;
+    // Use setAsTexture if width and height are specified
+    if (node->hasKey("width") && node->hasKey("height")) {
+        float width = node->get("width")->asNumber();
+        float height = node->get("height")->asNumber();
+        element.setAsTexture(element.path, width, height);
+    } else {
+        // Otherwise, set as character
+        element.setAsCharacter(element.character);
+    }
     return element;
 }
 
 // Process object texture nodes
 void JSONParser::processObjectTextureGroup(
 const std::shared_ptr<JSONValue>& group,
-std::map<std::string, graphical_element_t>& elements,
+std::map<std::string, DrawableComponent>& elements,
 const std::string& fontPath,
 const std::string& groupName) {
     auto groupObj = group->asObject();
@@ -327,7 +330,7 @@ const std::string& groupName) {
 // Process array texture nodes
 void JSONParser::processArrayTextureGroup(
 const std::shared_ptr<JSONValue>& group,
-std::map<std::string, graphical_element_t>& elements,
+std::map<std::string, DrawableComponent>& elements,
 const std::string& fontPath,
 const std::string& groupName) {
     auto arr = group->asArray();
@@ -339,7 +342,7 @@ const std::string& groupName) {
 
 void JSONParser::processTextureGroup(
 const std::shared_ptr<JSONValue>& group,
-std::map<std::string, graphical_element_t>& elements,
+std::map<std::string, DrawableComponent>& elements,
 const std::string& fontPath,
 const std::string& groupName) {
     if (group->isObject()) {
@@ -348,5 +351,6 @@ const std::string& groupName) {
         processArrayTextureGroup(group, elements, fontPath, groupName);
     }
 }
+
 
 }  // namespace Arcade

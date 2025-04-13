@@ -12,7 +12,7 @@
 namespace Arcade {
 
 ArcadeException::ArcadeException(const std::string& message)
-    : _message(message), _type("ArcadeException") {
+: _message(message), _type("ArcadeException") {
 }
 
 const char* ArcadeException::what() const noexcept {

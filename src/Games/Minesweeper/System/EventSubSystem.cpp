@@ -11,7 +11,9 @@
 #include <memory>
 #include <queue>
 #include <set>
+#include <map>
 #include <vector>
+#include <utility>
 #include <random>
 #include "Games/Minesweeper/System/EventSubSystem.hpp"
 #include "Shared/EventManager/KeyEvent/KeyEvent.hpp"
@@ -31,10 +33,13 @@ namespace Arcade {
 EventSubSystem::EventSubSystem(
 std::shared_ptr<Arcade::IComponentManager> componentManager,
 std::shared_ptr<Arcade::IEntityManager> entityManager,
-std::shared_ptr<Arcade::IEventManager> eventManager)
+std::shared_ptr<Arcade::IEventManager> eventManager,
+const std::map<std::string, DrawableComponent>& _drawableAssets)
 : _componentManager(componentManager),
 _entityManager(entityManager),
-_eventManager(eventManager), _firstClick(true) {
+_eventManager(eventManager),
+_drawableAssets(_drawableAssets),
+_firstClick(true) {
     subscribeToEvents();
 }
 
@@ -127,16 +132,25 @@ std::shared_ptr<Arcade::Minesweeper::Board> board) {
                             "assets/minesweeper/number_" +
                             std::to_string(neighborCell->getAdjacentMines())
                             + ".png";
-
                         auto neighborRevealedSprite =
-                            std::make_shared<SpriteComponent>
-                            (neighborNumberSpritePath);
-
+                            std::make_shared<Arcade::DrawableComponent>();
+                        neighborRevealedSprite->setAsTexture
+                            (neighborNumberSpritePath, 100.0f, 100.0f);
+                        neighborRevealedSprite->isVisible = true;
+                        neighborRevealedSprite->posX
+                            = static_cast<float>(neighborX * 100);
+                        neighborRevealedSprite->posY
+                            = static_cast<float>(neighborY * 100);
                         _componentManager->registerComponent(neighborEntity,
                             neighborRevealedSprite);
                     } else {
-                        auto emptySprite = std::make_shared<SpriteComponent>
-                            ("assets/minesweeper/revealed.png");
+                        auto emptySprite
+                            = std::make_shared<Arcade::DrawableComponent>();
+                        emptySprite->setAsTexture
+                            ("assets/minesweeper/revealed.png", 100.0f, 100.0f);
+                        emptySprite->isVisible = true;
+                        emptySprite->posX = static_cast<float>(neighborX * 100);
+                        emptySprite->posY = static_cast<float>(neighborY * 100);
                         _componentManager->registerComponent(neighborEntity,
                             emptySprite);
                     }
@@ -216,25 +230,35 @@ int cellX, int cellY, std::shared_ptr<Arcade::Minesweeper::Board> board) {
                         if (safeCell) {
                             safeCell->setHasMine(true);
 
-                            auto spriteComp = _componentManager->
-                                getComponentByType(safeEntity,
-                                    ComponentType::SPRITE);
-                            auto hiddenSprite = std::dynamic_pointer_cast
-                                <SpriteComponent> (spriteComp);
-
-                            if (hiddenSprite) {
-                                auto revealedSprite = std::make_shared
-                                    <SpriteComponent> (
-                                        "assets/minesweeper/mine.png");
-
-                                auto bombComponent = std::make_shared
-                                    <Minesweeper::BombComponent>
-                                        (hiddenSprite, revealedSprite);
-                                _componentManager->registerComponent(
-                                    safeEntity, bombComponent);
+                            auto hiddenAsset = _drawableAssets.find
+                                ("cell.revealed");
+                            auto mineAsset = _drawableAssets.find("cell.mine");
+                            if (hiddenAsset != _drawableAssets.end()
+                            && mineAsset != _drawableAssets.end()) {
+                                auto hiddenDrawable
+                                    = std::make_shared
+                                    <Arcade::DrawableComponent>
+                                    (hiddenAsset->second);
+                                auto revealedDrawable
+                                    = std::make_shared
+                                    <Arcade::DrawableComponent>
+                                    (mineAsset->second);
+                                hiddenDrawable->posX
+                                    = static_cast<float>(sx * 100);
+                                hiddenDrawable->posY
+                                    = static_cast<float>(sy * 100);
+                                revealedDrawable->posX
+                                    = static_cast<float>(sx * 100);
+                                revealedDrawable->posY
+                                    = static_cast<float>(sy * 100);
+                                auto bombComponent
+                                    = std::make_shared
+                                    <Minesweeper::BombComponent>(
+                                    hiddenDrawable, revealedDrawable);
+                                _componentManager->registerComponent
+                                    (safeEntity, bombComponent);
                             }
                         }
-
                         safeCells.erase(safeCells.begin() + randomIndex);
                     }
                 }
@@ -338,13 +362,17 @@ void EventSubSystem::handleLeftClick() {
                 (bombComp);
 
         if (bombComponent) {
-            std::string bombsprtPath = "assets/minesweeper/mine.png";
-            auto bombSprite = std::make_shared<SpriteComponent>
-                (bombsprtPath);
-            _componentManager->registerComponent(cellEntity,
-                bombSprite);
-            bombComponent->reveal();
-            board->setGameOver(true);
+            auto bombSpriteAsset = _drawableAssets.find("cell.mine");
+            if (bombSpriteAsset != _drawableAssets.end()) {
+                auto bombSprite = std::make_shared<Arcade::DrawableComponent>
+                    (bombSpriteAsset->second);
+                bombSprite->isVisible = true;
+                bombSprite->posX = static_cast<float>(cellX * 100);
+                bombSprite->posY = static_cast<float>(cellY * 100);
+                _componentManager->registerComponent(cellEntity, bombSprite);
+                bombComponent->reveal();
+                board->setGameOver(true);
+            }
         } else {
             auto statsComp = _componentManager->getComponentByType(boardEntity,
                 ComponentType::CUSTOM_BASE);
@@ -353,20 +381,31 @@ void EventSubSystem::handleLeftClick() {
             if (gameStats)
                 gameStats->revealSafeCell();
             if (cell->getAdjacentMines() > 0) {
-                std::string numberSpritePath = "assets/minesweeper/number_" +
-                    std::to_string(cell->getAdjacentMines()) + ".png";
-
-                auto revealedSprite = std::make_shared<SpriteComponent>
-                    (numberSpritePath);
-
-                _componentManager->registerComponent(cellEntity,
-                    revealedSprite);
+                int mineCount = cell->getAdjacentMines();
+                std::string assetKey = "cell.numbers["
+                    + std::to_string(mineCount - 1) + "]";
+                auto numberSpriteAsset = _drawableAssets.find(assetKey);
+                if (numberSpriteAsset != _drawableAssets.end()) {
+                    auto revealedSprite = std::make_shared
+                        <Arcade::DrawableComponent>(numberSpriteAsset->second);
+                    revealedSprite->isVisible = true;
+                    revealedSprite->posX = static_cast<float>(cellX * 100);
+                    revealedSprite->posY = static_cast<float>(cellY * 100);
+                    _componentManager->registerComponent
+                        (cellEntity, revealedSprite);
+                }
             } else {
-                auto emptySprite = std::make_shared<SpriteComponent>
-                    ("assets/minesweeper/revealed.png");
-                _componentManager->registerComponent(cellEntity, emptySprite);
+                auto emptySpriteAsset = _drawableAssets.find("cell.revealed");
+                if (emptySpriteAsset != _drawableAssets.end()) {
+                    auto emptySprite = std::make_shared
+                        <Arcade::DrawableComponent>(emptySpriteAsset->second);
+                    emptySprite->isVisible = true;
+                    emptySprite->posX = static_cast<float>(cellX * 100);
+                    emptySprite->posY = static_cast<float>(cellY * 100);
+                    _componentManager->registerComponent
+                        (cellEntity, emptySprite);
+                }
             }
-
             if (cell->getAdjacentMines() == 0) {
                 handleNoAdjacentMine(cellX, cellY, boardWidth,
                     boardHeight, board);
@@ -424,22 +463,30 @@ void EventSubSystem::handleRightClick() {
 
         if (cell->getState() == Arcade::Minesweeper::Cell::HIDDEN) {
             cell->setState(Arcade::Minesweeper::Cell::FLAGGED);
-
-            auto flagSprite = std::make_shared<SpriteComponent>
-                ("assets/minesweeper/flag.png");
-            _componentManager->registerComponent(cellEntity, flagSprite);
-
-            if (gameStats)
-                gameStats->addFlag();
+            auto flagSpriteAsset = _drawableAssets.find("cell.flag");
+            if (flagSpriteAsset != _drawableAssets.end()) {
+                auto flagSprite = std::make_shared
+                    <Arcade::DrawableComponent>(flagSpriteAsset->second);
+                flagSprite->isVisible = true;
+                flagSprite->posX = static_cast<float>(cellX * 100);
+                flagSprite->posY = static_cast<float>(cellY * 100);
+                _componentManager->registerComponent(cellEntity, flagSprite);
+                if (gameStats)
+                    gameStats->addFlag();
+            }
         } else if (cell->getState() == Arcade::Minesweeper::Cell::FLAGGED) {
             cell->setState(Arcade::Minesweeper::Cell::HIDDEN);
-
-            auto hiddenSprite = std::make_shared<SpriteComponent>
-                ("assets/minesweeper/hidden.png");
-            _componentManager->registerComponent(cellEntity, hiddenSprite);
-
-            if (gameStats)
-                gameStats->removeFlag();
+            auto hiddenSpriteAsset = _drawableAssets.find("cell.hidden");
+            if (hiddenSpriteAsset != _drawableAssets.end()) {
+                auto hiddenSprite = std::make_shared
+                    <Arcade::DrawableComponent>(hiddenSpriteAsset->second);
+                hiddenSprite->isVisible = true;
+                hiddenSprite->posX = static_cast<float>(cellX * 100);
+                hiddenSprite->posY = static_cast<float>(cellY * 100);
+                _componentManager->registerComponent(cellEntity, hiddenSprite);
+                if (gameStats)
+                    gameStats->removeFlag();
+            }
         }
     }
 }

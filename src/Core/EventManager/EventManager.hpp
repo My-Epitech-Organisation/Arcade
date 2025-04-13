@@ -79,7 +79,7 @@ class EventManager : public IEventManager {
         if (dynamic_cast<const MouseEvent*>(&eventType) != nullptr) {
             auto mouseEvent = dynamic_cast<const MouseEvent*>(&eventType);
             auto mouseFound = std::pair<EventType, MouseButton>
-                (mouseEvent->getType(), mouseEvent->getButton());
+                (mouseEvent->getType(), mouseEvent->getMouseButton());
             _mouseSubscribers[mouseFound].push_back(callback);
             return;
         } else if (dynamic_cast<const KeyEvent*>(&eventType) != nullptr) {
@@ -196,6 +196,13 @@ class EventManager : public IEventManager {
     * @throws InputException if there's an error during mouse position update
     */
     void updateMousePosition(const RawInputState& state);
+    void safeInvokeCallbacks(const std::vector<Callback>& callbacks) {
+        for (const auto& callback : callbacks) {
+            if (callback) {
+                callback();
+            }
+        }
+    }
 };
 
 }  // namespace Arcade

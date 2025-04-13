@@ -391,10 +391,10 @@ void GameLoop::switchGameInGame() {
             dlclose(handle);
             throw std::runtime_error(dlerror());
         }
-
         _entityManager.reset();
         _entityManager = std::make_shared<EntityManager>();
-
+        _componentManager.reset();
+        _componentManager = std::make_shared<ComponentManager>();
         auto newGame = std::shared_ptr<IGameModule>(
             static_cast<IGameModule*>(entryPoint(_eventManager,
                 _componentManager, _entityManager)),

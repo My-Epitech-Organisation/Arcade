@@ -45,23 +45,6 @@ std::vector<std::shared_ptr<IComponent>> ComponentManager::getAllComponents() {
     return result;
 }
 
-std::shared_ptr<IComponent> ComponentManager::getComponentBase(Entity entity,
-const std::string& typeName) {
-    if (_componentsByType.find(entity) == _componentsByType.end())
-        return nullptr;
-
-    if (_typeNameMap.find(typeName) == _typeNameMap.end())
-        return nullptr;
-
-    ComponentType type = _typeNameMap[typeName];
-    auto& entityComponents = _componentsByType[entity];
-
-    if (entityComponents.find(type) == entityComponents.end())
-        return nullptr;
-
-    return entityComponents[type];
-}
-
 std::shared_ptr<IComponent> ComponentManager::getComponentByType(Entity entity,
 ComponentType type) {
     if (_componentsByType.find(entity) == _componentsByType.end())

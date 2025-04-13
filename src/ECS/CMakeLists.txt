@@ -6,6 +6,7 @@ add_subdirectory(Components/Position)
 add_subdirectory(Components/Sprite)
 add_subdirectory(Components/Velocity)
 add_subdirectory(Components/Text)
+add_subdirectory(Components/Drawable)
 set(SRC
     ${COMPROOT}/ComponentManager.cpp
     ${ENTROOT}/EntityManager.cpp

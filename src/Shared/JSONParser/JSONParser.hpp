@@ -67,7 +67,7 @@ class JSONParser : public IJSONParser {
     std::shared_ptr<JSONValue> parseFile(const std::string& filePath) override;
     std::shared_ptr<JSONValue> parseString
         (const std::string& jsonString) override;
-    std::map<std::string, graphical_element_t>
+    std::map<std::string, DrawableComponent>
         convertAssetsToGraphicalElements
         (const std::string& jsonFilePath) override;
 
@@ -83,25 +83,25 @@ class JSONParser : public IJSONParser {
     // Asset conversion helper methods
     void validateAssetsStructure(const std::shared_ptr<JSONValue>& jsonRoot);
     std::string extractFontPath(const std::shared_ptr<JSONValue>& assets);
-    graphical_element_t createGraphicalElement(
+    DrawableComponent createGraphicalElement(
         const std::shared_ptr<JSONValue>& node, const std::string& fontPath);
     void processTextures(
         const std::shared_ptr<JSONValue>& textures,
-        std::map<std::string, graphical_element_t>& elements,
+        std::map<std::string, DrawableComponent>& elements,
         const std::string& fontPath);
     void processTextureGroup(
         const std::shared_ptr<JSONValue>& group,
-        std::map<std::string, graphical_element_t>& elements,
+        std::map<std::string, DrawableComponent>& elements,
         const std::string& fontPath,
         const std::string& groupName);
     void processObjectTextureGroup(
         const std::shared_ptr<JSONValue>& group,
-        std::map<std::string, graphical_element_t>& elements,
+        std::map<std::string, DrawableComponent>& elements,
         const std::string& fontPath,
         const std::string& groupName);
     void processArrayTextureGroup(
         const std::shared_ptr<JSONValue>& group,
-        std::map<std::string, graphical_element_t>& elements,
+        std::map<std::string, DrawableComponent>& elements,
         const std::string& fontPath,
         const std::string& groupName);
 };

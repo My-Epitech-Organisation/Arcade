@@ -11,48 +11,37 @@
 #include <utility>
 #include <string>
 #include <iostream>
-#include <future>
 #include "GTK+/GTK.hpp"
 #include "Models/ColorType.hpp"
 #include "Models/ModuleInfos.hpp"
 
 static gboolean on_window_close_request(GtkWindow* window, gpointer user_data) {
     GTKModule* module = static_cast<GTKModule*>(user_data);
-    if (module) {
+    if (module)
         module->_running = false;
-        module->_threadRunning = false;
-    }
     return TRUE;
-}
-
-GTKModule::GTKModule() : _name("GTK+"), _eventManager(nullptr) {
-    gtk_init();
-    _fontManager.loadFonts();
 }
 
 GTKModule::~GTKModule() {
     stop();
 }
 
-void GTKModule::init(float x, float y) {
-    int width = static_cast<int>(x);
-    int height = static_cast<int>(y);
+void GTKModule::threadMain() {
+    putenv(const_cast<char*>("GTK_MODULES="));
+    putenv(const_cast<char*>("GTK_PATH="));
+    putenv(const_cast<char*>("GTK_IM_MODULE="));
+    putenv(const_cast<char*>("GTK_THEME=Adwaita"));
 
-    _windowWidth = width;
-    _windowHeight = height;
+    std::string tempDir = "/tmp/gtk-arcade-" + std::to_string(getpid());
+    std::string xdgVar = "XDG_DATA_HOME=" + tempDir;
+    putenv(const_cast<char*>(xdgVar.c_str()));
 
-    gdk_set_allowed_backends("x11,*");
+    putenv(const_cast<char*>("GDK_BACKEND=x11"));
     putenv(const_cast<char*>("GSK_RENDERER=cairo"));
 
-    _threadRunning = true;
-    _initialized = false;
-    _gtkThread = std::thread(&GTKModule::gtkThreadFunction, this);
+    GMainContext *context = g_main_context_new();
+    g_main_context_push_thread_default(context);
 
-    waitForInitialization();
-    _running = true;
-}
-
-void GTKModule::gtkThreadFunction() {
     if (!gtk_is_initialized())
         gtk_init();
 
@@ -63,9 +52,9 @@ void GTKModule::gtkThreadFunction() {
         g_object_unref);
 
     if (!_app) {
-        _initialized = true;
+        std::cerr << "Failed to create GTK application" << std::endl;
         _threadRunning = false;
-        signalInitialized();
+        _initialized = false;
         return;
     }
 
@@ -73,10 +62,7 @@ void GTKModule::gtkThreadFunction() {
     g_application_register(G_APPLICATION(_app.get()), nullptr, nullptr);
 
     _window.createWindow(_app, _windowWidth, _windowHeight);
-    _windowValid.store(true);
-
     _window.setupDrawingArea(_windowWidth, _windowHeight, on_draw, this);
-    _drawingAreaValid.store(true);
 
     _eventManager = GTK::GTKEvent(_window.getWindow().get());
 
@@ -90,29 +76,44 @@ void GTKModule::gtkThreadFunction() {
     _window.showWindow();
 
     _renderer.createRenderer(_windowWidth, _windowHeight);
-    clearScreen();
+
+    _renderer.clearScreen();
+
+    while (g_main_context_iteration(nullptr, FALSE)) {}
 
     _initialized = true;
-    signalInitialized();
+    _running = true;
 
     while (_threadRunning) {
-        g_main_context_iteration(nullptr, FALSE);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        while (g_main_context_iteration(nullptr, FALSE)) {}
+
+        std::function<void()> command;
+        {
+            std::unique_lock<std::mutex> lock(_commandMutex);
+            if (!_commandQueue.empty()) {
+                command = _commandQueue.front();
+                _commandQueue.pop();
+            }
+        }
+
+        if (command)
+            command();
+
+        auto currentWindow = _window.getWindow();
+        if (!currentWindow || !GTK_IS_WINDOW(currentWindow.get()))
+            _running = false;
     }
 
+    _eventManager.disconnectSignals();
+
     if (_window.getWindow()) {
-        _windowValid.store(false);
-        _drawingAreaValid.store(false);
-
-        _eventManager.disconnectSignals();
-
         if (GTK_IS_WIDGET(_window.getWindow().get()))
             gtk_widget_set_visible(_window.getWindow().get(), FALSE);
 
         if (_app) {
             g_application_quit(G_APPLICATION(_app.get()));
-            for (int i = 0; i < 10 &&
-                g_main_context_iteration(NULL, FALSE); i++) {}
+            for (int i = 0; i < 10 && g_main_context_iteration(NULL,
+                FALSE); i++) {}
         }
     }
 
@@ -123,127 +124,151 @@ void GTKModule::gtkThreadFunction() {
     while (g_main_context_pending(NULL)) {
         g_main_context_iteration(NULL, FALSE);
     }
+
+    _app.reset();
+}
+
+void GTKModule::executeCommand(std::function<void()> command) {
+    std::unique_lock<std::mutex> lock(_commandMutex);
+    _commandQueue.push(command);
+    _commandCV.notify_one();
+}
+
+void GTKModule::executeCommandAndWait(std::function<void()> command) {
+    std::mutex waitMutex;
+    std::condition_variable waitCV;
+    bool done = false;
+
+    executeCommand([&]() {
+        command();
+        {
+            std::lock_guard<std::mutex> lock(waitMutex);
+            done = true;
+        }
+        waitCV.notify_one();
+    });
+
+    std::unique_lock<std::mutex> lock(waitMutex);
+    waitCV.wait(lock, [&]() { return done; });
+}
+
+void GTKModule::init(float x, float y) {
+    if (_initialized)
+        return;
+
+    int width = static_cast<int>(x);
+    int height = static_cast<int>(y);
+    _windowWidth = width;
+    _windowHeight = height;
+
+    _threadRunning = true;
+    _gtkThread = std::thread(&GTKModule::threadMain, this);
+
+    while (!_initialized && _threadRunning) {}
 }
 
 void GTKModule::stop() {
+    if (!_running && !_threadRunning)
+        return;
+
     _running = false;
-    _windowValid.store(false);
-    _drawingAreaValid.store(false);
     _threadRunning = false;
 
-    if (_gtkThread.joinable()) {
-        try {
-            auto joinFuture = std::async(std::launch::async, [this]() {
-                if (_gtkThread.joinable()) {
-                    _gtkThread.join();
-                }
-            });
+    if (_gtkThread.joinable())
+        _gtkThread.join();
 
-            auto status = joinFuture.wait_for(std::chrono::seconds(1));
-            if (status != std::future_status::ready) {
-                std::cerr <<
-                    "GTK thread join timed out, detaching to prevent crash"
-                << std::endl;
-                if (_gtkThread.joinable())
-                    _gtkThread.detach();
-            }
-        } catch (const std::exception& e) {
-            std::cerr << "Exception joining GTK thread: "
-                << e.what() << std::endl;
-            if (_gtkThread.joinable())
-                _gtkThread.detach();
-        }
-    }
-
-    _app.reset();
-
-    while (g_main_context_iteration(NULL, FALSE)) {}
-}
-
-void GTKModule::waitForInitialization() {
-    std::unique_lock<std::mutex> lock(_mutex);
-    _cv.wait(lock, [this]() { return _initialized.load(); });
-}
-
-void GTKModule::signalInitialized() {
-    std::unique_lock<std::mutex> lock(_mutex);
-    _cv.notify_all();
+    _initialized = false;
 }
 
 void GTKModule::clearScreen() {
     if (!_running) return;
 
-    std::unique_lock<std::mutex> lock(_mutex);
-    _renderer.clearScreen();
+    executeCommand([this]() {
+        _renderer.clearScreen();
+    });
 }
 
 void GTKModule::refreshScreen() {
-    if (!_running || !_drawingAreaValid.load()) return;
+    if (!_running) return;
 
-    std::unique_lock<std::mutex> lock(_mutex);
-    _renderer.present();
+    executeCommand([this]() {
+        _renderer.present();
 
-    auto drawingArea = _window.getDrawingArea();
-    if (drawingArea && _drawingAreaValid.load()
-        && GTK_IS_DRAWING_AREA(drawingArea.get())) {
-        gtk_widget_queue_draw(drawingArea.get());
+        auto drawingArea = _window.getDrawingArea();
+        if (drawingArea && GTK_IS_DRAWING_AREA(drawingArea.get())) {
+            gtk_widget_queue_draw(drawingArea.get());
+        }
+    });
+}
+
+void GTKModule::drawDrawable(const Arcade::DrawableComponent &drawable) {
+    if (!drawable.isVisible)
+        return;
+
+    if (drawable.shouldRenderAsText()) {
+        drawText(drawable.text, static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.color);
+    } else if (drawable.shouldRenderAsTexture()) {
+        drawTexture(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.path);
+    } else if (drawable.shouldRenderAsCharacter()) {
+        drawEntity(static_cast<int>(drawable.posX),
+            static_cast<int>(drawable.posY), drawable.character);
     }
 }
 
 void GTKModule::drawEntity(int x, int y, char symbol) {
+    // Implementation for drawEntity (if needed)
 }
 
 void GTKModule::drawTexture(int x, int y, const std::string &texturePath) {
     if (!_running) return;
 
-    std::unique_lock<std::mutex> lock(_mutex);
-    auto renderer = _renderer.getRenderer();
-    if (renderer) {
-        std::shared_ptr<cairo_surface_t> texture = nullptr;
-        int width = 0;
-        int height = 0;
+    executeCommand([this, x, y, texturePath]() {
+        auto renderer = _renderer.getRenderer();
+        if (renderer) {
+            std::shared_ptr<cairo_surface_t> texture = nullptr;
+            int width = 0;
+            int height = 0;
 
-        auto it = _textures.find(texturePath);
-        if (it == _textures.end()) {
-            texture = _textureManager.loadTexture(texturePath);
-            if (!texture)
-                return;
+            auto it = _textures.find(texturePath);
+            if (it == _textures.end()) {
+                texture = _textureManager.loadTexture(texturePath);
+                if (!texture)
+                    return;
 
-            width = cairo_image_surface_get_width(texture.get());
-            height = cairo_image_surface_get_height(texture.get());
-            _textures[texturePath] = {texture, width, height};
-        } else {
-            texture = it->second.surface;
+                width = cairo_image_surface_get_width(texture.get());
+                height = cairo_image_surface_get_height(texture.get());
+                _textures[texturePath] = {texture, width, height};
+            } else {
+                texture = it->second.surface;
+            }
+
+            _textureManager.renderTexture(renderer, texture, x, y);
         }
-
-        _textureManager.renderTexture(renderer, texture, x, y);
-    }
+    });
 }
 
-void GTKModule::drawText(const std::string &text, int x, int y,
-    Arcade::Color color) {
+void GTKModule::drawText(const std::string &text, int x,
+    int y, Arcade::Color color) {
     if (!_running) return;
 
-    std::unique_lock<std::mutex> lock(_mutex);
-    auto renderer = _renderer.getRenderer();
-    if (renderer) {
-        auto font = _fontManager.getFont("default");
-        _textManager.drawText(renderer, x, y, text, font, color);
-    }
+    executeCommand([this, text, x, y, color]() {
+        auto renderer = _renderer.getRenderer();
+        if (renderer) {
+            auto font = _fontManager.getFont("default");
+            _textManager.drawText(renderer, x, y, text, font, color);
+        }
+    });
 }
 
 void GTKModule::pollEvents() {
-    if (!_running || !_windowValid.load() || !_threadRunning) {
-        _running = false;
+    if (!_running)
         return;
-    }
 
-    _eventManager.handleEvents();
-
-    auto window = _window.getWindow();
-    if (!window || !_windowValid.load() || !GTK_IS_WINDOW(window.get())) {
-        _running = false;
-    }
+    executeCommandAndWait([this]() {
+        _eventManager.handleEvents();
+    });
 }
 
 bool GTKModule::isOpen() const {
@@ -281,8 +306,7 @@ extern "C" {
     }
 
     __attribute__((destructor))
-    void fini_gtk(void) {
-    }
+    void fini_gtk(void) {}
 
     Arcade::IArcadeModule* entryPoint(void) {
         return new GTKModule();

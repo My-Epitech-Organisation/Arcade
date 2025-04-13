@@ -13,31 +13,10 @@
 #include <vector>
 #include <memory>
 #include <map>
-#include "Models/ColorType.hpp"
+#include "JSONParser/JSONParser.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {
-
-// Graphical element structure
-typedef struct graphical_element_s {
-    std::string path;       // Path to the resource file (image, texture, etc.)
-    std::string font;       // Font to use for text elements
-    std::string text;       // Text content to display when isText is true
-    bool isText;            // Flag to determine if the element is text
-    char character;    // Character to display (for text or tile-based graphics)
-    Color color;            // Color of the element
-    float scale;            // Scale factor for the element
-    float posX;             // X position on screen
-    float posY;             // Y position on screen
-    float rotation;         // Rotation angle in degrees
-    bool isVisible;    // Flag to determine if the element should be rendered
-    float width;            // Width of the element
-    float height;           // Height of the element
-
-    graphical_element_s() :
-        path(""), font(""), text(""), isText(false), character(' '),
-        color(NOCOLOR), scale(1.0f), posX(0.0f), posY(0.0f), rotation(0.0f),
-        isVisible(true), width(0.0f), height(0.0f) {}
-} graphical_element_t;
 
 // JSON Value type enum
 enum class JSONValueType {
@@ -63,7 +42,7 @@ class IJSONParser {
     virtual std::shared_ptr<JSONValue>
         parseString(const std::string& jsonString) = 0;
     // Convert JSON asset configuration to graphical elements
-    virtual std::map<std::string, graphical_element_t>
+    virtual std::map<std::string, DrawableComponent>
         convertAssetsToGraphicalElements(const std::string& jsonFilePath) = 0;
 };
 

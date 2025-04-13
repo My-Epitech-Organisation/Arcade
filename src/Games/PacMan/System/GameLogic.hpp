@@ -10,7 +10,9 @@
 #define SRC_GAMES_PACMAN_SYSTEM_GAMELOGIC_HPP_
 
 #include <memory>
+#include <map>
 #include <chrono>
+#include <string>
 #include <utility>
 #include "Shared/Interface/ECS/ISystem.hpp"
 #include "Shared/Interface/ECS/IComponentManager.hpp"
@@ -18,6 +20,7 @@
 #include "Games/PacMan/Components/PacmanComponent.hpp"
 #include "Games/PacMan/Components/GhostComponent.hpp"
 #include "Games/PacMan/Components/GridComponent.hpp"
+#include "ECS/Components/Drawable/DrawableComponent.hpp"
 
 namespace Arcade {
 namespace PacMan {
@@ -25,7 +28,8 @@ namespace PacMan {
 class GameLogic : public Arcade::ISystem {
  public:
       GameLogic(std::shared_ptr<Arcade::IComponentManager> componentManager,
-               std::shared_ptr<Arcade::IEntityManager> entityManager);
+               std::shared_ptr<Arcade::IEntityManager> entityManager,
+               const std::map<std::string, DrawableComponent>& assets);
       void update() override;
       void reloadCurrentMap();
 
@@ -40,6 +44,9 @@ class GameLogic : public Arcade::ISystem {
       std::shared_ptr<Arcade::IComponentManager> _componentManager;
       std::shared_ptr<Arcade::IEntityManager> _entityManager;
       std::chrono::high_resolution_clock::time_point _lastUpdateTime;
+      const std::map<std::string, DrawableComponent>& _assets;
+      std::shared_ptr<DrawableComponent>
+         getDrawableAsset(const std::string& key) const;
 
       void movePacman();
       void checkCollisions();

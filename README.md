@@ -23,10 +23,19 @@ Arcade is a gaming platform that allows users to choose from multiple games and 
 
 Using **CMake**:
 
+### Standard Build
 ```bash
 mkdir build
 cd build
 cmake ..
+cmake --build .
+```
+
+### Bonus Build
+```bash
+mkdir build
+cd build
+cmake -DENABLE_BONUS=ON ..
 cmake --build .
 ```
 
